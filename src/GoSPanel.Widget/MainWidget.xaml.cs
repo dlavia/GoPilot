@@ -1723,6 +1723,7 @@ namespace GoSPanel.Widget
                 TempValue.Text = temp.HasValue ? temp.Value.ToString("0") + "°" : "—";
                 TempValue.Foreground = Brush(temp >= 85 ? "WarnBrush" : "TextBrush");
                 PowerValue.Text = watts.HasValue ? watts.Value.ToString(watts.Value < 10 ? "0.0" : "0", Es) : "—";
+                TdpNowText.Text = watts.HasValue ? "Ahora: " + watts.Value.ToString("0", Es) + " W de consumo real" : "";
                 FanValue.Text = rpm.HasValue ? (rpm.Value / 1000).ToString("0.0", Es) + "k" : "—";
 
                 UpdateBattery(Obj(data, "battery"));
@@ -1827,8 +1828,10 @@ namespace GoSPanel.Widget
             }
             _customSpl = (int)SplSlider.Value;
             ModeCustom.Title = _customSpl + " W";
+            SplMinText.Text = SplSlider.Minimum.ToString("0") + " W";
+            SplMaxText.Text = SplSlider.Maximum.ToString("0") + " W";
+            ApplyTdpAutoPref();
             UpdateTdpLabels();
-            ApplyTdpButton.IsEnabled = false;
             UpdateModeSummary();
         }
 
@@ -1926,66 +1929,139 @@ namespace GoSPanel.Widget
             HomeModeTile.IsOn = true;
         }
 
+        // ---------------------------------------------------------------------
+        // Manual (como la Steam Deck): un límite de potencia (SPL); ráfagas y picos automáticos por encima en la
+        // proporción de los modos de Lenovo, o a mano en «Avanzado». Se aplica al soltar el deslizador.
+        // ---------------------------------------------------------------------
+
+        private DispatcherTimer _tdpApplyTimer;
+
+        private bool TdpAuto => Pref("tdpAuto", true);
+
         private void OnTdpSliderChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (SplSlider == null || SpptSlider == null || FpptSlider == null) return;
             if (!_loading)
             {
-                // Mantener SPL ≤ sPPT ≤ fPPT empujando a los vecinos.
+                string note = null;
                 _loading = true;
                 try
                 {
-                    if (sender == SplSlider)
+                    if (TdpAuto)
                     {
-                        if (SpptSlider.Value < SplSlider.Value) SpptSlider.Value = SplSlider.Value;
-                        if (FpptSlider.Value < SplSlider.Value) FpptSlider.Value = SplSlider.Value;
+                        if (sender == SplSlider) SetAutoBursts();
+                    }
+                    // A mano: mantener SPL <= sPPT <= fPPT empujando a los vecinos, y decir cuál se ha movido
+                    else if (sender == SplSlider)
+                    {
+                        if (SpptSlider.Value < SplSlider.Value) { SpptSlider.Value = SplSlider.Value; note = "sPPT subido a " + Watts(SpptSlider) + " para no quedar por debajo del límite"; }
+                        if (FpptSlider.Value < SplSlider.Value) { FpptSlider.Value = SplSlider.Value; note = "fPPT subido a " + Watts(FpptSlider) + " para no quedar por debajo del límite"; }
                     }
                     else if (sender == SpptSlider)
                     {
-                        if (SplSlider.Value > SpptSlider.Value) SplSlider.Value = SpptSlider.Value;
-                        if (FpptSlider.Value < SpptSlider.Value) FpptSlider.Value = SpptSlider.Value;
+                        if (SplSlider.Value > SpptSlider.Value) { SplSlider.Value = SpptSlider.Value; note = "Límite bajado a " + Watts(SplSlider) + ": no puede superar las ráfagas"; }
+                        if (FpptSlider.Value < SpptSlider.Value) { FpptSlider.Value = SpptSlider.Value; note = "fPPT subido a " + Watts(FpptSlider) + " para no quedar por debajo de las ráfagas"; }
                     }
                     else if (sender == FpptSlider)
                     {
-                        if (SpptSlider.Value > FpptSlider.Value) SpptSlider.Value = FpptSlider.Value;
-                        if (SplSlider.Value > FpptSlider.Value) SplSlider.Value = FpptSlider.Value;
+                        if (SpptSlider.Value > FpptSlider.Value) { SpptSlider.Value = FpptSlider.Value; note = "sPPT bajado a " + Watts(SpptSlider) + ": no puede superar los picos"; }
+                        if (SplSlider.Value > FpptSlider.Value) { SplSlider.Value = FpptSlider.Value; note = "Límite bajado a " + Watts(SplSlider) + ": no puede superar los picos"; }
                     }
                 }
                 finally
                 {
                     _loading = false;
                 }
-                if (ApplyTdpButton != null) ApplyTdpButton.IsEnabled = true;
+                TdpNote.Text = note ?? "";
+                TdpNote.Visibility = note != null ? Visibility.Visible : Visibility.Collapsed;
+                ScheduleTdpApply();
             }
             UpdateTdpLabels();
         }
 
-        private void UpdateTdpLabels()
+        private static string Watts(Slider slider) => slider.Value.ToString("0") + " W";
+
+        /// <summary>Ráfagas = límite × 1,25 y picos = límite × 1,5 (sin pasar del máximo del firmware).</summary>
+        private void SetAutoBursts()
         {
-            if (SplValue == null) return;
-            SplValue.Text = SplSlider.Value.ToString("0") + " W";
-            SpptValue.Text = SpptSlider.Value.ToString("0") + " W";
-            FpptValue.Text = FpptSlider.Value.ToString("0") + " W";
+            var spl = SplSlider.Value;
+            SpptSlider.Value = Math.Min(SpptSlider.Maximum, Math.Max(spl, Math.Round(spl * 1.25)));
+            FpptSlider.Value = Math.Min(FpptSlider.Maximum, Math.Max(spl, Math.Round(spl * 1.5)));
         }
 
-        private async void OnApplyTdpClick(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Se aplica medio segundo después del último cambio y nunca con un deslizador «agarrado» con el mando: salir de
+        /// él (A o B) es lo que lo confirma, así que no hace falta botón «Aplicar».
+        /// </summary>
+        private void ScheduleTdpApply()
         {
-            ApplyTdpButton.IsEnabled = false;
+            if (_tdpApplyTimer == null)
+            {
+                _tdpApplyTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+                _tdpApplyTimer.Tick += async (s, e) =>
+                {
+                    if (SplSlider.IsFocusEngaged || SpptSlider.IsFocusEngaged || FpptSlider.IsFocusEngaged) return;
+                    _tdpApplyTimer.Stop();
+                    await ApplyTdpAsync();
+                };
+            }
+            _tdpApplyTimer.Stop();
+            _tdpApplyTimer.Start();
+        }
+
+        private async Task ApplyTdpAsync()
+        {
             var args = new JsonObject
             {
                 ["spl"] = JsonValue.CreateNumberValue(SplSlider.Value),
                 ["sppt"] = JsonValue.CreateNumberValue(SpptSlider.Value),
                 ["fppt"] = JsonValue.CreateNumberValue(FpptSlider.Value),
             };
-            if (await CallAsync("tdp.set", args) != null)
+            if (await CallAsync("tdp.set", args) == null) return;
+            _customSpl = (int)SplSlider.Value;
+            ModeCustom.Title = _customSpl + " W";
+            await RefreshPowerModeAsync();
+            UpdateModeSummary();
+        }
+
+        private void UpdateTdpLabels()
+        {
+            if (SplValue == null) return;
+            SplValue.Text = SplSlider.Value.ToString("0");
+            SpptValue.Text = Watts(SpptSlider);
+            FpptValue.Text = Watts(FpptSlider);
+            TdpAutoText.Text = "Ráfagas hasta " + Watts(SpptSlider) + " · picos hasta " + Watts(FpptSlider) + (TdpAuto ? " (automático)" : "");
+        }
+
+        private void ApplyTdpAutoPref()
+        {
+            var auto = TdpAuto;
+            TdpAutoTile.IsOn = auto;
+            TdpAutoTile.State = auto ? "Activado" : "Desactivado";
+            // Automáticos: los deslizadores siguen al límite y no se tocan a mano
+            SpptSlider.IsEnabled = !auto;
+            FpptSlider.IsEnabled = !auto;
+            if (auto) TdpNote.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnTdpAdvancedClick(object sender, RoutedEventArgs e)
+        {
+            var open = TdpAdvancedBody.Visibility != Visibility.Visible;
+            TdpAdvancedBody.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            TdpAdvancedTile.State = open ? "" : "sPPT y fPPT";
+        }
+
+        private void OnTdpAutoClick(object sender, RoutedEventArgs e)
+        {
+            SetPref("tdpAuto", !TdpAuto);
+            ApplyTdpAutoPref();
+            if (TdpAuto)
             {
-                await RefreshPowerModeAsync();
-                await RefreshTdpAsync();
+                _loading = true;
+                try { SetAutoBursts(); } finally { _loading = false; }
+                ScheduleTdpApply();
             }
-            else
-            {
-                ApplyTdpButton.IsEnabled = true;
-            }
+            UpdateTdpLabels();
         }
 
         // =====================================================================

@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 
 namespace GoSPanel.Service;
@@ -7,13 +7,19 @@ namespace GoSPanel.Service;
 /// SPL / sPPT / fPPT que aplica el firmware de Lenovo en cada modo (Silencio, Equilibrado, Rendimiento), para que el
 /// widget muestre los vatios reales. Cambian enchufada o con batería, y solo se pueden leer los del modo activo (los
 /// identificadores de cada modo devuelven valores sin sentido): se apuntan en state.json («modeLimits», por modo y
-/// fuente) cuando el modo lleva unos segundos activo. Hasta entonces, los vistos en una Legion Go S Z1 Extreme:
-/// enchufada 10/16/30 W (medido 2026-10-19) y con batería 7/15/20 W (los que muestra Legion Space).
+/// fuente) cuando el modo lleva unos segundos activo. Hasta entonces, los medidos en una Legion Go S Z1 Extreme
+/// (2026-10-19): enchufada 10/15/20, 16/25/30 y 30/33/40 W; con batería 10/10/20, 15/15/30 y 25/25/35 W.
 /// </summary>
 internal static class ModeLimits
 {
-    private static readonly Dictionary<string, int> DefaultSplAc = new() { ["quiet"] = 10, ["balanced"] = 16, ["performance"] = 30 };
-    private static readonly Dictionary<string, int> DefaultSplDc = new() { ["quiet"] = 7, ["balanced"] = 15, ["performance"] = 20 };
+    private static readonly Dictionary<string, (int Spl, int Sppt, int Fppt)> DefaultAc = new()
+    {
+        ["quiet"] = (10, 15, 20), ["balanced"] = (16, 25, 30), ["performance"] = (30, 33, 40),
+    };
+    private static readonly Dictionary<string, (int Spl, int Sppt, int Fppt)> DefaultDc = new()
+    {
+        ["quiet"] = (10, 10, 20), ["balanced"] = (15, 15, 30), ["performance"] = (25, 25, 35),
+    };
     private static readonly HashSet<string> Learned = new();
     private static string? _key;
     private static DateTime _since;
@@ -25,7 +31,7 @@ internal static class ModeLimits
         var source = OnAc() ? "ac" : "dc";
         var key = mode + "-" + source;
         if (key != _key) { _key = key; _since = DateTime.UtcNow; }
-        else if (mode != null && DefaultSplAc.ContainsKey(mode) && !Learned.Contains(key) && DateTime.UtcNow - _since > TimeSpan.FromSeconds(3))
+        else if (mode != null && DefaultAc.ContainsKey(mode) && !Learned.Contains(key) && DateTime.UtcNow - _since > TimeSpan.FromSeconds(3))
         {
             try
             {
@@ -49,10 +55,10 @@ internal static class ModeLimits
     private static JsonObject For(string source)
     {
         var saved = SavedState.Load()["modeLimits"] as JsonObject;
-        var defaults = source == "ac" ? DefaultSplAc : DefaultSplDc;
+        var defaults = source == "ac" ? DefaultAc : DefaultDc;
         var result = new JsonObject();
-        foreach (var (mode, spl) in defaults)
-            result[mode] = saved?[mode + "-" + source]?.DeepClone() ?? new JsonObject { ["spl"] = spl };
+        foreach (var (mode, d) in defaults)
+            result[mode] = saved?[mode + "-" + source]?.DeepClone() ?? new JsonObject { ["spl"] = d.Spl, ["sppt"] = d.Sppt, ["fppt"] = d.Fppt };
         return result;
     }
 

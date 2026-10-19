@@ -227,28 +227,51 @@
                                 <c:Tile x:Name="ModeCustom" Grid.Column="3" Vertical="True" Glyph="&#xE434;" Title="—" State="" AutomationProperties.Name="Manual" Tag="custom" Click="OnModeTileClick" />
                             </Grid>
 
-                            <!-- TDP: solo visible en Manual -->
-                            <StackPanel x:Name="TdpPanel" Spacing="4" Margin="0,10,0,0" Visibility="Collapsed">
+                            <!-- Manual, como la Steam Deck: un límite de potencia (SPL); ráfagas (sPPT) y picos (fPPT) se calculan
+                                 solos por encima. Se aplica al soltar el deslizador (sin botón «Aplicar»). Avanzado: tocarlos a mano. -->
+                            <StackPanel x:Name="TdpPanel" Spacing="6" Margin="0,10,0,0" Visibility="Collapsed">
                                 <StackPanel.RenderTransform>
                                     <TranslateTransform x:Name="TdpPanelTransform" />
                                 </StackPanel.RenderTransform>
-                                <Grid>
-                                    <TextBlock FontSize="12.5"><Run Text="SPL" /><Run Text="  sostenido" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                    <TextBlock x:Name="SplValue" Style="{StaticResource ValueText}" />
-                                </Grid>
-                                <Slider x:Name="SplSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="SPL" />
-                                <Grid>
-                                    <TextBlock FontSize="12.5"><Run Text="sPPT" /><Run Text="  ráfagas largas" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                    <TextBlock x:Name="SpptValue" Style="{StaticResource ValueText}" />
-                                </Grid>
-                                <Slider x:Name="SpptSlider" Minimum="5" Maximum="32" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="sPPT" />
-                                <Grid>
-                                    <TextBlock FontSize="12.5"><Run Text="fPPT" /><Run Text="  picos" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                    <TextBlock x:Name="FpptValue" Style="{StaticResource ValueText}" />
-                                </Grid>
-                                <Slider x:Name="FpptSlider" Minimum="5" Maximum="41" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="fPPT" />
-                                <Button x:Name="ApplyTdpButton" Style="{StaticResource ApplyButton}" Content="Aplicar" Margin="0,6,0,0"
-                                        IsEnabled="False" Click="OnApplyTdpClick" />
+                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Padding="12,10,12,12">
+                                    <StackPanel Spacing="4">
+                                        <Grid>
+                                            <TextBlock Text="Límite de potencia" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                                <Run x:Name="SplValue" Text="—" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" /><Run Text=" W" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                                            </TextBlock>
+                                        </Grid>
+                                        <Slider x:Name="SplSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="Límite de potencia" />
+                                        <Grid Margin="0,-6,0,0">
+                                            <TextBlock x:Name="SplMinText" Text="5 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" />
+                                            <TextBlock x:Name="SplMaxText" Text="30 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="9,7" Margin="0,4,0,0">
+                                            <TextBlock x:Name="TdpAutoText" FontSize="11.5" TextWrapping="Wrap" />
+                                        </Border>
+                                        <TextBlock x:Name="TdpNowText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
+                                <!-- Tarjeta: la fila «Avanzado» y sus deslizadores comparten fondo -->
+                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
+                                    <StackPanel>
+                                        <c:Tile Row="sub" x:Name="TdpAdvancedTile" Glyph="&#xE434;" Title="Avanzado" State="sPPT y fPPT" Click="OnTdpAdvancedClick" />
+                                        <StackPanel x:Name="TdpAdvancedBody" Spacing="4" Margin="12,4,12,12" Visibility="Collapsed">
+                                            <c:Tile Row="switch" x:Name="TdpAutoTile" Glyph="&#xE2DE;" Title="Ráfagas y picos automáticos" State="—" Click="OnTdpAutoClick" />
+                                            <Grid Margin="0,6,0,0">
+                                                <TextBlock FontSize="12.5"><Run Text="sPPT" /><Run Text="  ráfagas · hasta 1 min" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
+                                                <TextBlock x:Name="SpptValue" Style="{StaticResource ValueText}" />
+                                            </Grid>
+                                            <Slider x:Name="SpptSlider" Minimum="5" Maximum="32" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="sPPT" />
+                                            <Grid>
+                                                <TextBlock FontSize="12.5"><Run Text="fPPT" /><Run Text="  picos · fracciones de segundo" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
+                                                <TextBlock x:Name="FpptValue" Style="{StaticResource ValueText}" />
+                                            </Grid>
+                                            <Slider x:Name="FpptSlider" Minimum="5" Maximum="41" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="fPPT" />
+                                            <TextBlock x:Name="TdpNote" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}" Visibility="Collapsed" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </StackPanel>
                     </Border>
