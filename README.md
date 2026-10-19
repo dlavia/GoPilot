@@ -154,6 +154,9 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 ## Perfiles por juego
 
 - Un perfil **Global** y uno por juego, que se aplican solos al abrir y cerrar el juego.
+- **Cada juego nuevo recibe su perfil automáticamente** la primera vez que se abre, con los ajustes de ese momento:
+  lo que cambies jugando se queda en ese juego. Si borras un perfil, no se vuelve a crear mientras siga abierto.
+- Detecta también los juegos con antitrampas (Call of Duty, por ejemplo).
 - Cuenta como juego lo que se ejecuta desde una biblioteca (Steam, Epic, Xbox, GOG, EA…), lo que ocupa toda la
   pantalla o lo que ya tiene perfil; las consolas y los programas de Windows nunca.
 - Guardan modo y TDP, CPU Boost, resolución y Hz, Lossless, ajustes de AMD (incluido VRR), luces y giroscopio.
