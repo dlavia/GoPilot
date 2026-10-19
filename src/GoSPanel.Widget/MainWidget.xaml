@@ -390,6 +390,73 @@
                             </Button>
                         </StackPanel>
                     </Border>
+                    <!-- Modo escritorio (como la Steam Deck): el mando hace de ratón cuando no hay juego delante -->
+                    <Border Style="{StaticResource SectionStyle}">
+                        <StackPanel Spacing="8">
+                            <Grid>
+                                <TextBlock Text="MODO ESCRITORIO" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="mando como ratón" Style="{StaticResource SectionHint}" />
+                            </Grid>
+                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
+                                <StackPanel>
+                                    <c:Tile Row="value" x:Name="DesktopTile" Glyph="&#xE1DC;" Title="Modo escritorio" State="—" Click="OnDesktopTileClick" />
+                                    <StackPanel Spacing="8" Margin="12,4,12,12">
+                                        <Grid x:Name="DesktopModeButtons" ColumnSpacing="5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Button Style="{StaticResource FlatButton}" Height="32" Tag="off" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                                <TextBlock Text="Apagado" FontSize="12" FontWeight="SemiBold" />
+                                            </Button>
+                                            <Button Grid.Column="1" Style="{StaticResource FlatButton}" Height="32" Tag="auto" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                                <TextBlock Text="Automático" FontSize="12" FontWeight="SemiBold" />
+                                            </Button>
+                                            <Button Grid.Column="2" Style="{StaticResource FlatButton}" Height="32" Tag="always" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                                <TextBlock Text="Siempre" FontSize="12" FontWeight="SemiBold" />
+                                            </Button>
+                                        </Grid>
+                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="10,8">
+                                            <Grid ColumnSpacing="10" RowSpacing="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Text="Stick derecho" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Column="1" Text="Mover el ratón" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                                <TextBlock Grid.Row="1" Text="RT · LT" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="Clic izquierdo · clic derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                                <TextBlock Grid.Row="2" Text="Stick izquierdo" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Desplazar (rueda)" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                                <TextBlock Grid.Row="3" Text="A · B" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="Intro · Esc" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                                <TextBlock Grid.Row="4" Text="X · Y" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="Teclado en pantalla · vista de tareas" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                                <TextBlock Grid.Row="5" Text="LB · RB" FontSize="11.5" FontWeight="SemiBold" />
+                                                <TextBlock Grid.Row="5" Grid.Column="1" Text="Pestaña anterior · siguiente" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                            </Grid>
+                                        </Border>
+                                        <Grid>
+                                            <TextBlock Text="Velocidad del ratón" FontSize="12" />
+                                            <TextBlock x:Name="DesktopPointerValue" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                        <Slider x:Name="DesktopPointerSlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del ratón" />
+                                        <Grid>
+                                            <TextBlock Text="Velocidad del desplazamiento" FontSize="12" />
+                                            <TextBlock x:Name="DesktopScrollValue" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                        <Slider x:Name="DesktopScrollSlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del desplazamiento" />
+                                        <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
+                                                   Text="Automático: se activa sin juego delante y se apaga al abrir uno. Con el teclado en pantalla abierto, los botones son suyos (Start lo cierra). Para activarlo con un botón, asígnalo en Ajustes › Botones Legion." />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                     <!-- Ajustes avanzados: Sticks / Gatillos / Giroscopio se despliegan debajo (uno a la vez) -->
                     <Border x:Name="AdvancedSection" Style="{StaticResource SectionStyle}" Visibility="Collapsed">
                         <StackPanel Spacing="0"> <!-- sin Spacing: los desplegables ocultos también lo sumaban (hueco grande); cada hijo lleva su margen -->

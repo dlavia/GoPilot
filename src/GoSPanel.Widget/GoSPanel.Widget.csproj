@@ -62,6 +62,9 @@
     <Compile Include="MainWidget.Updates.cs">
       <DependentUpon>MainWidget.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MainWidget.Desktop.cs">
+      <DependentUpon>MainWidget.xaml</DependentUpon>
+    </Compile>
     <Compile Include="BridgeClient.cs" />
     <Compile Include="Controls\Selector.xaml.cs">
       <DependentUpon>Selector.xaml</DependentUpon>

@@ -27,7 +27,14 @@ internal static class ProfileManager
     // Juegos cuyo perfil se ha borrado a mano: no se les vuelve a crear uno solo mientras siga abierto el agente.
     private static readonly HashSet<string> NoAutoProfile = new(StringComparer.OrdinalIgnoreCase);
 
-    public static void Start() => _ = Task.Run(LoopAsync);
+    public static void Start()
+    {
+        // Perfiles creados solos para apps que no son juegos (versiones anteriores contaban Edge, por ejemplo)
+        var wrong = Profiles.Select(p => p.Key).Where(ForegroundTracker.IsIgnored).ToList();
+        foreach (var exe in wrong) Profiles.Remove(exe);
+        if (wrong.Count > 0) Save();
+        _ = Task.Run(LoopAsync);
+    }
 
     /// <summary>¿Hay un perfil guardado para ese ejecutable («juego.exe» en minúsculas)?</summary>
     public static bool HasProfile(string exe) => Profiles.ContainsKey(exe);
@@ -200,7 +207,8 @@ internal static class ProfileManager
 
         // Juego nuevo, sin perfil: se le crea uno con los ajustes de ahora (los de Global), como Armoury Crate. Así lo
         // que se ajuste jugando se queda en ese juego (autoguardado) y la pastilla muestra que se ha detectado.
-        if (Auto && current != null && current.Value.Pid != _globalOverridePid && !_manual
+        // Solo para juegos de una biblioteca (Steam, Epic…): uno reconocido solo por ocupar la pantalla puede no serlo.
+        if (Auto && current != null && current.Value.Pid != _globalOverridePid && !_manual && ForegroundTracker.CurrentIsLibrary
             && Profiles[current.Value.Exe] is not JsonObject && !NoAutoProfile.Contains(current.Value.Exe))
         {
             var profile = await CaptureAsync();

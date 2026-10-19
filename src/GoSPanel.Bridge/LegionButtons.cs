@@ -49,6 +49,7 @@ internal static class LegionButtons
         ("lossless", "Lossless"),
         ("overlay", "Overlay"),
         ("killgame", "Cerrar juego"),
+        ("desktopmode", "Modo escritorio"),
     };
 
     // Valores por defecto: Legion L abre la app Xbox (mantenido, Game Bar), Legion R abre GoPilot y Legion R
@@ -240,6 +241,16 @@ internal static class LegionButtons
     private static readonly object InputLock = new();
     private static readonly byte[] LastInput = new byte[33];
 
+    /// <summary>Copia el último informe del mando (para el modo escritorio). False si lleva más de 1 s sin llegar.</summary>
+    public static bool Snapshot(byte[] target)
+    {
+        lock (InputLock)
+        {
+            Array.Copy(LastInput, target, Math.Min(target.Length, LastInput.Length));
+            return (DateTime.Now - _lastReport).TotalSeconds < 1;
+        }
+    }
+
     public static JsonObject Input()
     {
         lock (InputLock)
@@ -314,6 +325,9 @@ internal static class LegionButtons
                 GameOverlay.ShowToast("Overlay", on ? "Activado" : "Desactivado", '');
                 break;
             case "killgame": ForegroundTracker.Kill(); break;
+            case "desktopmode":
+                GameOverlay.ShowToast("Modo escritorio", DesktopMode.Toggle() ? "Activado" : "Desactivado", '');
+                break;
             case "thermal":
                 // Legion L + Y ya lo atiende el firmware (cambia de modo él solo): aquí solo se muestra el aviso.
                 // En cualquier otra combinación lo cambia GoPilot.

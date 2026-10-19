@@ -85,6 +85,7 @@ namespace GoSPanel.Widget
                 {
                     await RefreshStatusAsync();
                     await FollowPowerModeAsync();
+                    if (_connected) await RefreshDesktopAsync();   // «activo» cambia con la app que hay delante
                 }
                 catch (Exception ex)
                 {
@@ -136,7 +137,8 @@ namespace GoSPanel.Widget
             // una vez dentro, el D-pad avanza de SmallChange en SmallChange (10 % brillo, 5 % volumen, 1 W TDP).
             BuildSwatches();
             foreach (var slider in new[] { BrightnessSlider, VolumeSlider, SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
-                                           LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider })
+                                           LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider,
+                                           DesktopPointerSlider, DesktopScrollSlider })
             {
                 slider.IsFocusEngagementEnabled = true;
                 slider.PreviewKeyDown += OnSliderPreviewKeyDown;
@@ -591,6 +593,7 @@ namespace GoSPanel.Widget
             if (advanced != null) ApplyAdvanced(advanced);
             var fanCurve = await CallAsync("fancurve.get", null, false);
             if (fanCurve != null) ApplyFanCurve(fanCurve);
+            await RefreshDesktopAsync();
         }
 
         // =====================================================================

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 
@@ -28,6 +28,42 @@ internal static class TouchKeyboard
         }
         return new JsonObject { ["toggled"] = true };
     }
+
+    /// <summary>
+    /// ¿Está el teclado táctil en pantalla? En Windows 11 lo dibuja TextInputHost en una ventana CoreWindow que, oculta,
+    /// queda «cloaked» (DWM); en Windows 10, la ventana IPTip_Main_Window de TabTip.
+    /// </summary>
+    public static bool IsVisible()
+    {
+        var hosts = Process.GetProcessesByName("TextInputHost").Select(p => p.Id).ToHashSet();
+        var visible = false;
+        EnumWindows((hwnd, _) =>
+        {
+            GetWindowThreadProcessId(hwnd, out var pid);
+            var cls = new System.Text.StringBuilder(64);
+            GetClassName(hwnd, cls, cls.Capacity);
+            var name = cls.ToString();
+            var candidate = (hosts.Contains((int)pid) && name == "Windows.UI.Core.CoreWindow") || name == "IPTip_Main_Window";
+            if (candidate && IsWindowVisible(hwnd) && !IsCloaked(hwnd) && GetWindowRect(hwnd, out var r) && r.Bottom - r.Top > 100)
+            {
+                visible = true;
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+        return visible;
+    }
+
+    private static bool IsCloaked(IntPtr hwnd) => DwmGetWindowAttribute(hwnd, 14 /*DWMWA_CLOAKED*/, out var cloaked, 4) == 0 && cloaked != 0;
+
+    private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr param);
+    [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
+    [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder name, int max);
+    [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+    [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
 
     [ComImport, Guid("4ce576fa-83dc-4F88-951c-9d0782b4e376")]
     private class UIHostNoLaunch { }

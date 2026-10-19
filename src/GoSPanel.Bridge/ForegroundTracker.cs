@@ -25,7 +25,18 @@ internal static class ForegroundTracker
         "Playnite.FullscreenApp", "GOG Galaxy", "AmazonGames", "HeroicGamesLauncher",
         // Utilidades que viven en carpetas de juegos (Steam) pero no lo son.
         "LosslessScaling", "Lossless Scaling",
+        // Apps de uso normal: en la consola suelen ir maximizadas a toda la pantalla y no son juegos.
+        "msedge", "msedgewebview2", "chrome", "firefox", "brave", "opera", "opera_gx", "vivaldi", "arc",
+        "Discord", "Spotify", "Telegram", "WhatsApp", "Teams", "ms-teams", "slack", "Zoom",
+        "WINWORD", "EXCEL", "POWERPNT", "OUTLOOK", "olk", "ONENOTE", "Acrobat", "AcroRd32", "notepad++", "Code",
+        "vlc", "mpc-hc64", "mpc-be64", "PotPlayerMini64", "obs64", "PowerToys", "PhotosApp", "Microsoft.Photos",
+        "AIDA64", "HWiNFO64", "MSIAfterburner", "RTSS", "Playnite.DesktopApp", "SnippingTool", "ScreenClippingHost",
+        "WindowsCamera", "Calculator", "CalculatorApp", "Notepad", "mspaint", "Paint", "ms-settings",
     };
+
+    /// <summary>¿Es una app que nunca cuenta como juego? («juego.exe» o nombre del proceso)</summary>
+    public static bool IsIgnored(string exeOrName) =>
+        Ignored.Contains(exeOrName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? exeOrName[..^4] : exeOrName);
 
     // Bibliotecas de juegos: lo que se ejecuta desde aquí cuenta como juego.
     private static readonly string[] GameFolders =
@@ -38,7 +49,14 @@ internal static class ForegroundTracker
     private static Timer? _timer;
     private static Tracked? _current;
 
-    private sealed record Tracked(int Pid, DateTime StartTime, string Name, string ProcessName, string? Path);
+    // Library: reconocido por estar en una biblioteca de juegos o tener perfil (no solo por ocupar la pantalla)
+    private sealed record Tracked(int Pid, DateTime StartTime, string Name, string ProcessName, string? Path, bool Library);
+
+    /// <summary>¿El juego actual se reconoció por su biblioteca (Steam, Epic…) o por tener perfil?</summary>
+    public static bool CurrentIsLibrary
+    {
+        get { lock (Lock) return _current is { } c && IsAlive(c) && c.Library; }
+    }
 
     public static void Start() => _timer ??= new Timer(_ => Sample(), null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
@@ -128,12 +146,13 @@ internal static class ForegroundTracker
             catch (Exception) { /* sin información de versión: basta el nombre del proceso */ }
 
             // Lo que no es un juego no sustituye al juego recordado (que puede seguir abierto detrás).
-            if (!IsGame(process.ProcessName, path, hwnd))
+            var kind = GameKind(process.ProcessName, path, hwnd);
+            if (kind == 0)
             {
                 LogOnce(process.Id, $"no es juego: {process.ProcessName} ({path ?? "ruta no legible"})");
                 return;
             }
-            lock (Lock) _current = new Tracked(process.Id, process.StartTime, name, process.ProcessName, path);
+            lock (Lock) _current = new Tracked(process.Id, process.StartTime, name, process.ProcessName, path, kind == 2);
             LogOnce(process.Id, $"juego: {name} ({path})");
         }
         catch (Exception ex)
@@ -166,19 +185,28 @@ internal static class ForegroundTracker
     /// ¿Es un juego? Sí si tiene perfil guardado, si se ejecuta desde una biblioteca de juegos (Steam, Epic, Xbox…)
     /// o si su ventana ocupa toda la pantalla (emuladores, juegos sueltos). Nunca lo de Windows ni las consolas.
     /// </summary>
-    private static bool IsGame(string processName, string? path, IntPtr hwnd)
+    /// <summary>
+    /// ¿Es un juego? 2 = sí, por tener perfil o ejecutarse desde una biblioteca (Steam, Epic, Xbox…); 1 = sí, porque su
+    /// ventana ocupa toda la pantalla sin marco (emuladores, juegos sueltos); 0 = no (Windows, consolas, apps de la
+    /// lista Ignored, o ventanas maximizadas normales: en una consola casi todo va maximizado).
+    /// </summary>
+    private static int GameKind(string processName, string? path, IntPtr hwnd)
     {
-        if (ProfileManager.HasProfile(processName.ToLowerInvariant() + ".exe")) return true;
-        if (IsConsole(hwnd)) return false;
+        if (ProfileManager.HasProfile(processName.ToLowerInvariant() + ".exe")) return 2;
+        if (IsConsole(hwnd)) return 0;
         if (path != null)
         {
             var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows) + @"\";
-            if (path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) return false;   // cmd, notepad, mmc…
-            if (GameFolders.Any(f => path.Contains(f, StringComparison.OrdinalIgnoreCase))) return true;
+            if (path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) return 0;   // cmd, notepad, mmc…
+            if (GameFolders.Any(f => path.Contains(f, StringComparison.OrdinalIgnoreCase))) return 2;
         }
-        // Sin ruta legible (proceso protegido) o fuera de una biblioteca: cuenta si ocupa toda la pantalla
-        return CoversMonitor(hwnd);
+        // Sin ruta legible (proceso protegido) o fuera de una biblioteca: pantalla completa sin marco
+        return CoversMonitor(hwnd) && !HasFrame(hwnd) ? 1 : 0;
     }
+
+    /// <summary>Ventana con barra de título o borde redimensionable (una app maximizada, no un juego).</summary>
+    private static bool HasFrame(IntPtr hwnd) => (GetWindowLong(hwnd, -16 /*GWL_STYLE*/) & (0x00C00000 /*WS_CAPTION*/ | 0x00040000 /*WS_THICKFRAME*/)) != 0;
+    [DllImport("user32.dll")] private static extern int GetWindowLong(IntPtr hwnd, int index);
 
     private static bool IsConsole(IntPtr hwnd)
     {

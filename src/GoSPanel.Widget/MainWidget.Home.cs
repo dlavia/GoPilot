@@ -67,6 +67,7 @@ namespace GoSPanel.Widget
             _homeTiles["autoprofiles"] = Mirror(AutoProfilesTile, "Perfiles auto.");
             _homeTiles["autosave"] = Mirror(AutoSaveTile, "Autoguardado");
             _homeTiles["resume"] = Mirror(ResumeTile, "Tras suspender");
+            _homeTiles["desktop"] = Mirror(DesktopTile, "Escritorio");
 
             foreach (var tile in _homeTiles.Values)
             {
