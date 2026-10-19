@@ -4,7 +4,11 @@
 $ErrorActionPreference = 'Stop'
 try {
     & (Join-Path $PSScriptRoot 'install-service.ps1')
+    # GoPilot sustituye a Legion Space (botones Legion, icono de Game Bar); al desinstalar vuelve a quedar activado
+    Start-Process (Join-Path $env:ProgramFiles 'GoSPanel\Service\GoSPanel.Service.exe') -ArgumentList 'legionspace-off' -Wait -WindowStyle Hidden
     & (Join-Path $PSScriptRoot 'install-widget.ps1')
+    # Widget de Lenovo fuera de Game Bar, Game Bar reiniciado y agente en marcha (en la sesión del usuario, sin elevar)
+    & (Join-Path $PSScriptRoot 'run-as-desktop-user.ps1') -Script (Join-Path $PSScriptRoot 'finish-install-user.ps1') | Out-Null
     Write-Host ''
     Write-Host 'GoPilot instalado. Abre Game Bar (Win + G o Legion R) > Widgets > GoPilot.' -ForegroundColor Green
 }

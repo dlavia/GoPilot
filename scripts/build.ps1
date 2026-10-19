@@ -46,6 +46,6 @@ $msbuild = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.
 if ($LASTEXITCODE) { throw 'Fallo al compilar el widget' }
 
 Copy-Item ([IO.Path]::ChangeExtension($pfx, '.cer')) (Join-Path $dist 'GoSPanel.cer')
-'Instalar GoPilot.cmd', 'install.ps1', 'install-service.ps1', 'update-service.ps1', 'install-widget.ps1', 'install-widget-user.ps1', 'run-as-desktop-user.ps1', 'uninstall.ps1' |
+'Instalar GoPilot.cmd', 'install.ps1', 'install-service.ps1', 'update-service.ps1', 'install-widget.ps1', 'install-widget-user.ps1', 'run-as-desktop-user.ps1', 'finish-install-user.ps1', 'uninstall.ps1' |
     ForEach-Object { Copy-Item (Join-Path $PSScriptRoot $_) $dist }
 Write-Host "Listo: $dist"

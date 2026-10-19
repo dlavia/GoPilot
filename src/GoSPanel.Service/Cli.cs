@@ -40,6 +40,13 @@ internal static class Cli
                     Print(output);
                     return 0;
 
+                // Al instalar (install.ps1): GoPilot sustituye a Legion Space; el desinstalador lo vuelve a activar.
+                case "legionspace-off":
+                    Print(LegionSpaceControl.Get()["installed"]?.GetValue<bool>() == true
+                        ? LegionSpaceControl.Set(false)
+                        : new JsonObject { ["installed"] = false });
+                    return 0;
+
                 case "cmd" when args.Length >= 2:
                     var request = JsonNode.Parse(args[1]) as JsonObject ?? throw new ArgumentException("JSON no válido");
                     Print(new CommandRouter().Handle(request));
