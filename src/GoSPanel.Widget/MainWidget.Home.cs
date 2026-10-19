@@ -382,7 +382,7 @@ namespace GoSPanel.Widget
             if (_editingHome) LinkGrid(available, homeLast ?? (Control)VolumeSlider, ResetHomeButton);
 
             // Perfil ↔ deslizadores ↔ baldosas
-            if (_tab == 0) LinkProfileTo(BrightnessSlider);
+            LinkHomeTop();
             BrightnessSlider.XYFocusDown = VolumeSlider;
             VolumeSlider.XYFocusUp = BrightnessSlider;
             VolumeSlider.XYFocusDown = home.FirstOrDefault(c => c != null) ?? afterHome;

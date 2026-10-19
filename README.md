@@ -100,13 +100,17 @@ Protocolo: `{"cmd":"tdp.set","args":{"spl":15,"sppt":18,"fppt":20}}` → `{"ok":
 
 ## Instalación (en la consola)
 
-1. Copia la carpeta `dist` a la consola.
-2. PowerShell **como administrador**:
+1. Descarga `GoPilot-<versión>.zip` de [Releases](https://github.com/dlavia/GoPilot/releases/latest) y descomprímelo.
+2. PowerShell **como administrador**, en esa carpeta:
    ```powershell
-   .\install-service.ps1       # servicio GoSPanel (SYSTEM)
-   .\install-widget.ps1        # confía en el certificado e instala el widget
+   .\install.ps1               # servicio (SYSTEM) + certificado + widget
    ```
 3. Abre Game Bar (Win+G o Legion R) → Widgets → **GoPilot**.
+
+**Actualizar:** GoPilot avisa en Inicio cuando hay una versión nueva y se instala desde Ajustes › Actualizaciones
+(solo instala paquetes firmados con el mismo certificado). **Desinstalar:** Ajustes › Actualizaciones ›
+«Desinstalar GoPilot» (pulsar dos veces), o `uninstall.ps1` como administrador. Quita el widget, el servicio, sus
+datos y el certificado, y deja Legion Space activado.
 
 > El paquete va firmado con un certificado propio. Con **Smart App Control** activado Windows no lo deja
 > instalar; para eso haría falta una firma de confianza (p. ej. Azure Artifact Signing).
@@ -120,6 +124,12 @@ Requisitos: Visual Studio 2022 con la carga de trabajo UWP, SDK de .NET 8 y Wind
 ```
 
 La primera vez crea un certificado de desarrollo en `certs\` (no se sube al repositorio).
+
+Publicar una versión (compila, etiqueta y la sube a Releases con `latest.json`, que es lo que consultan los widgets):
+
+```powershell
+.\scripts\release.ps1 -Notes "- Novedad 1`n- Novedad 2"
+```
 
 ---
 

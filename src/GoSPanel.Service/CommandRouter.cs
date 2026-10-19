@@ -17,7 +17,17 @@ public sealed class CommandRouter
         var args = request["args"] as JsonObject ?? new JsonObject();
         try
         {
-            JsonNode? data;
+            // Actualizaciones y desinstalación: no tocan hardware y pueden tardar (red), así que van sin el candado.
+            JsonNode? data = cmd switch
+            {
+                "update.check" => Updater.CheckAsync(args["force"]?.GetValue<bool>() == true).GetAwaiter().GetResult(),
+                "update.status" => Updater.Status(),
+                "update.install" => Updater.Install(),
+                "uninstall" => Updater.Uninstall(),
+                _ => null,
+            };
+            if (data != null) return new JsonObject { ["ok"] = true, ["data"] = data };
+
             lock (_hardwareLock)
             {
                 data = cmd switch

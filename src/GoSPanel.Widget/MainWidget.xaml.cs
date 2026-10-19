@@ -94,6 +94,7 @@ namespace GoSPanel.Widget
             {
                 ApplyThemeShapes();
                 InitHomeTiles();
+                InitUpdates();
                 TabsBar.SizeChanged += (_, __) => MovePill(false);
                 MovePill(false);
                 Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
@@ -101,6 +102,8 @@ namespace GoSPanel.Widget
                 _timer.Start();
                 try { await RefreshAllAsync(); }
                 catch (Exception ex) { LogError("load", ex); }
+                try { await RefreshUpdatesAsync(); }
+                catch (Exception ex) { LogError("updates", ex); }
                 await BridgeClient.EnsureStartupTaskAsync();
             };
             Unloaded += (s, e) =>
@@ -270,7 +273,7 @@ namespace GoSPanel.Widget
             to.ChangeView(null, 0, null, true);
             to.UpdateLayout();
             var first = FocusManager.FindFirstFocusableElement(to) as Control;
-            LinkProfileTo(index == 0 ? BrightnessSlider : first);
+            LinkProfileTo(index == 0 ? HomeFirstControl : first);
             if (first != null) first.Focus(FocusState.Keyboard);
             if (!_animate)
             {
@@ -1325,9 +1328,9 @@ namespace GoSPanel.Widget
         {
             var v = Windows.ApplicationModel.Package.Current.Id.Version;
             AboutText.Text = "GoPilot " + v.Major + "." + v.Minor + "." + v.Build + "." + v.Revision
+                             + " · licencia MIT · github.com/dlavia/GoPilot"
                              + "\nServicio: " + (_connected ? "conectado" : "sin conexión")
-                             + " · Agente: " + (_connected ? "activo" : "—")
-                             + "\nLegion Go S · Z1 Extreme";
+                             + " · Agente: " + (_connected ? "activo" : "—");
         }
 
         // =====================================================================
@@ -2035,19 +2038,6 @@ namespace GoSPanel.Widget
             _lastQuickInput = DateTime.UtcNow;
             var value = e.NewValue;
             _volume.Run(() => CallAsync("volume.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
-        }
-
-        // =====================================================================
-        // Diagnóstico
-        // =====================================================================
-
-        private async void OnProbeClick(object sender, RoutedEventArgs e)
-        {
-            MessageText.Text = "Explorando…";
-            var response = await BridgeClient.SendAsync("lenovo.probe");
-            MessageText.Text = response.GetNamedBoolean("ok", false)
-                ? response.GetNamedValue("data").Stringify()
-                : "Error: " + response.GetNamedString("error", "desconocido");
         }
 
         // =====================================================================

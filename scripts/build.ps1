@@ -2,7 +2,7 @@
 #   dist\service\           servicio (lo instala install-service.ps1)
 #   dist\widget\*.msix      widget firmado
 #   dist\GoSPanel.cer       certificado para confiar en el MSIX
-#   dist\*.ps1              scripts de instalación
+#   dist\*.ps1              scripts de instalación (install.ps1 hace todo) y desinstalación
 param([ValidateSet('Debug', 'Release')][string]$Configuration = 'Release')
 
 $ErrorActionPreference = 'Stop'
@@ -16,6 +16,13 @@ New-Item -ItemType Directory -Force $dist | Out-Null
 
 dotnet publish (Join-Path $root 'src\GoSPanel.Service') -c $Configuration -o (Join-Path $dist 'service') -nologo
 if ($LASTEXITCODE) { throw 'Fallo al publicar el servicio' }
+Remove-Item (Join-Path $dist 'service\*.pdb')
+# Firmado con el mismo certificado que el widget: apply-update.ps1 no instala un servicio con otra firma.
+$signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1
+& $signtool.FullName sign /q /fd SHA256 /f $pfx /p gospanel (Join-Path $dist 'service\GoSPanel.Service.exe')
+if ($LASTEXITCODE) { throw 'Fallo al firmar el servicio' }
+# Los scripts de actualización y desinstalación viajan con el servicio (los ejecuta él).
+'apply-update.ps1', 'uninstall.ps1' | ForEach-Object { Copy-Item (Join-Path $PSScriptRoot $_) (Join-Path $dist 'service') }
 
 # Subir la revisión del paquete en cada compilación (Windows no reinstala la misma versión).
 $manifest = Join-Path $root 'src\GoSPanel.Widget\Package.appxmanifest'
@@ -27,7 +34,8 @@ Write-Host "Versión del paquete: $($xml.Package.Identity.Version)"
 
 & (Join-Path $PSScriptRoot 'make-sounds.ps1')
 
-$msbuild = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+# MSBuild de 64 bits: Smart App Control bloquea el genxbf.dll x86 del SDK (no está firmado) que carga el de 32.
+$msbuild = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
 & $msbuild (Join-Path $root 'src\GoSPanel.Widget\GoSPanel.Widget.csproj') -restore -nologo -v:m `
     "-p:Configuration=$Configuration" -p:Platform=x64 `
     -p:GenerateAppxPackageOnBuild=true -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never `
@@ -36,6 +44,6 @@ $msbuild = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.
 if ($LASTEXITCODE) { throw 'Fallo al compilar el widget' }
 
 Copy-Item ([IO.Path]::ChangeExtension($pfx, '.cer')) (Join-Path $dist 'GoSPanel.cer')
-'install-service.ps1', 'update-service.ps1', 'install-widget.ps1', 'install-widget-user.ps1', 'run-as-desktop-user.ps1' |
+'install.ps1', 'install-service.ps1', 'update-service.ps1', 'install-widget.ps1', 'install-widget-user.ps1', 'run-as-desktop-user.ps1', 'uninstall.ps1' |
     ForEach-Object { Copy-Item (Join-Path $PSScriptRoot $_) $dist }
 Write-Host "Listo: $dist"
