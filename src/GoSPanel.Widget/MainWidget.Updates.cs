@@ -35,6 +35,7 @@ namespace GoSPanel.Widget
         private void InitUpdates()
         {
             AutoUpdateTile.IsOn = Pref("autoUpdate", true);
+            AutoUpdateTile.State = AutoUpdateTile.IsOn ? "Activado" : "Desactivado";   // en las filas con interruptor no se ve
             // Con el mando, X sobre el aviso lo oculta (la ✕ es para el táctil).
             UpdateNoticeButton.AddHandler(KeyDownEvent, new KeyEventHandler((s, e) =>
             {
@@ -291,6 +292,7 @@ namespace GoSPanel.Widget
             var enabled = !Pref("autoUpdate", true);
             SetPref("autoUpdate", enabled);
             AutoUpdateTile.IsOn = enabled;
+            AutoUpdateTile.State = enabled ? "Activado" : "Desactivado";
             if (enabled) await CheckUpdatesAsync(false);
         }
 

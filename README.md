@@ -4,7 +4,11 @@
 Rendimiento, pantalla, mando, luces, botones Legion y perfiles por juego en un widget pensado para usarse con el
 mando, sin salir del juego. Sustituye a Legion Space: más ligero, más rápido y con más opciones.
 
-[**Descargar la última versión**](https://github.com/dlavia/GoPilot/releases/latest) · Licencia [MIT](LICENSE)
+[**Descargar la última versión**](https://github.com/dlavia/GoPilot/releases/latest) · Licencia [MIT](LICENSE) · [English](README.en.md)
+
+<p align="center">
+  <img src="docs/img/pestanas.gif" width="340" alt="GoPilot en Xbox Game Bar: cambio entre las pestañas Inicio, Potencia, Pantalla, Equipo y Ajustes">
+</p>
 
 > Proyecto personal, no afiliado a Lenovo, AMD ni Microsoft. Probado en una Legion Go S **Z1 Extreme**
 > (modelo 83N6, BIOS S0CN27WW) con Windows 11. Úsalo bajo tu responsabilidad: cambia ajustes de la BIOS
@@ -67,6 +71,8 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 
 ### Inicio
 
+<img src="docs/img/inicio.png" width="260" align="right" alt="Pestaña Inicio: brillo, volumen y baldosas rápidas">
+
 - **Brillo y volumen** siempre a mano.
 - **Baldosas de acceso rápido editables** («Editar baldosas»): quitar (X o mantener A), añadir (+) y cambiar de sitio
   (A sobre una y A sobre otra). Por defecto salen 15; hay **35** para elegir:
@@ -82,7 +88,11 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 - **Cerrar juego**: cierra el juego en primer plano (pulsar dos veces), útil si se queda colgado.
 - **Aviso de actualización** arriba cuando hay versión nueva.
 
+<br clear="right">
+
 ### Potencia
+
+<img src="docs/img/potencia.png" width="260" align="right" alt="Pestaña Potencia: modos con sus vatios, CPU Boost y ventilador">
 
 - **Modos de Lenovo** con sus vatios reales, que el firmware cambia según esté enchufada o con batería
   (límite sostenido / ráfagas / picos):
@@ -101,7 +111,11 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 - **Ventilador al máximo** y **curva del ventilador** propia (en modo Manual).
 - Al salir de la suspensión se vuelve a aplicar todo (el firmware a veces vuelve a sus valores).
 
+<br clear="right">
+
 ### Pantalla
+
+<img src="docs/img/pantalla.png" width="260" align="right" alt="Pestaña Pantalla: resolución, refresco y ajustes de AMD Radeon">
 
 - **Resolución** y **frecuencia de refresco** (hasta 120 Hz).
 - **VRR (FreeSync)**: al activarlo también se activa el ajuste de Windows para juegos en ventana o sin bordes.
@@ -119,7 +133,11 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 
 - **Lossless Scaling**: activar o desactivar su escalado con el juego delante (el estado se lee de su ventana real).
 
+<br clear="right">
+
 ### Equipo (mando)
+
+<img src="docs/img/equipo-avanzado.png" width="260" align="right" alt="Pestaña Equipo: ajustes del mando y ajustes avanzados">
 
 - **Luces de los sticks** (Ajustes avanzados › Luces): 10 colores, brillo y velocidad, con estos efectos:
 
@@ -140,7 +158,11 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
   - **Giroscopio**: como ratón, como stick izquierdo o como stick derecho, con sensibilidad.
 - **Restablecer el mando de fábrica**.
 
+<br clear="right">
+
 ### Ajustes
+
+<img src="docs/img/ajustes.png" width="260" align="right" alt="Pestaña Ajustes: interfaz, overlay, carga de la batería, tema y sonidos">
 
 - **Datos del pie** (visibles u ocultos), **overlay en los juegos**, **tema** (Sencillo o Contraste, con el color de
   acento de Windows), **animaciones**, **sonidos** y **carga solo hasta el 80 %** (con la salud de la batería).
@@ -148,6 +170,8 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 - **Perfiles**: lista de perfiles, aplicarlos automáticamente y guardar cambios automáticamente.
 - **Comportamiento**: reaplicar ajustes tras suspender y cada cuánto se actualizan los datos.
 - **Actualizaciones**: versión, novedades, buscar automáticamente y desinstalar.
+
+<br clear="right">
 
 ---
 
