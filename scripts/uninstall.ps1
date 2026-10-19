@@ -68,11 +68,16 @@ Get-ScheduledTask -TaskName 'GoSPanel-*' -ErrorAction SilentlyContinue |
 Start-Sleep -Seconds 1
 Remove-Item (Join-Path $env:ProgramFiles 'GoSPanel') -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $env:ProgramData 'GoSPanel') -Recurse -Force -ErrorAction SilentlyContinue
+# Restos de versiones que Windows no pudo borrar (un archivo abierto al quitarlas: la fuente de iconos, el agente…)
+Get-ChildItem (Join-Path $env:ProgramFiles 'WindowsApps') -Filter 'GoSPanel_*' -ErrorAction SilentlyContinue |
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 Get-ChildItem Cert:\LocalMachine\TrustedPeople | Where-Object Subject -eq 'CN=GoSPanel Dev' | Remove-Item
 
 # Game Bar vuelve a leer el hueco del fabricante al abrirse
 Get-Process GameBar, GameBarFTServer -ErrorAction SilentlyContinue | Stop-Process -Force
 
 Stop-Transcript | Out-Null
+# No queda ni el registro (si algo falla, ejecutar este script a mano muestra la salida)
+Remove-Item (Join-Path $env:TEMP 'gopilot-uninstall.log') -Force -ErrorAction SilentlyContinue
 Unregister-ScheduledTask -TaskName 'GoSPanel-Uninstall' -Confirm:$false -ErrorAction SilentlyContinue
 Remove-Item $PSCommandPath -Force -ErrorAction SilentlyContinue

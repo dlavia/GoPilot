@@ -100,6 +100,10 @@ try {
 
     Remove-Item $backup -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $Source -Recurse -Force -ErrorAction SilentlyContinue
+    # Carpetas de versiones anteriores que Windows no pudo borrar (tenían un archivo abierto): nunca la instalada
+    $keep = @(Get-AppxPackage -AllUsers GoSPanel | ForEach-Object PackageFullName)
+    Get-ChildItem (Join-Path $env:ProgramFiles 'WindowsApps') -Filter 'GoSPanel_*' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notin $keep } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
     Write-Status 'done' "Actualizado a $version"
 }
 catch {
