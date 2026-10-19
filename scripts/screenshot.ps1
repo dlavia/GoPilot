@@ -2,7 +2,7 @@
 param([string]$Out = 'C:\GoSPanel\shot.png', [switch]$LaunchWidget)
 
 if ($LaunchWidget) {
-    Start-Process "shell:AppsFolder\$((Get-AppxPackage GoSPanel).PackageFamilyName)!App"
+    & (Join-Path $PSScriptRoot 'open-standalone.ps1')
     Start-Sleep -Seconds 8
 }
 

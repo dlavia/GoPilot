@@ -51,6 +51,15 @@ namespace GoSPanel.Widget
         // Lanzado como app normal (fuera de Game Bar): útil para depurar la interfaz.
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            // GoPilot es un widget: abierto como aplicación (menú Inicio, o Windows al reiniciarlo tras actualizar)
+            // se abre en Game Bar y esta ventana se cierra. Solo los scripts de prueba lo abren como app («standalone»).
+            if (e.Arguments != "standalone")
+            {
+                var open = Windows.System.Launcher.LaunchUriAsync(new System.Uri("ms-gamebar://toggleForeground/activate/GoSPanel_3ncfs0ed3kzx8_App_GoSPanel"));
+                // Si este proceso ya tiene el widget abierto en Game Bar, no se cierra
+                open.Completed = (op, status) => { if (_widgets.Count == 0) Exit(); };
+                return;
+            }
             if (Window.Current.Content == null)
             {
                 // Fuera de Game Bar no hay fondo del host detrás del contenido translúcido.

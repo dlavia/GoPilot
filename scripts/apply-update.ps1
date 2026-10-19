@@ -84,8 +84,12 @@ try {
     # actualización del framework y reinicie todas las apps que las usan (Xbox, Game Bar…): minutos en vez de segundos.
     $add = "Add-AppxPackage -Path '$($msix.FullName)' -ForceApplicationShutdown"
     $install = if ($deps) { "try { $add -ErrorAction Stop } catch { $add -DependencyPath $deps }" } else { $add }
-    # Tras instalar: reiniciar Game Bar (si no, no muestra el widget nuevo) y volver a arrancar el agente.
+    # Antes de instalar se cierra todo lo del paquete: si Windows lo encuentra abierto, al terminar lo «reinicia»
+    # como aplicación normal (ventana a pantalla completa en vez de widget). Después se reinicia Game Bar (si no,
+    # no muestra el widget nuevo) y se vuelve a arrancar el agente.
+    $close = 'Get-Process GameBar, GameBarFTServer, XboxGameBarWidgets, GoSPanel.Widget, GoSPanel.Bridge -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Milliseconds 500'
     Invoke-AsDesktopUser ((
+        $close,
         $install,
         'Get-Process GameBar, GameBarFTServer, XboxGameBarWidgets, GoSPanel.Widget -ErrorAction SilentlyContinue | Stop-Process -Force',
         '$p = Get-AppxPackage GoSPanel',
