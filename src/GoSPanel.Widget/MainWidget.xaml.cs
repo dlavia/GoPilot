@@ -1828,6 +1828,7 @@ namespace GoSPanel.Widget
             }
             _customSpl = (int)SplSlider.Value;
             ModeCustom.Title = _customSpl + " W";
+            _tdpLoaded = true;
             SplMinText.Text = SplSlider.Minimum.ToString("0") + " W";
             SplMaxText.Text = SplSlider.Maximum.ToString("0") + " W";
             ApplyTdpAutoPref();
@@ -1935,12 +1936,15 @@ namespace GoSPanel.Widget
         // ---------------------------------------------------------------------
 
         private DispatcherTimer _tdpApplyTimer;
+        // Los Slider con Minimum > 0 lanzan ValueChanged durante InitializeComponent, antes de que existan los demás
+        // controles: hasta leer los valores reales (RefreshTdpAsync) no se reacciona ni, sobre todo, se aplica nada.
+        private bool _tdpLoaded;
 
         private bool TdpAuto => Pref("tdpAuto", true);
 
         private void OnTdpSliderChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (SplSlider == null || SpptSlider == null || FpptSlider == null) return;
+            if (!_tdpLoaded) return;
             if (!_loading)
             {
                 string note = null;
@@ -2026,7 +2030,7 @@ namespace GoSPanel.Widget
 
         private void UpdateTdpLabels()
         {
-            if (SplValue == null) return;
+            if (!_tdpLoaded) return;
             SplValue.Text = SplSlider.Value.ToString("0");
             SpptValue.Text = Watts(SpptSlider);
             FpptValue.Text = Watts(FpptSlider);
