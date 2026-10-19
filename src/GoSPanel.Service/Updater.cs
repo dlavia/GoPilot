@@ -155,6 +155,11 @@ internal static class Updater
     /// </summary>
     public static JsonObject Uninstall()
     {
+        // Lo que solo sabe deshacer el servicio: dispositivos desactivados desde GoPilot y la directiva de Ctrl+Alt+Supr
+        try { TouchDevices.SetTouchpad(true); } catch (Exception) { }
+        try { TouchDevices.SetTouchscreen(true); } catch (Exception) { }
+        try { SecureAttention.Restore(); } catch (Exception) { }
+
         var copy = Path.Combine(Path.GetTempPath(), "gopilot-uninstall.ps1");
         File.Copy(Path.Combine(ServiceFolder, "uninstall.ps1"), copy, true);
         RunAsSystem("GoSPanel-Uninstall", copy, "");

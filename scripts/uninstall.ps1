@@ -35,8 +35,28 @@ $state = Join-Path $env:ProgramData 'GoSPanel\state.json'
 if ((Get-ItemProperty $key -ErrorAction SilentlyContinue).OEMGameBarwidget -eq 'GoSPanel_3ncfs0ed3kzx8') {
     $original = $null
     if (Test-Path $state) { $original = (Get-Content $state -Raw | ConvertFrom-Json).oemWidgetOriginal }
+    # Sin valor guardado: el de Lenovo si su widget está en el equipo (es el que trae la consola de fábrica)
+    if (-not $original -and (Get-AppxProvisionedPackage -Online | Where-Object DisplayName -eq 'LegionGoGameBarWidget')) {
+        $original = 'LegionGoGameBarWidget_ra2g5j82mn5h8'
+    }
     if ($original) { Set-ItemProperty $key OEMGameBarwidget $original }
     else { Remove-ItemProperty $key OEMGameBarwidget }
+}
+
+# Iluminación dinámica: quitar GoPilot de la lista de apps de luces de cada usuario (general y por dispositivo)
+# y renumerar el resto en su orden («1» es la que manda).
+foreach ($hive in Get-ChildItem Registry::HKEY_USERS | Where-Object PSChildName -match '^S-1-5-21-[\d-]+$') {
+    $lighting = Join-Path $hive.PSPath 'Software\Microsoft\Lighting'
+    $lists = @(Join-Path $lighting 'Providers') + @(Get-ChildItem (Join-Path $lighting 'Devices') -ErrorAction SilentlyContinue |
+        ForEach-Object { Join-Path $_.PSPath 'Providers' })
+    foreach ($list in $lists | Where-Object { Test-Path $_ }) {
+        $item = Get-ItemProperty $list
+        $names = @($item.PSObject.Properties | Where-Object { $_.Name -match '^\d+$' } | Sort-Object { [int]$_.Name })
+        if (-not ($names | Where-Object Value -eq 'GoSPanel_3ncfs0ed3kzx8')) { continue }
+        $rest = @($names | Where-Object Value -ne 'GoSPanel_3ncfs0ed3kzx8' | ForEach-Object Value)
+        $names | ForEach-Object { Remove-ItemProperty $list $_.Name }
+        for ($i = 0; $i -lt $rest.Count; $i++) { Set-ItemProperty $list ([string]($i + 1)) $rest[$i] }
+    }
 }
 
 # 4. Servicio, tareas, archivos y certificado
