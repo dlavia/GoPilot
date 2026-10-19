@@ -103,7 +103,11 @@ Protocolo: `{"cmd":"tdp.set","args":{"spl":15,"sppt":18,"fppt":20}}` → `{"ok":
 1. Descarga `GoPilot-<versión>.zip` de [Releases](https://github.com/dlavia/GoPilot/releases/latest) y descomprímelo.
 2. Doble clic en **`Instalar GoPilot.cmd`** y acepta el aviso de administrador (instala el servicio, el certificado
    y el widget). También vale `.\install.ps1` en PowerShell como administrador.
-3. Abre Game Bar (Win+G) → Widgets → **GoPilot**.
+3. Abre Game Bar (Win+G o **Legion R**): GoPilot ocupa el primer icono, el de Legion Space.
+
+Al instalarlo, GoPilot **sustituye a Legion Space**: lo desactiva (sin desinstalarlo) y se queda con los botones Legion
+y su sitio en Game Bar. Se puede volver a activar en Ajustes › Botones Legion, y al desinstalar GoPilot vuelve solo.
+Windows avisa al ejecutar el instalador descargado («Windows protegió tu PC» › Más información › Ejecutar de todas formas).
 
 **Actualizar:** GoPilot avisa en Inicio cuando hay una versión nueva y se instala desde Ajustes › Actualizaciones
 (solo instala paquetes firmados con el mismo certificado). **Desinstalar:** Ajustes › Actualizaciones ›
