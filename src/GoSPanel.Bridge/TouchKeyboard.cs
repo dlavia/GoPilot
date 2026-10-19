@@ -33,10 +33,13 @@ internal static class TouchKeyboard
     /// ¿Está el teclado táctil en pantalla? En Windows 11 lo dibuja TextInputHost en una ventana CoreWindow que, oculta,
     /// queda «cloaked» (DWM); en Windows 10, la ventana IPTip_Main_Window de TabTip.
     /// </summary>
-    public static bool IsVisible()
+    public static bool IsVisible() => VisibleCenter() != null;
+
+    /// <summary>Centro del teclado en pantalla (píxeles físicos), o null si no se ve.</summary>
+    public static (int X, int Y)? VisibleCenter()
     {
         var hosts = Process.GetProcessesByName("TextInputHost").Select(p => p.Id).ToHashSet();
-        var visible = false;
+        (int X, int Y)? center = null;
         EnumWindows((hwnd, _) =>
         {
             GetWindowThreadProcessId(hwnd, out var pid);
@@ -46,12 +49,12 @@ internal static class TouchKeyboard
             var candidate = (hosts.Contains((int)pid) && name == "Windows.UI.Core.CoreWindow") || name == "IPTip_Main_Window";
             if (candidate && IsWindowVisible(hwnd) && !IsCloaked(hwnd) && GetWindowRect(hwnd, out var r) && r.Bottom - r.Top > 100)
             {
-                visible = true;
+                center = ((r.Left + r.Right) / 2, (r.Top + r.Bottom) / 2);
                 return false;
             }
             return true;
         }, IntPtr.Zero);
-        return visible;
+        return center;
     }
 
     private static bool IsCloaked(IntPtr hwnd) => DwmGetWindowAttribute(hwnd, 14 /*DWMWA_CLOAKED*/, out var cloaked, 4) == 0 && cloaked != 0;
