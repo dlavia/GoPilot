@@ -10,6 +10,12 @@ mando, sin salir del juego. Sustituye a Legion Space: más ligero, más rápido 
   <img src="docs/img/pestanas.gif" width="340" alt="GoPilot en Xbox Game Bar: cambio entre las pestañas Inicio, Potencia, Pantalla, Equipo y Ajustes">
 </p>
 
+**Se siente parte de Windows y de Xbox:**
+
+- Usa el **color de acento de Windows**: cámbialo en Configuración › Personalización › Colores y GoPilot lo sigue.
+- **Sonidos de navegación de la app Xbox**, los mismos que suenan en el resto de la consola.
+- Ocupa el **sitio del fabricante en Game Bar** (el primer icono) y se abre con **Legion R**, como Legion Space.
+
 > Proyecto personal, no afiliado a Lenovo, AMD ni Microsoft. Probado en una Legion Go S **Z1 Extreme**
 > (modelo 83N6, BIOS S0CN27WW) con Windows 11. Úsalo bajo tu responsabilidad: cambia ajustes de la BIOS
 > (TDP, ventilador, carga) y del firmware del mando, siempre dentro de los límites que permite el propio firmware.
@@ -87,6 +93,10 @@ la pantalla táctil si estaban desactivados y se quitan el servicio, los datos, 
 
 - **Cerrar juego**: cierra el juego en primer plano (pulsar dos veces), útil si se queda colgado.
 - **Aviso de actualización** arriba cuando hay versión nueva.
+
+<p align="center">
+  <img src="docs/img/editar-baldosas.gif" width="300" alt="Editar baldosas: intercambiar dos baldosas, añadir una de las disponibles y restablecer">
+</p>
 
 <br clear="right">
 

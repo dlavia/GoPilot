@@ -10,6 +10,12 @@ without leaving your game. It replaces Legion Space: lighter, faster and with mo
   <img src="docs/img/pestanas.gif" width="340" alt="GoPilot in Xbox Game Bar: switching between the Home, Power, Display, Device and Settings tabs">
 </p>
 
+**It feels part of Windows and Xbox:**
+
+- It uses the **Windows accent colour**: change it in Settings › Personalisation › Colours and GoPilot follows.
+- **Navigation sounds from the Xbox app**, the same ones you hear across the console.
+- It takes the **manufacturer's slot in Game Bar** (the first icon) and opens with **Legion R**, like Legion Space.
+
 > Personal project, not affiliated with Lenovo, AMD or Microsoft. Tested on a Legion Go S **Z1 Extreme**
 > (model 83N6, BIOS S0CN27WW) with Windows 11. Use it at your own risk: it changes BIOS settings (TDP, fan, charging)
 > and controller firmware settings, always within the limits the firmware itself allows.
@@ -89,6 +95,10 @@ screen are re-enabled if they were off, and the service, data, scheduled tasks a
 
 - **Close game**: closes the foreground game (press twice), handy if it hangs.
 - **Update notice** at the top when a new version is out.
+
+<p align="center">
+  <img src="docs/img/editar-baldosas.gif" width="300" alt="Editing tiles: swapping two tiles, adding an available one and resetting">
+</p>
 
 <br clear="right">
 
