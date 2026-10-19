@@ -18,7 +18,11 @@ function Write-Status([string]$state, [string]$message) {
 function Invoke-AsDesktopUser([string]$command) {
     $user = (Get-CimInstance Win32_ComputerSystem).UserName
     if (-not $user) { throw 'No hay ningún usuario con sesión iniciada' }
+    # La carpeta solo la pueden modificar SYSTEM y administradores: el registro se crea aquí y se le da permiso al
+    # usuario solo sobre ese archivo (si no puede abrirlo, PowerShell aborta el comando antes de empezar).
     $log = Join-Path $folder 'user-step.log'
+    Set-Content $log '' -Encoding UTF8
+    icacls.exe $log /grant "$($user):(M)" | Out-Null
     $taskName = 'GoSPanel-UpdateUser'
     # conhost --headless: sin ventana que robe el foco al juego
     $action = New-ScheduledTaskAction -Execute 'conhost.exe' `
@@ -76,10 +80,13 @@ try {
     Write-Status 'installing' 'Actualizando el widget'
     $deps = (Get-ChildItem (Join-Path $msix.DirectoryName 'Dependencies\x64') -Filter '*.appx' -ErrorAction SilentlyContinue |
         ForEach-Object { "'$($_.FullName)'" }) -join ','
-    $depArg = if ($deps) { "-DependencyPath $deps" } else { '' }
+    # Las dependencias (VCLibs, .NET Native) solo si faltan: pasarlas siempre hace que Windows las trate como una
+    # actualización del framework y reinicie todas las apps que las usan (Xbox, Game Bar…): minutos en vez de segundos.
+    $add = "Add-AppxPackage -Path '$($msix.FullName)' -ForceApplicationShutdown"
+    $install = if ($deps) { "try { $add -ErrorAction Stop } catch { $add -DependencyPath $deps }" } else { $add }
     # Tras instalar: reiniciar Game Bar (si no, no muestra el widget nuevo) y volver a arrancar el agente.
     Invoke-AsDesktopUser ((
-        "Add-AppxPackage -Path '$($msix.FullName)' $depArg -ForceApplicationShutdown",
+        $install,
         'Get-Process GameBar, GameBarFTServer, XboxGameBarWidgets, GoSPanel.Widget -ErrorAction SilentlyContinue | Stop-Process -Force',
         '$p = Get-AppxPackage GoSPanel',
         "Invoke-CommandInDesktopPackage -PackageFamilyName `$p.PackageFamilyName -AppId App -Command (Join-Path `$p.InstallLocation 'Bridge\GoSPanel.Bridge.exe') -Args 'relay'"

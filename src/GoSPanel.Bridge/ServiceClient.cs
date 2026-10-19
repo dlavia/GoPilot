@@ -25,9 +25,12 @@ internal sealed class ServiceClient : IDisposable
                 {
                     await EnsureConnectedAsync();
                     await _writer!.WriteLineAsync(line);
-                    return await _reader!.ReadLineAsync() ?? throw new IOException("Conexión cerrada");
+                    // Con límite: si el servicio se para a mitad de una respuesta (p. ej. al actualizarse), sin él
+                    // la espera no terminaba y bloqueaba todas las peticiones siguientes del widget.
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    return await _reader!.ReadLineAsync(timeout.Token) ?? throw new IOException("Conexión cerrada");
                 }
-                catch (Exception ex) when (ex is IOException or TimeoutException or ObjectDisposedException)
+                catch (Exception ex) when (ex is IOException or TimeoutException or ObjectDisposedException or OperationCanceledException)
                 {
                     Reset();
                 }

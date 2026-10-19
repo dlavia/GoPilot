@@ -169,19 +169,49 @@ namespace GoSPanel.Widget
         private void StartUpdatePolling()
         {
             if (_updateTimer != null) return;
-            _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            _updateTimer.Tick += async (s, e) =>
+            var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            var lastAnswer = DateTime.UtcNow;
+            var asking = false;
+            timer.Tick += async (s, e) =>
             {
-                var data = await CallAsync("update.status", null, false);
-                if (data == null) return;   // el servicio se está reiniciando
-                ApplyUpdate(data);
-                if (_updateState != "downloading" && _updateState != "installing")
+                if (asking) return;   // una consulta cada vez, aunque tarde
+                asking = true;
+                try
                 {
-                    _updateTimer.Stop();
-                    _updateTimer = null;
+                    var data = await CallAsync("update.status", null, false);
+                    if (data != null)
+                    {
+                        lastAnswer = DateTime.UtcNow;
+                        ApplyUpdate(data);
+                    }
+                    else if (DateTime.UtcNow - lastAnswer > TimeSpan.FromMinutes(2))
+                    {
+                        // Sin respuesta tanto tiempo: no dejar el widget atascado en «Instalando…»
+                        StopUpdatePolling();
+                        _updateState = "idle";
+                        await CheckUpdatesAsync(true);
+                        return;
+                    }
+                    if (_updateState == "downloading" || _updateState == "installing") return;
+                    StopUpdatePolling();
+                    // El servicio se ha reiniciado (actualizado) y ha olvidado la versión: se vuelve a preguntar
+                    // para mostrar «Al día» o el error de la última instalación.
+                    if (data != null && Obj(data, "latest") == null) await CheckUpdatesAsync(false);
+                }
+                finally
+                {
+                    asking = false;
                 }
             };
-            _updateTimer.Start();
+            _updateTimer = timer;
+            timer.Start();
+        }
+
+        private void StopUpdatePolling()
+        {
+            if (_updateTimer == null) return;
+            _updateTimer.Stop();
+            _updateTimer = null;
         }
 
         // ---------------------------------------------------------------------

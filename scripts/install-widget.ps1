@@ -9,6 +9,10 @@ $msix = Get-ChildItem (Join-Path $PSScriptRoot 'widget') -Recurse -Filter '*.msi
 if (-not $msix) { throw 'No se encontró el .msix en widget\' }
 # .NET Native y VCLibs: vienen junto al paquete por si el equipo no los tiene
 $deps = @(Get-ChildItem (Join-Path $msix.DirectoryName 'Dependencies\x64') -Filter '*.appx' -ErrorAction SilentlyContinue | ForEach-Object FullName)
-if ($deps) { Add-AppxPackage -Path $msix.FullName -DependencyPath $deps -ForceApplicationShutdown -ForceUpdateFromAnyVersion }
-else { Add-AppxPackage -Path $msix.FullName -ForceApplicationShutdown -ForceUpdateFromAnyVersion }
+# Solo si faltan: pasarlas cuando ya están hace que Windows reinicie todas las apps que las usan (lento)
+try { Add-AppxPackage -Path $msix.FullName -ForceApplicationShutdown -ForceUpdateFromAnyVersion -ErrorAction Stop }
+catch {
+    if (-not $deps) { throw }
+    Add-AppxPackage -Path $msix.FullName -DependencyPath $deps -ForceApplicationShutdown -ForceUpdateFromAnyVersion
+}
 Write-Host 'Widget instalado. Abre Game Bar (Win+G) > Widgets > GoPilot.'
