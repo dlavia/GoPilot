@@ -167,14 +167,20 @@ internal static class Program
         await ConnectGate.WaitAsync();
         try
         {
-            if (_connection != null) return;
+            // Si el widget lo pide es que no tiene puente: una conexión que aún parece viva es de una ventana anterior
+            // que Game Bar cerró a la fuerza (sin ServiceClosed) y dejaba el widget nuevo en «Sin servicio».
+            if (_connection != null)
+            {
+                try { _connection.Dispose(); } catch (Exception) { }
+                _connection = null;
+            }
             var connection = new AppServiceConnection
             {
                 AppServiceName = AppServiceName,
                 PackageFamilyName = Package.Current.Id.FamilyName,
             };
             connection.RequestReceived += OnRequestReceived;
-            connection.ServiceClosed += (_, _) => _connection = null;   // el agente sigue vivo
+            connection.ServiceClosed += (_, _) => { if (_connection == connection) _connection = null; };   // el agente sigue vivo
             if (await connection.OpenAsync() == AppServiceConnectionStatus.Success)
                 _connection = connection;
         }
