@@ -1,0 +1,16 @@
+bin/
+obj/
+dist/
+certs/
+*.user
+.vs/
+AppPackages/
+GoSPanel-dist.zip
+*.csv
+src/GoSPanel.Widget/Assets/Sounds/
+
+# Notas internas y volcados locales
+CLAUDE.md
+probe-*.txt
+*.log
+design/

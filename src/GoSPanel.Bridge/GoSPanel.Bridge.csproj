@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Proceso "full trust" dentro del paquete del widget. Corre en la sesión del usuario:
+       reenvía peticiones al servicio y maneja lo que debe hacerse en esa sesión (pantalla). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GoSPanel.Bridge</RootNamespace>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PublishDir>$(MSBuildThisFileDirectory)bin\publish\</PublishDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Dibujo del overlay sobre el juego (GameOverlay) -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+    <!-- Sonido del sistema (WASAPI en bucle) para el efecto «Reactivo» de las luces -->
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+  </ItemGroup>
+
+</Project>
