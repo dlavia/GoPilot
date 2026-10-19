@@ -43,8 +43,8 @@ try {
     # Solo se instala lo firmado con el certificado de GoPilot en el que confió la instalación original.
     $pinned = @(Get-ChildItem Cert:\LocalMachine\TrustedPeople | Where-Object Subject -eq 'CN=GoSPanel Dev' | ForEach-Object Thumbprint)
     if (-not $pinned) { throw 'No se encuentra el certificado de GoPilot en el equipo' }
-    $msix = Get-ChildItem (Join-Path $Source 'widget') -Recurse -Filter '*.msix' | Select-Object -First 1
-    if (-not $msix) { throw 'El paquete no contiene el widget' }
+    $msix = Get-ChildItem (Join-Path $Source 'widget') -Recurse -Filter "*_$($version)_*.msix" | Select-Object -First 1
+    if (-not $msix) { throw "El paquete no contiene el widget $version" }
     foreach ($file in $msix.FullName, (Join-Path $Source 'service\GoSPanel.Service.exe')) {
         $signature = Get-AuthenticodeSignature $file
         # UnknownError = firma íntegra pero el certificado no es de una entidad raíz (es propio); HashMismatch o
@@ -74,9 +74,12 @@ try {
     }
 
     Write-Status 'installing' 'Actualizando el widget'
+    $deps = (Get-ChildItem (Join-Path $msix.DirectoryName 'Dependencies\x64') -Filter '*.appx' -ErrorAction SilentlyContinue |
+        ForEach-Object { "'$($_.FullName)'" }) -join ','
+    $depArg = if ($deps) { "-DependencyPath $deps" } else { '' }
     # Tras instalar: reiniciar Game Bar (si no, no muestra el widget nuevo) y volver a arrancar el agente.
     Invoke-AsDesktopUser ((
-        "Add-AppxPackage -Path '$($msix.FullName)' -ForceApplicationShutdown",
+        "Add-AppxPackage -Path '$($msix.FullName)' $depArg -ForceApplicationShutdown",
         'Get-Process GameBar, GameBarFTServer, XboxGameBarWidgets, GoSPanel.Widget -ErrorAction SilentlyContinue | Stop-Process -Force',
         '$p = Get-AppxPackage GoSPanel',
         "Invoke-CommandInDesktopPackage -PackageFamilyName `$p.PackageFamilyName -AppId App -Command (Join-Path `$p.InstallLocation 'Bridge\GoSPanel.Bridge.exe') -Args 'relay'"

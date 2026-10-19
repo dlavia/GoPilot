@@ -11,8 +11,10 @@ $dist = Join-Path $root 'dist'
 $pfx = Join-Path $root 'certs\GoSPanel.pfx'
 if (-not (Test-Path $pfx)) { & (Join-Path $PSScriptRoot 'new-cert.ps1') }
 
-Remove-Item $dist -Recurse -Force -ErrorAction SilentlyContinue
+# Vaciar (no borrar la carpeta, que puede estar abierta en una terminal). Si algo no se puede borrar se para:
+# un widget viejo en dist\widget acabaría dentro de la versión publicada.
 New-Item -ItemType Directory -Force $dist | Out-Null
+Get-ChildItem $dist -Force | Remove-Item -Recurse -Force
 
 dotnet publish (Join-Path $root 'src\GoSPanel.Service') -c $Configuration -o (Join-Path $dist 'service') -nologo
 if ($LASTEXITCODE) { throw 'Fallo al publicar el servicio' }
