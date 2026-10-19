@@ -1,36 +1,45 @@
+<div align="center">
+
 # GoPilot
 
 **The control panel for the Lenovo Legion Go S, inside Xbox Game Bar.**
-Performance, display, controller, lights, Legion buttons and per-game profiles in a widget built for the controller,
-without leaving your game. It replaces Legion Space: lighter, faster and with more options.
 
-[**Download the latest version**](https://github.com/dlavia/GoPilot/releases/latest) · [MIT](LICENSE) license · [Español](README.md)
+[**Download**](https://github.com/dlavia/GoPilot/releases/latest) · [Installation](#installation) · [Features](#features) · [Español](README.md)
 
-<p align="center">
-  <img src="docs/img/pestanas.gif" width="340" alt="GoPilot in Xbox Game Bar: switching between the Home, Power, Display, Device and Settings tabs">
-</p>
+<img src="docs/img/pestanas.gif" width="340" alt="GoPilot in Xbox Game Bar: switching between the Home, Power, Display, Device and Settings tabs">
 
-**It feels part of Windows and Xbox:**
+</div>
 
-- It uses the **Windows accent colour**: change it in Settings › Personalisation › Colours and GoPilot follows.
-- **Navigation sounds from the Xbox app**, the same ones you hear across the console.
-- It takes the **manufacturer's slot in Game Bar** (the first icon) and opens with **Legion R**, like Legion Space.
+GoPilot replaces Legion Space with a Game Bar widget built for the controller: performance, display, controller,
+lights, Legion buttons and per-game profiles, without leaving your game.
 
-> Personal project, not affiliated with Lenovo, AMD or Microsoft. Tested on a Legion Go S **Z1 Extreme**
-> (model 83N6, BIOS S0CN27WW) with Windows 11. Use it at your own risk: it changes BIOS settings (TDP, fan, charging)
-> and controller firmware settings, always within the limits the firmware itself allows.
->
-> **The interface is currently in Spanish.** The names below give the Spanish label in brackets where it helps.
+> The interface is currently in Spanish.
 
----
+## Why GoPilot
 
-## Contents
+- **Instant, on top of your game.** Legion R opens it over the game; LT and RT switch tabs.
+- **Real numbers.** The footer shows FPS, temperature, fan and the console's **real power draw in watts**.
+- **One profile per game, automatically.** Every new game gets its own profile and what you tweak while playing stays there.
+- **Steam Deck-style Manual mode.** A single power limit; bursts and peaks adjust themselves.
+- **Lights that react to sound.** The sticks light up with the game's gunshots and explosions.
+- **Part of Windows and Xbox.** It uses the **Windows accent colour**, the **Xbox app's sounds** and the manufacturer's
+  slot in Game Bar.
+- **Updates itself and uninstalls cleanly.** No telemetry, no leftovers.
 
-- [Installation](#installation) · [Updating](#updating) · [Uninstalling](#uninstalling)
-- [How to use it](#how-to-use-it)
-- [Features](#features): [Home](#home-inicio) · [Power](#power-potencia) · [Display](#display-pantalla) · [Device](#device-equipo) · [Settings](#settings-ajustes)
-- [Per-game profiles](#per-game-profiles) · [Legion buttons](#legion-buttons) · [In-game overlay](#in-game-overlay)
-- [Privacy](#privacy) · [FAQ](#faq) · [For developers](#for-developers)
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/img/inicio.png" width="240" alt="Home tab"><br><sub><b>Home</b> · quick tiles</sub></td>
+    <td align="center"><img src="docs/img/potencia.png" width="240" alt="Power tab"><br><sub><b>Power</b> · modes with real watts</sub></td>
+    <td align="center"><img src="docs/img/pantalla.png" width="240" alt="Display tab"><br><sub><b>Display</b> · resolution, Hz and AMD</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/img/equipo-avanzado.png" width="240" alt="Device tab"><br><sub><b>Device</b> · controller, lights and gyro</sub></td>
+    <td align="center"><img src="docs/img/ajustes.png" width="240" alt="Settings tab"><br><sub><b>Settings</b> · theme, overlay and buttons</sub></td>
+    <td align="center"><img src="docs/img/editar-baldosas.gif" width="240" alt="Editing tiles"><br><sub><b>Edit tiles</b> · your way</sub></td>
+  </tr>
+</table>
 
 ---
 
@@ -38,205 +47,140 @@ without leaving your game. It replaces Legion Space: lighter, faster and with mo
 
 1. Download `GoPilot-<version>.zip` from [Releases](https://github.com/dlavia/GoPilot/releases/latest) and extract it.
 2. Double-click **`Instalar GoPilot.cmd`** and accept the administrator prompt.
-   Windows warns because the installer comes from the internet: "Windows protected your PC" › **More info** ›
-   **Run anyway** (and the same for PowerShell).
-3. Press **Legion R**: GoPilot opens. It is also in Game Bar (Win + G) as the first icon of the bar.
+3. Press **Legion R**. Done!
 
-When installed, GoPilot **replaces Legion Space**: it disables it (without uninstalling it) and takes its place on the
-Legion buttons and in Game Bar. To get it back: Settings › Legion buttons › Legion Space, or uninstall GoPilot.
+> Windows warns because the installer comes from the internet: "Windows protected your PC" › **More info** ›
+> **Run anyway**. It can't be installed with Smart App Control turned on.
 
-> The package is signed with its own certificate, which the installer adds as trusted. With **Smart App Control**
-> turned on, Windows will not install it.
+When installed, GoPilot **replaces Legion Space** (it disables it, it doesn't delete it). You can turn it back on in
+Settings › Legion buttons.
 
-## Updating
+**Updating:** when a new version is out you get a notice on Home; install it from Settings › Updates in about
+20 seconds, keeping your settings and profiles.
 
-GoPilot tells you when a new version is out: a notice at the top of Home and a dot on the Settings tab.
-**Settings › Updates** (Actualizaciones) shows what's new and installs it with **Update** (about 20 seconds; Game Bar
-closes for a moment and GoPilot comes back with your settings and profiles). Only packages signed with the same
-certificate are installed; if anything fails, you keep the version you had.
-
-## Uninstalling
-
-**Settings › Updates › Uninstall GoPilot** (press twice), or run `uninstall.ps1` as administrator.
-It leaves the device as it was before GoPilot: Legion Space comes back with its Game Bar icon, the touchpad and touch
-screen are re-enabled if they were off, and the service, data, scheduled tasks and certificate are removed.
+**Uninstalling:** Settings › Updates › Uninstall GoPilot (press twice). It leaves the console as it was, with Legion
+Space back.
 
 ---
 
 ## How to use it
 
-- **Legion R** opens and closes GoPilot (hold: Task View). **Legion L** opens the Xbox app (hold: Game Bar).
-- **LT / RT** switch tabs: Home · Power · Display · Device · Settings.
-- **D-pad** to move, **A** to select, **B** to go back. Sliders are entered with A, adjusted with the D-pad and left
-  with A or B (so they don't move by accident while scrolling).
-- **Footer**: always visible at the bottom, the **applied profile** (A opens the list to change it) and live data:
-  game FPS, temperature, **real power draw in watts** and fan speed.
-- Everything also works with the touch screen, with navigation sounds like the Xbox app's.
+| Button | What it does |
+|---|---|
+| **Legion R** | Opens and closes GoPilot (hold: Task View) |
+| **Legion L** | Opens the Xbox app (hold: Game Bar) |
+| **LT / RT** | Switch tabs |
+| **A / B** | Select / back. On sliders: A to enter, D-pad to adjust, A or B to leave |
+
+The **footer** at the bottom is always visible: the applied profile (A to change it) and live data.
+It also works with the touch screen.
 
 ---
 
 ## Features
 
-### Home (Inicio)
+### Home
 
-<img src="docs/img/inicio.png" width="260" align="right" alt="Home tab: brightness, volume and quick tiles">
+Brightness, volume and **quick tiles** you can reorder, remove and add ("Editar baldosas").
 
-- **Brightness and volume** always at hand.
-- **Editable quick tiles** ("Editar baldosas"): remove (X or hold A), add (+) and reorder (A on one tile, then A on
-  another). 15 are shown by default; there are **35** to choose from:
+<details>
+<summary>All 35 available tiles</summary>
 
 | Group | Tiles |
 |---|---|
-| Performance | Power mode · CPU Boost · Max fan · Fan curve |
-| Display | Refresh rate (Hz) · VRR · Lossless Scaling · AFMF · RSR · Chill · Sharpening · Anti-Lag · Vari-Bright |
+| Performance | Mode · CPU Boost · Max fan · Fan curve |
+| Display | Hz · VRR · Lossless Scaling · AFMF · RSR · Chill · Sharpening · Anti-Lag · Vari-Bright |
 | Controller | Lights · Gyro · Vibration · Touchpad vibration · Controller auto-off · Polling rate · D-pad 8/4 |
 | Touch & system | Touchpad · Touch screen · On-screen keyboard · Close game · Charge to 80 % |
 | GoPilot | Overlay · Footer data · Theme · Animations · Sounds · Legion buttons · Legion Space · Auto profiles · Auto-save · Re-apply after sleep |
 
-- **Close game**: closes the foreground game (press twice), handy if it hangs.
-- **Update notice** at the top when a new version is out.
+</details>
 
-<p align="center">
-  <img src="docs/img/editar-baldosas.gif" width="300" alt="Editing tiles: swapping two tiles, adding an available one and resetting">
-</p>
+### Power
 
-<br clear="right">
-
-### Power (Potencia)
-
-<img src="docs/img/potencia.png" width="260" align="right" alt="Power tab: modes with their watts, CPU Boost and fan">
-
-- **Lenovo modes** with their real watts, which the firmware changes depending on whether it is plugged in or on
-  battery (sustained / bursts / peaks):
+Lenovo's modes with their **real watts**, which change depending on whether the console is plugged in or on battery:
 
 | Mode | Plugged in | On battery |
 |---|---|---|
-| Quiet (Silencio) | 10 / 15 / 20 W | 10 / 10 / 20 W |
-| Balanced (Equilibrado) | 16 / 25 / 30 W | 15 / 15 / 30 W |
-| Performance (Rendimiento) | 30 / 33 / 40 W | 25 / 25 / 35 W |
+| Quiet | 10 W | 10 W |
+| Balanced | 16 W | 15 W |
+| Performance | 30 W | 25 W |
 
-- **Manual, Steam Deck style**: a single **power limit** (5–30 W) with the real power draw shown below it. Bursts and
-  peaks follow automatically above it (× 1.25 and × 1.5, up to 32 and 41 W); under **Advanced** they can be set by hand
-  (SPL, sPPT and fPPT). It applies when you let go of the slider, no button needed.
-- **Legion L + Y** cycles modes (done by the firmware) and GoPilot shows a large notice with the mode and its watts.
-- **CPU Boost**: turning it off lowers temperature and power draw with little difference in many games.
-- **Max fan** and a custom **fan curve** (in Manual mode).
-- Everything is re-applied after sleep (the firmware sometimes resets its values).
+- **Manual, Steam Deck style:** pick a limit (5–30 W) and see right away what it draws. Under "Advanced" you can set
+  bursts (sPPT) and peaks (fPPT) by hand.
+- **CPU Boost**, **max fan** and **fan curve**.
+- **Legion L + Y** switches modes and GoPilot shows it big with its watts.
 
-<br clear="right">
+### Display
 
-### Display (Pantalla)
+- **Resolution**, **refresh rate** (up to 120 Hz) and **VRR (FreeSync)**, also for windowed games.
+- **AMD Radeon without opening Adrenalin:** AFMF (more FPS), RSR (upscaling), Chill (FPS limit), Sharpening,
+  Anti-Lag and Vari-Bright.
+- **Lossless Scaling:** turn it on with the game in front.
 
-<img src="docs/img/pantalla.png" width="260" align="right" alt="Display tab: resolution, refresh rate and AMD Radeon settings">
+### Device
 
-- **Resolution** and **refresh rate** (up to 120 Hz).
-- **VRR (FreeSync)**: turning it on also enables the Windows setting for windowed and borderless games.
-  Verified with PresentMon: the screen follows the game frame by frame below 120 FPS.
-- **AMD Radeon** (without opening Adrenalin):
+- **Stick lights:** colour, brightness and speed, with Solid, Breathing, Chroma, Rainbow and **Reactive** effects —
+  Reactive pulses with the game's sound.
+- **Controller:** vibration (touchpad too), auto-off, polling rate and 8 or 4-way D-pad.
+- **Advanced settings:** stick dead zones, trigger travel and **gyro** (as mouse or as a stick), with calibrate, live
+  test and defaults.
+- Turn the **touchpad** and **touch screen** on or off, and factory-reset the controller.
 
-| Feature | What it does |
-|---|---|
-| AFMF | AMD frame generation: more perceived FPS in almost any game |
-| RSR | AMD upscaling: play at a lower resolution and scale to the screen |
-| Chill | Keeps FPS between a minimum and a maximum to save battery and heat |
-| Sharpening | Sharpens the image (useful with RSR or low resolutions) |
-| Anti-Lag | Reduces the delay between the controller and the screen |
-| Vari-Bright | AMD's automatic brightness to save battery |
+### Settings
 
-- **Lossless Scaling**: turn its scaling on or off with the game in front (state read from its real window).
+Theme (Simple or Contrast), overlay, sounds, animations, **charge to 80 %** with battery health, Legion buttons,
+profiles and updates.
 
-<br clear="right">
+### Per-game profiles
 
-### Device (Equipo)
+- A **Global** profile and one per game, applied automatically when each game opens and closes.
+- **Every new game gets its profile automatically**, and what you change while playing is saved to it.
+- Detects games from Steam, Epic, Xbox, GOG, EA… and games with anti-cheat too (like Call of Duty).
+- Profiles store mode and TDP, CPU Boost, resolution, Hz, Lossless, AMD settings, lights and gyro.
 
-<img src="docs/img/equipo-avanzado.png" width="260" align="right" alt="Device tab: controller settings and advanced settings">
+### Legion buttons and overlay
 
-- **Stick lights** (Advanced settings › Lights): 10 colours, brightness and speed, with these effects:
+- Every press and long press of **Legion L and R** can be changed, and "Advanced shortcuts" adds Legion + button
+  combinations.
+- **Its own overlay** on top of the game with FPS, temperature and battery, in the corner you like.
 
-| Effect | What it does |
-|---|---|
-| Solid (Fijo) | A constant colour |
-| Breathing (Respiración) | The colour fades in and out |
-| Chroma (Croma) | Cycles through colours, both sticks together |
-| Rainbow (Arcoíris) | Moving colour cycle |
-| **Reactive (Reactivo)** | Light pulses with the hits in the game's sound (gunshots, explosions), in real time. Idle and peak brightness are adjustable |
+<details>
+<summary>Actions available for the buttons</summary>
 
-- **Vibration** of the controller and touchpad (4 levels), controller **auto-off**, **polling rate** (125–1000 Hz) and
-  **D-pad** with 8 or 4 directions.
-- **Touchpad** and **touch screen**: turn on or off.
-- **Advanced settings**, each with **Calibrate**, **Test** (live values) and **Default**:
-  - **Sticks**: centre and edge dead zones of each stick.
-  - **Triggers**: start and end of travel of each trigger.
-  - **Gyro**: as mouse, left stick or right stick, with sensitivity.
-- **Factory-reset the controller**.
-
-<br clear="right">
-
-### Settings (Ajustes)
-
-<img src="docs/img/ajustes.png" width="260" align="right" alt="Settings tab: interface, overlay, battery charging, theme and sounds">
-
-- **Footer data** (shown or hidden), **in-game overlay**, **theme** (Simple or Contrast, with the Windows accent
-  colour), **animations**, **sounds** and **charge only to 80 %** (with battery health).
-- **Legion buttons**: what each press does (see [Legion buttons](#legion-buttons)) and the Legion Space switch.
-- **Profiles**: profile list, apply profiles automatically and save changes automatically.
-- **Behaviour**: re-apply settings after sleep and how often data refreshes.
-- **Updates**: version, what's new, check automatically and uninstall.
-
-<br clear="right">
-
----
-
-## Per-game profiles
-
-- A **Global** profile and one per game, applied automatically when a game opens and closes.
-- **Every new game gets its own profile automatically** the first time it opens, with the settings of that moment:
-  whatever you change while playing stays with that game. If you delete a profile, it isn't recreated while the game is open.
-- Games with anti-cheat (Call of Duty, for example) are detected too.
-- A game is anything run from a library (Steam, Epic, Xbox, GOG, EA…), anything that fills the screen, or anything
-  that already has a profile; consoles and Windows programs never.
-- Profiles store mode and TDP, CPU Boost, resolution and Hz, Lossless, AMD settings (including VRR), lights and gyro.
-- **Auto-save**: what you change is saved to the applied profile. Without auto-save, save with the floppy button.
-- From the footer you can apply any profile even if its game isn't open.
-
-## Legion buttons
-
-Defaults: **Legion L** → Xbox app (hold: Game Bar) and **Legion R** → GoPilot (hold: Task View).
-Every press and long press can be changed, and **Advanced shortcuts** adds Legion + button combinations.
-Available actions: GoPilot · Game Bar · Xbox home · Task View · Desktop · Keyboard · Snipping · Screenshot ·
-Record · Thermal mode · Ctrl+Alt+Del · Task Manager · Lossless · Overlay · Close game.
+GoPilot · Game Bar · Xbox home · Task View · Desktop · Keyboard · Snipping · Screenshot · Record · Thermal mode ·
+Ctrl+Alt+Del · Task Manager · Lossless · Overlay · Close game.
 The firmware's own combinations (Legion L + Y, X, A, B, LB) keep working.
 
-## In-game overlay
-
-GoPilot's own window on top of the game (no need to pin widgets in Game Bar) with **FPS**, **FPS and battery** or
-**FPS, temperature and battery**; only in games or always, in the corner you prefer.
+</details>
 
 ---
 
-## Privacy
+## Coming soon
 
-GoPilot sends no personal data or usage statistics. The only thing it does online is check for a new version (it
-downloads a small `latest.json` from this repository), and that can be turned off in Settings › Updates › Check
-automatically.
+- **AutoTDP:** GoPilot will adjust the power limit by itself, game by game, to hold the FPS you choose while using as
+  little battery as possible.
+
+---
 
 ## FAQ
 
-**Can it damage the console?** GoPilot only asks Lenovo's firmware for values within the limits the firmware itself
-reports (for example 5–30 W sustained, AMD's maximum for the Z1 Extreme), just like Legion Space.
+**Can it damage the console?** No. It only uses values within the limits Lenovo's firmware itself allows, just like
+Legion Space.
 
-**Why does Windows warn when installing?** The package is signed with its own certificate, not one from a recognised
-authority. That's why you have to confirm "Run anyway", and why it can't be installed with Smart App Control on.
+**Does it send data?** No. The only thing it does online is check for a new version, and that can be turned off.
 
-**Does it work on other handhelds?** It is built and tested for the Legion Go S. On other devices many features (TDP,
-controller, lights, buttons) won't be available.
+**Does it work on other handhelds?** It is built for the Legion Go S. On other devices many features won't be there.
 
-**What happens to my Legion Space settings?** They stay: Legion Space is only disabled. Re-enabling it or uninstalling
-GoPilot brings it back as it was.
+**Do I lose Legion Space?** No: it's only disabled. Re-enabling it or uninstalling GoPilot brings it back as it was.
+
+> Personal project, not affiliated with Lenovo, AMD or Microsoft. Tested on a Legion Go S Z1 Extreme (83N6) with
+> Windows 11.
 
 ---
 
-## For developers
+<details>
+<summary><b>For developers</b></summary>
 
 ### Architecture
 
@@ -251,39 +195,27 @@ Windows service (.NET 8, SYSTEM)                src/GoSPanel.Service
          updates and uninstall
 ```
 
-- The widget can't touch hardware from its sandbox: everything goes through the agent and the service.
-- The agent starts with the session (package startup task) and the widget connects to it.
-- The service only exposes specific commands, never arbitrary WMI calls.
-- Protocol: `{"cmd":"tdp.set","args":{"spl":15,"sppt":18,"fppt":20}}` → `{"ok":true,"data":{...}}`.
+The widget can't touch hardware from its sandbox: everything goes through the agent and the service, which only
+exposes specific commands. Protocol: `{"cmd":"tdp.set","args":{"spl":15,"sppt":18,"fppt":20}}` → `{"ok":true,"data":{...}}`.
 
-### Building
+### Build and publish
 
-Requirements: Visual Studio 2022 with the UWP workload, .NET 8 SDK and Windows SDK 10.0.26100.
+Requirements: Visual Studio 2022 with UWP, .NET 8 SDK and Windows SDK 10.0.26100.
 
 ```powershell
-.\scripts\build.ps1            # service + widget (with the agent inside) into dist\
+.\scripts\build.ps1                                   # service + widget into dist\
+.\scripts\release.ps1 -Notes "- Change 1`n- Change 2"     # builds and publishes the Release with latest.json
 ```
 
-The first run creates a development certificate in `certs\` (not committed to the repository).
+The first build creates a development certificate in `certs\` (not committed).
 
-### Publishing a release
-
-```powershell
-.\scripts\release.ps1 -Notes "- Change 1`n- Change 2"
-```
-
-Builds, tags and creates the Release with the zip and `latest.json`, which installed widgets check.
-
----
+</details>
 
 ## Credits
 
-- Controller and BIOS protocol worked out from: the Linux driver **hid-lenovo-go-s** (Derek J. Clark),
-  **lenovo-wmi** in the Linux kernel, **HHD / Handheld Daemon** and the controller configuration library installed by
-  Legion Space (only the protocol is reimplemented; no Lenovo code is included).
-- **AMD ADLX** for the Radeon settings, **Xbox Game Bar Widget SDK**, **PresentMon** to measure VRR.
-- **Phosphor Icons**.
+Controller and BIOS protocol worked out from the Linux driver **hid-lenovo-go-s** (Derek J. Clark), **lenovo-wmi** in
+the Linux kernel, **HHD / Handheld Daemon** and Legion Space's controller configuration library (only the protocol is
+reimplemented; no Lenovo code is included). **AMD ADLX**, **Xbox Game Bar Widget SDK**, **PresentMon** and
+**Phosphor Icons**.
 
-## License
-
-[MIT](LICENSE).
+License: [MIT](LICENSE).
