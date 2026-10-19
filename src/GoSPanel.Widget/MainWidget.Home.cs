@@ -60,7 +60,7 @@ namespace GoSPanel.Widget
             _homeTiles["autosleep"] = Mirror(AutoSleepTile, "Apagado mando");
             _homeTiles["pollrate"] = Mirror(PollRateTile, "Sondeo");
             _homeTiles["dpad"] = Mirror(DpadTile, "Cruceta");
-            _homeTiles["monitor"] = Mirror(ShowMonitorTile, "Monitor");
+            _homeTiles["monitor"] = Mirror(ShowMonitorTile, "Datos del pie");
             _homeTiles["animations"] = Mirror(AnimationsTile, "Animaciones");
             _homeTiles["sounds"] = Mirror(SoundsTile, "Sonidos");
             _homeTiles["buttons"] = Mirror(ButtonsTile, "Botones Legion");

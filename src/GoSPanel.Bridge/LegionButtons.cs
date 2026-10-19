@@ -331,12 +331,15 @@ internal static class LegionButtons
 
     private static async Task ShowModeToastAsync()
     {
-        var mode = (await Program.CallServiceAsync("power.get"))["mode"]?.GetValue<string>();
+        var power = await Program.CallServiceAsync("power.get");
+        var mode = power["mode"]?.GetValue<string>();
+        // Vatios reales del modo (los que aplica el firmware, enchufada o con batería)
+        var watts = mode != null && power["limits"]?[mode]?["spl"] is JsonNode modeSpl ? $"{modeSpl.GetValue<double>():0} W" : null;
         switch (mode)
         {
-            case "quiet": GameOverlay.ShowToast("Silencio", "7 W", ''); break;
-            case "balanced": GameOverlay.ShowToast("Equilibrado", "15 W", ''); break;
-            case "performance": GameOverlay.ShowToast("Rendimiento", "20 W", ''); break;
+            case "quiet": GameOverlay.ShowToast("Silencio", watts, ''); break;
+            case "balanced": GameOverlay.ShowToast("Equilibrado", watts, ''); break;
+            case "performance": GameOverlay.ShowToast("Rendimiento", watts, ''); break;
             case "custom":
                 var spl = (await Program.CallServiceAsync("tdp.get"))["spl"]?.GetValue<double>();
                 GameOverlay.ShowToast("Manual", spl.HasValue ? $"{spl:0} W" : null, '');

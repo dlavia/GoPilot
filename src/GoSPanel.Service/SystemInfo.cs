@@ -14,6 +14,7 @@ internal static class SystemInfo
             ["tempC"] = LenovoWmi.TryApuTemp() ?? AcpiTempC(),
         },
         ["fan"] = new JsonObject { ["rpm"] = LenovoWmi.TryFanRpm() },
+        ["apu"] = new JsonObject { ["watts"] = ApuPower.Watts() },
     };
 
     private static JsonObject Battery()

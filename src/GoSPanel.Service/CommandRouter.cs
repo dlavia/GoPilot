@@ -35,7 +35,7 @@ public sealed class CommandRouter
                     "ping" => "pong",
                     "status" => SystemInfo.Status(),
                     "lenovo.probe" => LenovoWmi.Probe(),
-                    "power.get" => LenovoWmi.GetPowerMode(),
+                    "power.get" => ModeLimits.With(LenovoWmi.GetPowerMode()),
                     "power.set" => WithFanCurve(Remember(LenovoWmi.SetPowerMode(Required<string>(args, "mode")),
                         s => s["mode"] = Required<string>(args, "mode"))),
                     "brightness.get" => Brightness.Get(),

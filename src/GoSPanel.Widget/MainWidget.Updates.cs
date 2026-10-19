@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Data.Json;
@@ -31,9 +31,6 @@ namespace GoSPanel.Widget
                 return new Version(v.Major, v.Minor, v.Build, v.Revision);
             }
         }
-
-        /// <summary>Lo primero de Inicio: el aviso de versión nueva si se ve, o el brillo.</summary>
-        private Control HomeFirstControl => UpdateNotice.Visibility == Visibility.Visible ? (Control)UpdateNoticeButton : BrightnessSlider;
 
         private void InitUpdates()
         {
@@ -230,13 +227,12 @@ namespace GoSPanel.Widget
             if (hadFocus) BrightnessSlider.Focus(FocusState.Keyboard);
         }
 
-        /// <summary>Perfil → aviso (si se ve) → brillo, con la cruceta.</summary>
+        /// <summary>Aviso (si se ve) → brillo, con la cruceta.</summary>
         private void LinkHomeTop()
         {
-            if (_tab == 0) LinkProfileTo(HomeFirstControl);
-            if (UpdateNotice.Visibility != Visibility.Visible) return;
+            var notice = UpdateNotice.Visibility == Visibility.Visible;
             UpdateNoticeButton.XYFocusDown = BrightnessSlider;
-            BrightnessSlider.XYFocusUp = UpdateNoticeButton;
+            BrightnessSlider.XYFocusUp = notice ? UpdateNoticeButton : null;
         }
 
         private void DismissUpdateNotice()

@@ -20,10 +20,11 @@ namespace GoSPanel.Widget
 {
     public sealed partial class MainWidget : Page
     {
-        // SPL por defecto de cada modo según el firmware (los mismos 7/15/20 W que muestra Legion Space).
-        private static readonly Dictionary<string, int> PresetSpl = new Dictionary<string, int>
+        // SPL real de cada modo: lo apunta el servicio al leer el firmware (power.get › limits); hasta entonces, el de
+        // una Legion Go S Z1 Extreme.
+        private readonly Dictionary<string, int> _presetSpl = new Dictionary<string, int>
         {
-            ["quiet"] = 7, ["balanced"] = 15, ["performance"] = 20,
+            ["quiet"] = 10, ["balanced"] = 16, ["performance"] = 30,
         };
         private static readonly string[] ModeOrder = { "quiet", "balanced", "performance", "custom" };
         private static readonly Dictionary<string, string> ModeNames = new Dictionary<string, string>
@@ -120,6 +121,11 @@ namespace GoSPanel.Widget
             PreviewKeyDown += (s, e) =>
             {
                 var k = e.Key;
+                if (HandleFooterNavigation(k))
+                {
+                    e.Handled = true;
+                    return;
+                }
                 if (k != VirtualKey.GamepadLeftTrigger && k != VirtualKey.GamepadRightTrigger
                     && k != VirtualKey.GamepadLeftShoulder && k != VirtualKey.GamepadRightShoulder) return;
                 HandleTabKey(k);   // LB / RB no hacen nada en el widget
@@ -167,15 +173,34 @@ namespace GoSPanel.Widget
             ShowTab(int.Parse((string)((Button)sender).Tag));
         }
 
-        /// <summary>
-        /// Desde el perfil (arriba), «abajo» va al primer control de la pestaña visible: la navegación automática
-        /// del mando se equivoca en este widget y no encontraba nada en las pestañas que no son Inicio.
-        /// </summary>
-        private void LinkProfileTo(Control first)
+        // Pie: con la cruceta, desde el último control de la pestaña se baja al perfil y desde el perfil se vuelve a
+        // donde se estaba. Se decide al pulsar (el contenido cambia al abrir desplegables) porque la navegación
+        // automática del mando se equivoca en este widget.
+        private Control _lastContentFocus;
+
+        private bool HandleFooterNavigation(VirtualKey key)
         {
-            GameBanner.XYFocusDown = first;
-            SaveProfileButton.XYFocusDown = first;
-            if (first != null) first.XYFocusUp = GameBanner;
+            var down = key == VirtualKey.GamepadDPadDown || key == VirtualKey.GamepadLeftThumbstickDown || key == VirtualKey.Down;
+            var up = key == VirtualKey.GamepadDPadUp || key == VirtualKey.GamepadLeftThumbstickUp || key == VirtualKey.Up;
+            if (!down && !up) return false;
+            var focused = FocusManager.GetFocusedElement() as Control;
+            if (focused == null || (focused as Slider)?.IsFocusEngaged == true) return false;
+            var inFooter = focused == GameBanner || focused == SaveProfileButton;
+            if (up && inFooter)
+            {
+                var target = _lastContentFocus ?? FocusManager.FindLastFocusableElement(_panels[_tab]) as Control;
+                return target != null && target.Focus(FocusState.Keyboard);
+            }
+            if (down && !inFooter && focused == FocusManager.FindLastFocusableElement(_panels[_tab]))
+                return GameBanner.Focus(FocusState.Keyboard);
+            return false;
+        }
+
+        private bool IsInCurrentPanel(DependencyObject element)
+        {
+            for (; element != null; element = VisualTreeHelper.GetParent(element))
+                if (element == _panels[_tab]) return true;
+            return false;
         }
 
         private DateTime _lastTabKey;
@@ -218,6 +243,7 @@ namespace GoSPanel.Widget
         {
             var control = e.NewFocusedElement as Control;
             if (control != null && control.FocusState == FocusState.Keyboard) Sounds.Focus();
+            if (control != null && IsInCurrentPanel(control)) _lastContentFocus = control;
         }
 
         private void OnSoundPointerReleased(object sender, PointerRoutedEventArgs e)
@@ -273,7 +299,7 @@ namespace GoSPanel.Widget
             to.ChangeView(null, 0, null, true);
             to.UpdateLayout();
             var first = FocusManager.FindFirstFocusableElement(to) as Control;
-            LinkProfileTo(index == 0 ? HomeFirstControl : first);
+            _lastContentFocus = null;
             if (first != null) first.Focus(FocusState.Keyboard);
             if (!_animate)
             {
@@ -1282,18 +1308,15 @@ namespace GoSPanel.Widget
         private void ApplyInterfacePrefs()
         {
             var showMonitor = Pref("showMonitor", true);
-            var compact = Pref("compactMonitor", false);
             var animations = Pref("animations", true);
             var seconds = Pref("refreshSeconds", 2);
 
-            MonitorBar.Visibility = showMonitor ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var bar in new[] { FpsBar, LoadBar, TempBar, FanBar, BatteryBar })
-                bar.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
-            MonitorBar.Padding = compact ? new Thickness(6, 5, 6, 5) : new Thickness(6, 8, 6, 8);
+            // El pie siempre está (lleva el perfil); lo que se oculta son los datos de la derecha.
+            FooterStats.Visibility = showMonitor ? Visibility.Visible : Visibility.Collapsed;
             _timer.Interval = TimeSpan.FromSeconds(seconds);
 
             ShowMonitorTile.IsOn = showMonitor;
-            ShowMonitorTile.State = !showMonitor ? "Oculto" : compact ? "Compacto" : "Completo";
+            ShowMonitorTile.State = showMonitor ? "Visibles" : "Ocultos";
             AnimationsTile.IsOn = animations && _systemAnimations;
             AnimationsTile.State = !_systemAnimations ? "Off en Windows" : animations ? "Activadas" : "Desactivadas";
             AnimationsTile.Available = _systemAnimations;
@@ -1301,14 +1324,10 @@ namespace GoSPanel.Widget
             UpdateAbout();
         }
 
-        // Monitor: Completo → Compacto → Oculto → Completo
+        // Datos del pie (FPS, temperatura, consumo y ventilador): visibles u ocultos
         private void OnShowMonitorClick(object sender, RoutedEventArgs e)
         {
-            var show = Pref("showMonitor", true);
-            var compact = Pref("compactMonitor", false);
-            if (show && !compact) SetPref("compactMonitor", true);
-            else if (show) SetPref("showMonitor", false);
-            else { SetPref("showMonitor", true); SetPref("compactMonitor", false); }
+            SetPref("showMonitor", !Pref("showMonitor", true));
             ApplyInterfacePrefs();
         }
 
@@ -1347,9 +1366,6 @@ namespace GoSPanel.Widget
             var active = data != null && data.GetNamedBoolean("active", false);
             _gameName = active ? data.GetNamedString("name", "") : null;
 
-            GameTitle.Text = active ? _gameName : "Sin juego";
-            GameIcon.Text = active ? "" : "";
-            GameIcon.Foreground = Brush(active ? "AccentBrush" : "MutedBrush");
 
             HomeKillTile.Available = active;
             if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
@@ -1365,7 +1381,7 @@ namespace GoSPanel.Widget
                 fps = Num(fpsData, "fps");
             }
             FpsValue.Text = fps.HasValue ? fps.Value.ToString("0") : "—";
-            SetBar(FpsBar, (fps ?? 0) / 120, false);
+            FpsItem.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // =====================================================================
@@ -1405,8 +1421,10 @@ namespace GoSPanel.Widget
             var global = Obj(data, "global");
             // Una sola línea: el juego y la etiqueta «Perfil», en color si se usa el perfil del juego.
             var activeProfile = profiles.FirstOrDefault(p => p.GetNamedString("exe", "") == _activeTarget);
-            GameTitle.Text = !onGlobal && activeProfile != null ? activeProfile.GetNamedString("name", _activeTarget)
-                           : gameActive ? _gameName : "Sin juego";
+            // Siempre el perfil aplicado (no el juego abierto): mando en color = perfil de juego, globo = Global.
+            GameTitle.Text = !onGlobal && activeProfile != null ? activeProfile.GetNamedString("name", _activeTarget) : "Global";
+            GameIcon.Text = onGlobal ? "" : "";
+            GameIcon.Foreground = Brush(onGlobal ? "MutedBrush" : "AccentBrush");
             ConnectionText.Text = "PERFIL";
             _profileOnGlobal = onGlobal;
             ApplyProfileChip();
@@ -1510,6 +1528,13 @@ namespace GoSPanel.Widget
         {
             ProfilesFlyoutPanel.Children.Clear();
             Button selected = null;
+            // Arriba, el juego abierto: el perfil aplicado puede no ser el suyo (Global elegido a mano)
+            ProfilesFlyoutPanel.Children.Add(new TextBlock
+            {
+                Text = _gameName != null ? _gameName + " abierto" : "Sin juego abierto",
+                FontSize = 14, Foreground = Brush("MutedBrush"), Margin = new Thickness(14, 6, 14, 4),
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            });
 
             void Add(string text, string sub, string target, bool isActive)
             {
@@ -1691,16 +1716,14 @@ namespace GoSPanel.Widget
                     var _ = RefreshAllButStatusAsync();
                 }
 
-                var cpu = Obj(data, "cpu");
-                var load = Num(cpu, "loadPct");
-                var temp = Num(cpu, "tempC");
+                var temp = Num(Obj(data, "cpu"), "tempC");
                 var rpm = Num(Obj(data, "fan"), "rpm");
-                LoadValue.Text = load.HasValue ? load.Value.ToString("0") + " %" : "—";
+                // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería
+                var watts = Num(Obj(data, "apu"), "watts");
                 TempValue.Text = temp.HasValue ? temp.Value.ToString("0") + "°" : "—";
+                TempValue.Foreground = Brush(temp >= 85 ? "WarnBrush" : "TextBrush");
+                PowerValue.Text = watts.HasValue ? watts.Value.ToString(watts.Value < 10 ? "0.0" : "0", Es) : "—";
                 FanValue.Text = rpm.HasValue ? (rpm.Value / 1000).ToString("0.0", Es) + "k" : "—";
-                SetBar(LoadBar, (load ?? 0) / 100, false);
-                SetBar(TempBar, (temp ?? 0) / 100, temp >= 80);
-                SetBar(FanBar, (rpm ?? 0) / 6000, false);
 
                 UpdateBattery(Obj(data, "battery"));
                 await RefreshForegroundAsync();
@@ -1723,9 +1746,6 @@ namespace GoSPanel.Widget
             var acOnline = battery != null && battery.ContainsKey("acOnline")
                            && battery["acOnline"].ValueType == JsonValueType.Boolean && battery.GetNamedBoolean("acOnline");
 
-            PowerLabel.Text = acOnline ? "Carga" : "Consumo";
-            PowerValue.Text = rate.HasValue ? rate.Value.ToString("0") + " W" : "—";
-            SetBar(BatteryBar, (percent ?? 0) / 100, percent < 20 && !acOnline);
 
             if (health.HasValue && full.HasValue)
                 BatteryHealthText.Text = "Salud de la batería: " + health.Value.ToString("0") + " % · capacidad actual " + full.Value.ToString("0.0", Es) + " Wh";
@@ -1743,6 +1763,7 @@ namespace GoSPanel.Widget
         {
             if (!_connected) return;
             var data = await CallAsync("power.get", null, false);
+            ApplyModeLimits(data);
             var mode = data?.GetNamedString("mode", "");
             if (string.IsNullOrEmpty(mode) || mode == _mode) return;
             ApplyMode(mode, false);
@@ -1762,7 +1783,26 @@ namespace GoSPanel.Widget
         private async Task RefreshPowerModeAsync()
         {
             var data = await CallAsync("power.get");
+            ApplyModeLimits(data);
             if (data != null) ApplyMode(data.GetNamedString("mode", ""), false);
+        }
+
+        /// <summary>Vatios (SPL) de las baldosas de modo: los que aplica de verdad el firmware.</summary>
+        private void ApplyModeLimits(JsonObject power)
+        {
+            var limits = Obj(power, "limits");
+            if (limits == null) return;
+            var changed = false;
+            foreach (var tile in new[] { ModeQuiet, ModeBalanced, ModePerformance })
+            {
+                var mode = (string)tile.Tag;
+                var spl = Num(Obj(limits, mode), "spl");
+                if (!spl.HasValue) continue;
+                tile.Title = spl.Value.ToString("0") + " W";
+                changed |= _presetSpl[mode] != (int)spl.Value;
+                _presetSpl[mode] = (int)spl.Value;
+            }
+            if (changed && _mode != "custom" && _presetSpl.ContainsKey(_mode)) UpdateModeSummary();
         }
 
         private async Task RefreshTdpAsync()
@@ -1879,7 +1919,7 @@ namespace GoSPanel.Widget
             {
                 return;
             }
-            var watts = _mode == "custom" ? _customSpl : PresetSpl[_mode];
+            var watts = _mode == "custom" ? _customSpl : _presetSpl[_mode];
             var summary = ModeNames[_mode] + " · " + watts + " W";
             HomeModeTile.State = summary;
             HomeModeTile.Glyph = ModeGlyphs[_mode];

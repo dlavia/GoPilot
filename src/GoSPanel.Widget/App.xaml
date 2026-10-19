@@ -16,6 +16,8 @@
         <SolidColorBrush x:Key="PanelBrush" Color="#1F000000" />
         <SolidColorBrush x:Key="Panel2Brush" Color="#4D000000" />
         <SolidColorBrush x:Key="Panel3Brush" Color="#1FFFFFFF" />
+        <!-- Pie («dock»): más oscuro que las filas para que la pastilla del perfil no se confunda con ellas -->
+        <SolidColorBrush x:Key="DockBrush" Color="#73000000" />
         <SolidColorBrush x:Key="LineBrush" Color="#2EFFFFFF" />
         <SolidColorBrush x:Key="TrackBrush" Color="#33FFFFFF" />
         <SolidColorBrush x:Key="TextBrush" Color="#FFF3F3F5" />

@@ -18,8 +18,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ===== Una sola fila: pestañas (LT / RT; Game Bar se reserva LB / RB para cambiar de widget) y, a la
-             derecha, el perfil activo (tocar abre la lista de perfiles). Game Bar ya pone el título «GoPilot» encima
+        <!-- ===== Una sola fila: pestañas (LT / RT; Game Bar se reserva LB / RB para cambiar de widget). El perfil
+             está en el pie. Game Bar ya pone el título «GoPilot» encima
              y no se puede quitar: así se ahorra la fila que ocupaba el perfil. ===== -->
         <Grid x:Name="TabsBar" Grid.Row="0" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="4" ColumnSpacing="3">
             <Grid.ColumnDefinitions>
@@ -77,31 +77,6 @@
             <Border Grid.Column="6" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Margin="2,0" Padding="4,1" VerticalAlignment="Center">
                 <TextBlock Text="RT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
             </Border>
-            <StackPanel x:Name="GameBannerHost" Grid.Column="7" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="2,0,0,0">
-                <Button x:Name="GameBanner" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Height="30" MaxWidth="112"
-                        Padding="8,0" Click="OnBannerClick" AutomationProperties.Name="Perfil activo">
-                    <FlyoutBase.AttachedFlyout>
-                        <Flyout x:Name="ProfilesFlyout" Placement="BottomEdgeAlignedRight" FlyoutPresenterStyle="{StaticResource SelectorFlyoutStyle}">
-                            <StackPanel x:Name="ProfilesFlyoutPanel" Spacing="2" />
-                        </Flyout>
-                    </FlyoutBase.AttachedFlyout>
-                    <StackPanel Orientation="Horizontal" Spacing="5">
-                        <TextBlock x:Name="GameIcon" Style="{StaticResource IconText}" FontSize="14" Text="&#xE560;" VerticalAlignment="Center" />
-                        <TextBlock x:Name="GameTitle" Text="Global" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                        <!-- Sin uso visible: se mantienen para el aviso «Sin servicio» y temas -->
-                        <TextBlock x:Name="GameSub" Visibility="Collapsed" />
-                        <Border x:Name="ProfileChip" Visibility="Collapsed">
-                            <TextBlock x:Name="ConnectionText" Text="PERFIL" />
-                        </Border>
-                    </StackPanel>
-                </Button>
-                <!-- Solo con el autoguardado desactivado: guardar a mano en el perfil activo -->
-                <Button x:Name="SaveProfileButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Visibility="Collapsed"
-                        Width="30" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnSaveProfileClick"
-                        AutomationProperties.Name="Guardar perfil" ToolTipService.ToolTip="Guardar los ajustes actuales en el perfil activo">
-                    <TextBlock x:Name="SaveProfileIcon" Style="{StaticResource IconText}" FontSize="15" Text="&#xE248;" HorizontalAlignment="Center" />
-                </Button>
-            </StackPanel>
         </Grid>
 
         <!-- ===== Paneles (se deslizan al cambiar de pestaña) ===== -->
@@ -246,9 +221,9 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <c:Tile x:Name="ModeQuiet" Vertical="True" Glyph="&#xE2DA;" Title="7 W" State="" AutomationProperties.Name="Silencio" Tag="quiet" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModeBalanced" Grid.Column="1" Vertical="True" Glyph="&#xE750;" Title="15 W" State="" AutomationProperties.Name="Equilibrado" Tag="balanced" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModePerformance" Grid.Column="2" Vertical="True" Glyph="&#xE2DE;" Title="20 W" State="" AutomationProperties.Name="Rendimiento" Tag="performance" Click="OnModeTileClick" />
+                                <c:Tile x:Name="ModeQuiet" Vertical="True" Glyph="&#xE2DA;" Title="10 W" State="" AutomationProperties.Name="Silencio" Tag="quiet" Click="OnModeTileClick" />
+                                <c:Tile x:Name="ModeBalanced" Grid.Column="1" Vertical="True" Glyph="&#xE750;" Title="16 W" State="" AutomationProperties.Name="Equilibrado" Tag="balanced" Click="OnModeTileClick" />
+                                <c:Tile x:Name="ModePerformance" Grid.Column="2" Vertical="True" Glyph="&#xE2DE;" Title="30 W" State="" AutomationProperties.Name="Rendimiento" Tag="performance" Click="OnModeTileClick" />
                                 <c:Tile x:Name="ModeCustom" Grid.Column="3" Vertical="True" Glyph="&#xE434;" Title="—" State="" AutomationProperties.Name="Manual" Tag="custom" Click="OnModeTileClick" />
                             </Grid>
 
@@ -701,7 +676,7 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="AJUSTES" Style="{StaticResource SectionTitle}" />
                             <StackPanel Spacing="3">
-                                <c:Tile Row="value" x:Name="ShowMonitorTile" Glyph="&#xE628;" Title="Monitor" State="—" Click="OnShowMonitorClick" />
+                                <c:Tile Row="value" x:Name="ShowMonitorTile" Glyph="&#xE628;" Title="Datos del pie" State="—" Click="OnShowMonitorClick" />
                                 <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
                                 <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
                                     <StackPanel>
@@ -828,39 +803,55 @@
         </Grid>
 
 
-        <!-- ===== Monitor (siempre visible, a todo el ancho) ===== -->
-        <Grid x:Name="MonitorBar" Grid.Row="2" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="6,8">
+        <!-- ===== Pie («dock»): franja propia de borde a borde, más oscura, para que no se confunda con el contenido.
+             A la izquierda el perfil aplicado (la lista se abre hacia arriba); a la derecha FPS, temperatura, consumo
+             real de la APU y ventilador. Las pestañas de arriba ya no cambian de sitio con el nombre del perfil. ===== -->
+        <Grid x:Name="MonitorBar" Grid.Row="2" Background="{StaticResource DockBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
+              Margin="-10,0,-10,-10" Padding="10,7,10,9" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <StackPanel Spacing="3">
-                <TextBlock Text="FPS" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="FpsValue" Text="—" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource OkBrush}" HorizontalAlignment="Center" />
-                <Grid x:Name="FpsBar" Height="3" Margin="8,0" CornerRadius="2" Background="{StaticResource TrackBrush}" />
-            </StackPanel>
-            <StackPanel Grid.Column="1" Spacing="3">
-                <TextBlock Text="APU" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="LoadValue" Text="—" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid x:Name="LoadBar" Height="3" Margin="8,0" CornerRadius="2" Background="{StaticResource TrackBrush}" />
-            </StackPanel>
-            <StackPanel Grid.Column="2" Spacing="3">
-                <TextBlock Text="Temp" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="TempValue" Text="—" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid x:Name="TempBar" Height="3" Margin="8,0" CornerRadius="2" Background="{StaticResource TrackBrush}" />
-            </StackPanel>
-            <StackPanel Grid.Column="3" Spacing="3">
-                <TextBlock Text="Ventil." FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="FanValue" Text="—" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid x:Name="FanBar" Height="3" Margin="8,0" CornerRadius="2" Background="{StaticResource TrackBrush}" />
-            </StackPanel>
-            <StackPanel Grid.Column="4" Spacing="3">
-                <TextBlock x:Name="PowerLabel" Text="Consumo" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
-                <TextBlock x:Name="PowerValue" Text="—" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                <Grid x:Name="BatteryBar" Height="3" Margin="8,0" CornerRadius="2" Background="{StaticResource TrackBrush}" />
+                <StackPanel x:Name="GameBannerHost" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="GameBanner" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Height="32" MaxWidth="170"
+                            Padding="8,0" Click="OnBannerClick" AutomationProperties.Name="Perfil activo">
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout x:Name="ProfilesFlyout" Placement="TopEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SelectorFlyoutStyle}">
+                                <StackPanel x:Name="ProfilesFlyoutPanel" Spacing="2" />
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock x:Name="GameIcon" Style="{StaticResource IconText}" FontSize="14" Text="&#xE560;" VerticalAlignment="Center" />
+                            <TextBlock x:Name="GameTitle" Text="Global" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource IconText}" FontSize="10" Text="&#xE13C;" VerticalAlignment="Center" Margin="2,0,0,0" />
+                            <!-- Sin uso visible: se mantienen para el aviso «Sin servicio» y temas -->
+                            <TextBlock x:Name="GameSub" Visibility="Collapsed" />
+                            <Border x:Name="ProfileChip" Visibility="Collapsed">
+                                <TextBlock x:Name="ConnectionText" Text="PERFIL" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                    <!-- Solo con el autoguardado desactivado: guardar a mano en el perfil activo -->
+                    <Button x:Name="SaveProfileButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Visibility="Collapsed"
+                            Width="30" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnSaveProfileClick"
+                            AutomationProperties.Name="Guardar perfil" ToolTipService.ToolTip="Guardar los ajustes actuales en el perfil activo">
+                        <TextBlock x:Name="SaveProfileIcon" Style="{StaticResource IconText}" FontSize="15" Text="&#xE248;" HorizontalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            <StackPanel x:Name="FooterStats" Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <StackPanel x:Name="FpsItem" Orientation="Horizontal" Spacing="2">
+                    <TextBlock x:Name="FpsValue" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OkBrush}" VerticalAlignment="Center" />
+                    <TextBlock Text="FPS" FontSize="10.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock x:Name="TempValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal" Spacing="2">
+                    <TextBlock x:Name="PowerValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="13" Text="&#xE9F2;" />
+                    <TextBlock x:Name="FanValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
             </StackPanel>
         </Grid>
 

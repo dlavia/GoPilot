@@ -16,7 +16,7 @@ internal static class LenovoWmi
 
     // IDs de feature: 0x01XXMMSS → 01 = CPU, XX = límite, MM = modo (01 silencio, 02 equilibrado, 03 rendimiento, FF custom).
     // Orden de XX según el driver lenovo-wmi-other de Linux: 01 = sPPT, 02 = SPL, 03 = fPPT.
-    // Comprobado con los valores por defecto del firmware (SPL 7/15/20 W), que son los que muestra Legion Space.
+    // Las IDs «FF» dan los límites activos: los del modo actual (cambian enchufada o con batería, ver ModeLimits) o los manuales.
     private const uint SpptId = 0x0101FF00;
     private const uint SplId = 0x0102FF00;
     private const uint FpptId = 0x0103FF00;
