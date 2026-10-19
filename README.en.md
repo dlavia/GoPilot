@@ -104,7 +104,7 @@ Lenovo's modes with their **real watts**, which change depending on whether the 
 |---|---|---|
 | Quiet | 10 W | 10 W |
 | Balanced | 16 W | 15 W |
-| Performance | 30 W | 25 W |
+| Performance | up to 30 W | up to 25 W |
 
 - **Manual, Steam Deck style:** pick a limit (5–30 W) and see right away what it draws. Under "Advanced" you can set
   bursts (sPPT) and peaks (fPPT) by hand.

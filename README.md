@@ -102,7 +102,7 @@ Los modos de Lenovo con sus **vatios reales**, que cambian si la consola está e
 |---|---|---|
 | Silencio | 10 W | 10 W |
 | Equilibrado | 16 W | 15 W |
-| Rendimiento | 30 W | 25 W |
+| Rendimiento | hasta 30 W | hasta 25 W |
 
 - **Manual, como la Steam Deck:** eliges un límite (5–30 W) y ves al momento lo que consume. En «Avanzado» puedes
   ajustar a mano las ráfagas (sPPT) y los picos (fPPT).
