@@ -36,6 +36,9 @@ internal static class ModeLimits
             try
             {
                 var tdp = LenovoWmi.GetTdp();
+                // Al pasar de Manual a un modo, el firmware puede seguir dando un rato los valores manuales: esos no
+                // son los del modo (se vio con 22 W apuntados en los tres modos) y no se guardan.
+                if (IsManual(tdp)) return Finish(power, source);
                 SavedState.Update(s =>
                 {
                     var all = s["modeLimits"] as JsonObject ?? new JsonObject();
@@ -46,9 +49,23 @@ internal static class ModeLimits
             }
             catch (Exception) { /* se reintenta en la próxima lectura */ }
         }
+        return Finish(power, source);
+    }
+
+    private static JsonObject Finish(JsonObject power, string source)
+    {
         power["ac"] = source == "ac";
         power["limits"] = For(source);
         return power;
+    }
+
+    /// <summary>¿Son los límites del modo Manual guardado (no los de un modo de Lenovo)?</summary>
+    private static bool IsManual(JsonNode? limits)
+    {
+        var manual = SavedState.Load()["tdp"];
+        if (limits == null || manual == null) return false;
+        return new[] { "spl", "sppt", "fppt" }.All(k =>
+            limits[k]?.GetValue<double>() is double a && manual[k]?.GetValue<double>() is double b && Math.Abs(a - b) < 0.5);
     }
 
     /// <summary>Límites de los tres modos para la fuente de alimentación actual.</summary>
@@ -58,7 +75,13 @@ internal static class ModeLimits
         var defaults = source == "ac" ? DefaultAc : DefaultDc;
         var result = new JsonObject();
         foreach (var (mode, d) in defaults)
-            result[mode] = saved?[mode + "-" + source]?.DeepClone() ?? new JsonObject { ["spl"] = d.Spl, ["sppt"] = d.Sppt, ["fppt"] = d.Fppt };
+        {
+            // Lo apuntado mal en versiones anteriores (los valores de Manual) se ignora y vale el medido
+            var learned = saved?[mode + "-" + source];
+            result[mode] = learned != null && !IsManual(learned)
+                ? learned.DeepClone()
+                : new JsonObject { ["spl"] = d.Spl, ["sppt"] = d.Sppt, ["fppt"] = d.Fppt };
+        }
         return result;
     }
 
