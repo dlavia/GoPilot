@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.Http.Headers;
 using System.Security;
@@ -36,7 +36,7 @@ internal static class Updater
         // latest.json se publica como archivo de cada versión (release.ps1). Se descarga en lugar de usar la API de
         // GitHub porque esta solo admite 60 consultas por hora e IP, y con IP compartida (VPN, operador) se agotan.
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-        using var response = await Http.GetAsync($"https://github.com/{Repo}/releases/latest/download/latest.json", timeout.Token);
+        using var response = await Http.GetAsync(NoCache($"https://github.com/{Repo}/releases/latest/download/latest.json"), timeout.Token);
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             lock (Sync) { _release = null; _checkedAt = DateTime.UtcNow; }   // aún no hay ninguna versión publicada
@@ -100,20 +100,17 @@ internal static class Updater
             var zip = Path.Combine(Folder, $"GoPilot-{version}.zip");
             var target = Path.Combine(Folder, version);
 
-            using (var response = await Http.GetAsync((string)release["url"]!, HttpCompletionOption.ResponseHeadersRead))
+            // GitHub a veces responde 502/503 o corta la descarga: se reintenta antes de dar error.
+            for (var attempt = 1; ; attempt++)
             {
-                response.EnsureSuccessStatusCode();
-                var total = response.Content.Headers.ContentLength ?? (long)release["size"]!;
-                await using var source = await response.Content.ReadAsStreamAsync();
-                await using var file = File.Create(zip);
-                var buffer = new byte[81920];
-                long done = 0;
-                int read;
-                while ((read = await source.ReadAsync(buffer)) > 0)
+                try
                 {
-                    await file.WriteAsync(buffer.AsMemory(0, read));
-                    done += read;
-                    if (total > 0) lock (Sync) _progress = (int)(done * 100 / total);
+                    await DownloadAsync((string)release["url"]!, zip, (long)release["size"]!);
+                    break;
+                }
+                catch (Exception) when (attempt < 3)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(3 * attempt));
                 }
             }
 
@@ -130,6 +127,26 @@ internal static class Updater
         {
             lock (Sync) { _state = "error"; _error = ex.Message; }
         }
+    }
+
+    private static async Task DownloadAsync(string url, string zip, long size)
+    {
+        lock (Sync) _progress = 0;
+        using var response = await Http.GetAsync(NoCache(url), HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+        var total = response.Content.Headers.ContentLength ?? size;
+        await using var source = await response.Content.ReadAsStreamAsync();
+        await using var file = File.Create(zip);
+        var buffer = new byte[81920];
+        long done = 0;
+        int read;
+        while ((read = await source.ReadAsync(buffer)) > 0)
+        {
+            await file.WriteAsync(buffer.AsMemory(0, read));
+            done += read;
+            if (total > 0) lock (Sync) _progress = (int)(done * 100 / total);
+        }
+        if (total > 0 && done != total) throw new IOException("Descarga incompleta");
     }
 
     /// <summary>
@@ -209,6 +226,12 @@ internal static class Updater
         p.WaitForExit(15000);
         if (check && p.ExitCode != 0) throw new InvalidOperationException($"{file}: {p.StandardError.ReadToEnd().Trim()}");
     }
+
+    /// <summary>
+    /// La caché de GitHub llegó a guardar un error 502 para la dirección de un zip y seguía devolviéndolo; con un
+    /// parámetro distinto en cada petición siempre se pide de nuevo (GitHub lo ignora al redirigir al archivo).
+    /// </summary>
+    private static string NoCache(string url) => $"{url}?t={DateTime.UtcNow.Ticks}";
 
     private static HttpClient CreateClient()
     {
