@@ -24,6 +24,8 @@ internal static class ProfileManager
     private static int _globalOverridePid;          // juego para el que el usuario eligió Global a mano
     private static bool _manual;
     private static int _autoSaveTick;                    // perfil de un juego elegido a mano desde la lista (sin su juego)
+    // Juegos cuyo perfil se ha borrado a mano: no se les vuelve a crear uno solo mientras siga abierto el agente.
+    private static readonly HashSet<string> NoAutoProfile = new(StringComparer.OrdinalIgnoreCase);
 
     public static void Start() => _ = Task.Run(LoopAsync);
 
@@ -154,6 +156,7 @@ internal static class ProfileManager
 
     public static JsonObject Delete(string exe)
     {
+        NoAutoProfile.Add(exe.ToLowerInvariant());
         Profiles.Remove(exe.ToLowerInvariant());
         Save();
         return List();
@@ -194,6 +197,18 @@ internal static class ProfileManager
         var current = ForegroundTracker.Current;
         // La elección manual de Global dura mientras siga abierto ese juego.
         if (_globalOverridePid != 0 && (current == null || current.Value.Pid != _globalOverridePid)) _globalOverridePid = 0;
+
+        // Juego nuevo, sin perfil: se le crea uno con los ajustes de ahora (los de Global), como Armoury Crate. Así lo
+        // que se ajuste jugando se queda en ese juego (autoguardado) y la pastilla muestra que se ha detectado.
+        if (Auto && current != null && current.Value.Pid != _globalOverridePid && !_manual
+            && Profiles[current.Value.Exe] is not JsonObject && !NoAutoProfile.Contains(current.Value.Exe))
+        {
+            var profile = await CaptureAsync();
+            profile["name"] = current.Value.Name;
+            profile["lossless"] = false;
+            Profiles[current.Value.Exe] = profile;
+            Save();
+        }
 
         var wantsGame = Auto && current != null && current.Value.Pid != _globalOverridePid
                         && Profiles[current.Value.Exe] is JsonObject;

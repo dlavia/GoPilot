@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
 
@@ -116,24 +116,50 @@ internal static class ForegroundTracker
             if (Ignored.Contains(process.ProcessName) || process.SessionId == 0) return;
             lock (Lock) if (_current?.Pid == process.Id) return;
 
-            string? path = null;
+            // Ruta con QueryFullProcessImageName (solo pide permiso de consulta): MainModule necesita leer la memoria
+            // del proceso y los antitrampas (Call of Duty, por ejemplo) se lo niegan al agente.
+            var path = ImagePath(process.Id);
             string name = process.ProcessName;
             try
             {
-                path = process.MainModule?.FileName;
-                var description = process.MainModule?.FileVersionInfo.FileDescription;
+                var description = path is null ? null : FileVersionInfo.GetVersionInfo(path).FileDescription;
                 if (!string.IsNullOrWhiteSpace(description)) name = description.Trim();
             }
-            catch (Exception) { /* proceso protegido o de otra arquitectura: basta el nombre */ }
+            catch (Exception) { /* sin información de versión: basta el nombre del proceso */ }
 
             // Lo que no es un juego no sustituye al juego recordado (que puede seguir abierto detrás).
-            if (!IsGame(process.ProcessName, path, hwnd)) return;
+            if (!IsGame(process.ProcessName, path, hwnd))
+            {
+                LogOnce(process.Id, $"no es juego: {process.ProcessName} ({path ?? "ruta no legible"})");
+                return;
+            }
             lock (Lock) _current = new Tracked(process.Id, process.StartTime, name, process.ProcessName, path);
+            LogOnce(process.Id, $"juego: {name} ({path})");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // El proceso pudo cerrarse entre llamadas; se reintenta en la siguiente muestra.
+            LogOnce(ex.Message.GetHashCode() | int.MinValue, "error: " + ex.Message);   // una vez por mensaje
         }
+    }
+
+    // Diagnóstico de la detección (LocalStateoreground.log): cada proceso se anota una sola vez.
+    private static readonly HashSet<int> Logged = new();
+
+    private static void LogOnce(int pid, string line)
+    {
+        try
+        {
+            lock (Logged)
+            {
+                if (!Logged.Add(pid)) return;
+                if (Logged.Count > 500) Logged.Clear();
+            }
+            var file = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "foreground.log");
+            if (File.Exists(file) && new FileInfo(file).Length > 64 * 1024) File.Delete(file);
+            File.AppendAllText(file, $"{DateTime.Now:HH:mm:ss} {line}{Environment.NewLine}");
+        }
+        catch (Exception) { }
     }
 
     /// <summary>
@@ -143,10 +169,14 @@ internal static class ForegroundTracker
     private static bool IsGame(string processName, string? path, IntPtr hwnd)
     {
         if (ProfileManager.HasProfile(processName.ToLowerInvariant() + ".exe")) return true;
-        if (path is null || IsConsole(hwnd)) return false;
-        var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows) + @"\";
-        if (path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) return false;   // cmd, notepad, mmc…
-        if (GameFolders.Any(f => path.Contains(f, StringComparison.OrdinalIgnoreCase))) return true;
+        if (IsConsole(hwnd)) return false;
+        if (path != null)
+        {
+            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows) + @"\";
+            if (path.StartsWith(windows, StringComparison.OrdinalIgnoreCase)) return false;   // cmd, notepad, mmc…
+            if (GameFolders.Any(f => path.Contains(f, StringComparison.OrdinalIgnoreCase))) return true;
+        }
+        // Sin ruta legible (proceso protegido) o fuera de una biblioteca: cuenta si ocupa toda la pantalla
         return CoversMonitor(hwnd);
     }
 
@@ -167,6 +197,26 @@ internal static class ForegroundTracker
         var m = info.Monitor;
         return r.Left <= m.Left && r.Top <= m.Top && r.Right >= m.Right && r.Bottom >= m.Bottom;
     }
+
+    private static string? ImagePath(int pid)
+    {
+        var handle = OpenProcess(0x1000 /*PROCESS_QUERY_LIMITED_INFORMATION*/, false, pid);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var buffer = new System.Text.StringBuilder(1024);
+            var size = buffer.Capacity;
+            return QueryFullProcessImageName(handle, 0, buffer, ref size) ? buffer.ToString() : null;
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
+    [DllImport("kernel32.dll")] private static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] private static extern bool QueryFullProcessImageName(IntPtr process, int flags, System.Text.StringBuilder name, ref int size);
+    [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr handle);
 
     [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
     [StructLayout(LayoutKind.Sequential)] private struct MonitorInfo { public int Size; public Rect Monitor, Work; public uint Flags; }
