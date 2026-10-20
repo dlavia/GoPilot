@@ -17,7 +17,12 @@ namespace GoSPanel.Bridge;
 /// </summary>
 internal static class ReactiveLights
 {
-    private const int FrameMs = 16;
+    // 30 actualizaciones por segundo como mucho: a 60 el mando (mismo USB que los botones) respondía con retraso.
+    private const int FrameMs = 33;
+    // Al volver de la suspensión (o al reaparecer las luces) no se les manda nada durante un rato: el mando se está
+    // despertando y escribirle entonces podía dejarlo sin responder.
+    private static readonly TimeSpan WakePause = TimeSpan.FromSeconds(8);
+    private static DateTime _lastTick, _pausedUntil;
 
     private static readonly object Lock = new();
     private static bool _running;
@@ -92,7 +97,11 @@ internal static class ReactiveLights
         {
             var lamps = await LampArray.FromIdAsync(info.Id);
             if (lamps == null || lamps.LampArrayKind != LampArrayKind.GameController) return;
-            lamps.AvailabilityChanged += (s, e) => Log("disponible: " + s.IsAvailable);
+            lamps.AvailabilityChanged += (s, e) =>
+            {
+                Log("disponible: " + s.IsAvailable);
+                lock (Lock) { _pausedUntil = DateTime.UtcNow.AddSeconds(3); _last = default; }
+            };
             lock (Lock) { if (_running) _lamps = lamps; }
             Log($"luces: {info.Name}, {lamps.LampCount} LED, disponible: {lamps.IsAvailable}");
             if (!lamps.IsAvailable) await PrioritizeAsync();
@@ -118,15 +127,29 @@ internal static class ReactiveLights
     private static void Render()
     {
         LampArray? lamps;
-        lock (Lock) lamps = _lamps;
+        var now = DateTime.UtcNow;
+        lock (Lock)
+        {
+            lamps = _lamps;
+            // Un hueco largo entre dos fotogramas = el equipo ha estado suspendido
+            if (_lastTick != default && now - _lastTick > TimeSpan.FromSeconds(2))
+            {
+                _pausedUntil = now + WakePause;
+                _last = default;
+                Log("vuelta de la suspensión: luces en pausa " + WakePause.TotalSeconds + " s");
+            }
+            _lastTick = now;
+            if (now < _pausedUntil) return;
+        }
         if (lamps == null) return;
 
         // Del brillo de reposo al de pico con los golpes (por defecto 20 → 80 %: con menos rango apenas se notaba).
         var scale = _low + (_high - _low) * _pulse;
         Color color = Color.FromArgb(255, Mix(_base.R * scale, 0), Mix(_base.G * scale, 0), Mix(_base.B * scale, 0));
-        _pulse *= 0.9;   // ~250 ms en volver al reposo
+        _pulse *= 0.8;   // ~250 ms en volver al reposo (a 30 fotogramas por segundo)
 
-        if (color.Equals(_last) || !lamps.IsAvailable) return;
+        // Solo si el cambio se nota: cada orden que se ahorra es una menos para el mando
+        if (!lamps.IsAvailable || Close(color, _last)) return;
         try
         {
             lamps.SetColor(color);
@@ -134,6 +157,9 @@ internal static class ReactiveLights
         }
         catch (Exception) { }
     }
+
+    private static bool Close(Color a, Color b) =>
+        a.A == b.A && Math.Abs(a.R - b.R) <= 4 && Math.Abs(a.G - b.G) <= 4 && Math.Abs(a.B - b.B) <= 4;
 
     private static byte Mix(double channel, double white) => (byte)Math.Clamp(channel + (255 - channel) * white, 0, 255);
 
