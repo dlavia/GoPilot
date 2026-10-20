@@ -17,8 +17,8 @@ namespace GoSPanel.Widget.Controls
     /// </summary>
     public sealed class TileGrid : Panel
     {
-        public double Gap { get; set; } = 7;
-        public double TileHeight { get; set; } = 92;
+        public double Gap { get; set; } = 6;
+        public double TileHeight { get; set; } = 78;
 
         private readonly List<Rect> _rects = new List<Rect>();
         private ImplicitAnimationCollection _implicit;

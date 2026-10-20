@@ -297,7 +297,7 @@ namespace GoSPanel.Widget.Controls
         private void ApplyLayout()
         {
             // Ampliada: cabecera de una línea (icono, «Brillo · 71 %» y ⌃); ya se sabe dónde se está y deja sitio a las opciones
-            Root.Height = _expanded ? 46 : 92;
+            Root.Height = _expanded ? 40 : 78;
             HoldFill.Height = ArtLayer.Height = Root.Height;
             if (_expanded)
             {
@@ -311,8 +311,8 @@ namespace GoSPanel.Widget.Controls
                 ChevronText.Visibility = Visibility.Visible;
                 ChevronText.Text = "";
                 ChevronText.FontSize = 11;
-                IconBox.Width = IconBox.Height = _key ? 26 : double.NaN;
-                IconText.FontSize = _key ? 15 : 16;
+                IconBox.Width = IconBox.Height = _key ? 24 : double.NaN;
+                IconText.FontSize = _key ? 14 : 15;
                 IconBox.VerticalAlignment = VerticalAlignment.Center;
                 return;
             }
@@ -324,7 +324,7 @@ namespace GoSPanel.Widget.Controls
             // Interruptor: icono y punto arriba, el nombre abajo en grande. Valor: icono + nombre arriba y el dato grande.
             TitleText.Visibility = toggleLook || _key ? Visibility.Collapsed : Visibility.Visible;
             ValueText.Text = toggleLook ? _title : _value;
-            ValueText.FontSize = toggleLook ? 14 : _key ? 16 : 21;
+            ValueText.FontSize = toggleLook ? 13.5 : _key ? 15 : 19;
             ValueText.Margin = new Thickness(0, 0, 0, toggleLook ? 0 : 1);
             TitleText.Text = _title;
             // El punto dice si está encendida; en Modo (pasa de uno a otro) no tiene sentido
@@ -342,8 +342,8 @@ namespace GoSPanel.Widget.Controls
                 ChevronText.Text = "";
                 ChevronText.FontSize = 11;
             }
-            IconBox.Width = IconBox.Height = _key ? 34 : double.NaN;
-            IconText.FontSize = _key ? 18 : 16;
+            IconBox.Width = IconBox.Height = _key ? 28 : double.NaN;
+            IconText.FontSize = _key ? 16 : 15;
         }
 
         private void ApplyVisuals()

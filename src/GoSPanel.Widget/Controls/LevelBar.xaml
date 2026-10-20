@@ -7,7 +7,7 @@
 
     <!-- Barra de brillo o volumen (maqueta design/brillo-volumen.html, opción 1): la barra entera es el deslizador.
          Con el foco encima, ← → la mueven al momento (sin «entrar» con A); A silencia o activa el brillo automático. -->
-    <c:LevelButton x:Name="Root" Style="{StaticResource FlatButton}" Height="36" Background="{StaticResource Panel2Brush}">
+    <c:LevelButton x:Name="Root" Style="{StaticResource FlatButton}" Height="32" Background="{StaticResource Panel2Brush}">
         <Grid>
             <Border x:Name="Fill" HorizontalAlignment="Left" CornerRadius="8" Width="0" />
             <Grid Padding="12,0" ColumnSpacing="9">

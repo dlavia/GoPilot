@@ -2097,7 +2097,7 @@ namespace GoSPanel.Widget
             sb.Begin();
         }
 
-        private const double QuickBarsHeight = 86;   // 2 barras de 36 + 6 de separación + 8 hasta los filtros
+        private const double QuickBarsHeight = 76;   // 2 barras de 32 + 5 de separación + 7 hasta los filtros
 
         private void OnQuickBarsSizeChanged(object sender, SizeChangedEventArgs e)
         {

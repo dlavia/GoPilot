@@ -10,7 +10,7 @@
     <Border x:Name="Frame" CornerRadius="12" BorderThickness="1">
         <Grid>
         <!-- Arte del juego (baldosa Perfil): su fondo oscurecido detrás de la cabecera -->
-        <Border x:Name="ArtLayer" VerticalAlignment="Top" Height="92" CornerRadius="11" Visibility="Collapsed">
+        <Border x:Name="ArtLayer" VerticalAlignment="Top" Height="78" CornerRadius="11" Visibility="Collapsed">
             <Border CornerRadius="11">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
@@ -21,13 +21,13 @@
             </Border>
         </Border>
         <!-- Mantener A: la cabecera se va llenando de color de izquierda a derecha; al llenarse se abren las opciones -->
-        <Border x:Name="HoldFill" VerticalAlignment="Top" Height="92" CornerRadius="11" Opacity="0" RenderTransformOrigin="0,0.5">
+        <Border x:Name="HoldFill" VerticalAlignment="Top" Height="78" CornerRadius="11" Opacity="0" RenderTransformOrigin="0,0.5">
             <Border.RenderTransform>
                 <ScaleTransform x:Name="HoldFillScale" ScaleX="0" />
             </Border.RenderTransform>
         </Border>
         <StackPanel>
-            <c:CardButton x:Name="Root" Style="{StaticResource FlatButton}" Height="92" Padding="11,10,11,9">
+            <c:CardButton x:Name="Root" Style="{StaticResource FlatButton}" Height="78" Padding="10,8,10,7">
                 <Grid>
                     <Grid x:Name="Layout" RowSpacing="1">
                         <Grid.RowDefinitions>
@@ -56,7 +56,7 @@
                                 </TextBlock.RenderTransform>
                             </TextBlock>
                         </Grid>
-                        <TextBlock x:Name="ValueText" Grid.Row="1" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Bottom"
+                        <TextBlock x:Name="ValueText" Grid.Row="1" FontSize="19" FontWeight="SemiBold" VerticalAlignment="Bottom"
                                    TextTrimming="CharacterEllipsis" Margin="0,0,0,1" />
                         <TextBlock x:Name="StateText" Grid.Row="2" FontSize="10.5" TextTrimming="CharacterEllipsis" />
                     </Grid>
@@ -69,7 +69,7 @@
                     </Border>
                 </Grid>
             </c:CardButton>
-            <ContentPresenter x:Name="BodyHost" Margin="11,0,11,11" Visibility="Collapsed" />
+            <ContentPresenter x:Name="BodyHost" Margin="10,0,10,10" Visibility="Collapsed" />
         </StackPanel>
         </Grid>
     </Border>

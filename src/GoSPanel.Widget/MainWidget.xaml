@@ -10,7 +10,7 @@
          Diseño de una sola página (design/perfil-modo-baldosas.html): información del sistema arriba, filtros (LT / RT),
          baldosas en dos columnas que se amplían con sus opciones y, abajo, qué hace cada botón del mando. -->
     <Grid x:Name="ScaleHost" Background="{StaticResource PageBrush}" SizeChanged="OnScaleHostSizeChanged">
-    <Grid x:Name="LayoutRoot" Padding="10,6,10,0" RowSpacing="8" HorizontalAlignment="Left" VerticalAlignment="Top">
+    <Grid x:Name="LayoutRoot" Padding="10,4,10,0" RowSpacing="6" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Grid.RenderTransform>
             <ScaleTransform x:Name="RootScale" />
         </Grid.RenderTransform>
@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
 
         <!-- ===== Información del sistema: batería (o carga), FPS, W, temperatura y ventilador en una tarjeta ===== -->
-        <Grid x:Name="StatusCard" Background="{StaticResource Panel2Brush}" CornerRadius="12" Padding="4,8">
+        <Grid x:Name="StatusCard" Background="{StaticResource Panel2Brush}" CornerRadius="12" Padding="4,8" Visibility="Collapsed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.75*" />
                 <ColumnDefinition Width="*" />
@@ -67,7 +67,7 @@
             <!-- ===== Brillo y volumen (solo en «Todo»; maqueta design/brillo-volumen.html, opción 1): con el foco encima,
                  ← → los cambian al momento. A: brillo automático / silenciar. Se pliegan con animación en los demás filtros. ===== -->
             <Grid x:Name="QuickBars" SizeChanged="OnQuickBarsSizeChanged">
-                <StackPanel Spacing="6" Padding="0,0,0,8" VerticalAlignment="Top">
+                <StackPanel Spacing="5" Padding="0,0,0,7" VerticalAlignment="Top">
                     <c:LevelBar x:Name="BrightnessBar" Glyph="&#xE472;" Label="Brillo" ValueChanged="OnBrightnessBarChanged" Click="OnBrightnessBarClick" />
                     <c:LevelBar x:Name="VolumeBar" Glyph="&#xE44A;" Label="Volumen" StepSize="5" ValueChanged="OnVolumeBarChanged" Click="OnVolumeBarClick" />
                 </StackPanel>
@@ -81,7 +81,7 @@
 
         <!-- ===== Baldosas ===== -->
         <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" IsTabStop="False">
-            <StackPanel Spacing="8" Padding="0,0,0,10">
+            <StackPanel Spacing="6" Padding="0,0,0,8">
                 <Grid x:Name="UpdateNotice" Visibility="Collapsed" ColumnSpacing="4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
