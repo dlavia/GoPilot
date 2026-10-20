@@ -28,7 +28,9 @@ function Invoke-AsDesktopUser([string]$command) {
     $action = New-ScheduledTaskAction -Execute 'conhost.exe' `
         -Argument "--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command `"& { $command } *> '$log'`""
     $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
-    Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Force | Out-Null
+    # También con batería: por defecto Windows deja la tarea «en cola» sin cargador (una consola casi siempre)
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+    Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings -Force | Out-Null
     try {
         Start-ScheduledTask -TaskName $taskName
         # Add-AppxPackage puede tardar varios minutos si la Tienda está instalando otras actualizaciones

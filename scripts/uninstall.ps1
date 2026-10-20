@@ -11,7 +11,9 @@ if ($user -and [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) {
     $action = New-ScheduledTaskAction -Execute 'conhost.exe' `
         -Argument "--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command `"Get-AppxPackage GoSPanel | Remove-AppxPackage; if (-not (Get-AppxPackage LegionGoGameBarWidget)) { Add-AppxPackage -RegisterByFamilyName -MainPackage LegionGoGameBarWidget_ra2g5j82mn5h8 -ErrorAction SilentlyContinue }; Get-Process GameBar, GameBarFTServer, XboxGameBarWidgets -ErrorAction SilentlyContinue | Stop-Process -Force`""
     $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
-    Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Force | Out-Null
+    # También con batería: por defecto Windows deja la tarea «en cola» sin cargador (una consola casi siempre)
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+    Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings -Force | Out-Null
     Start-ScheduledTask -TaskName $taskName
     $deadline = (Get-Date).AddMinutes(5)
     do { Start-Sleep -Seconds 1 } while ((Get-ScheduledTask -TaskName $taskName).State -in 'Queued', 'Running' -and (Get-Date) -lt $deadline)
