@@ -1193,6 +1193,7 @@ namespace GoSPanel.Widget
             var data = await CallAsync("foreground.get", null, false);
             var active = data != null && data.GetNamedBoolean("active", false);
             _gameName = active ? data.GetNamedString("name", "") : null;
+            _gamePath = active ? StringOrNull(data, "path") : null;
 
 
             KillCard.Available = active;
@@ -1255,18 +1256,32 @@ namespace GoSPanel.Widget
             ProfileCard.Quick = _gameName != null && currentExe != null ? "toggle" : "";
             ProfileCard.ActionText = !onGlobal ? "Usar Global" : current != null ? "Usar el perfil del juego" : "Crear perfil del juego";
             ProfileCard.State = !onGlobal ? "Perfil del juego" : _gameName != null ? "Global · " + _gameName + " abierto" : "Perfil Global";
+            await ApplyProfileArtAsync(onGlobal ? null : activeProfile);
 
-            // Reconstruir la lista solo si ha cambiado (para no perder el foco del mando).
+            // Reconstruir la lista solo si ha cambiado (para no perder el foco del mando). El arte que aún se estaba
+            // buscando también cuenta: cuando llega, se rehace (salvo que el mando esté dentro de la lista).
             var signature = data.Stringify();
-            if (signature == _profilesSignature) return;
+            var focusInList = IsInside(FocusManager.GetFocusedElement() as DependencyObject, ProfilesList);
+            if (signature == _profilesSignature && !(_artPending && !focusInList)) return;
             _profilesSignature = signature;
+            _artPending = false;
+            var arts = new Dictionary<string, JsonObject>();
+            foreach (var p in profiles)
+            {
+                var art = await GetArtAsync(p);
+                if (art == null) continue;
+                arts[p.GetNamedString("exe", "")] = art;
+                if (art.GetNamedBoolean("pending", false)) _artPending = true;
+            }
 
             ProfilesList.Children.Clear();
-            ProfilesList.Children.Add(ProfileRow(global ?? new JsonObject(), "global", "Global", onGlobal));
+            ProfilesList.Children.Add(ProfileRow(global ?? new JsonObject(), "global", "Global", onGlobal, null));
             foreach (var p in profiles.OrderBy(p => p.GetNamedString("name", "")))
             {
                 var exe = p.GetNamedString("exe", "");
-                ProfilesList.Children.Add(ProfileRow(p, exe, p.GetNamedString("name", exe), exe == _activeTarget));
+                JsonObject art;
+                arts.TryGetValue(exe, out art);
+                ProfilesList.Children.Add(ProfileRow(p, exe, p.GetNamedString("name", exe), exe == _activeTarget, art));
             }
             ProfilesEmptyText.Visibility = profiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             ProfileCountText.Text = profiles.Count == 1 ? "1 perfil" : profiles.Count + " perfiles";
@@ -1290,7 +1305,7 @@ namespace GoSPanel.Widget
         }
 
         /// <summary>Fila de la lista de perfiles: A lo aplica (también sin su juego abierto); la papelera lo borra.</summary>
-        private UIElement ProfileRow(JsonObject p, string target, string name, bool active)
+        private UIElement ProfileRow(JsonObject p, string target, string name, bool active, JsonObject art)
         {
             var grid = new Grid { ColumnSpacing = 4 };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -1299,12 +1314,26 @@ namespace GoSPanel.Widget
             var content = new Grid { ColumnSpacing = 10 };
             content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            content.Children.Add(new TextBlock
+            var cover = ArtImage(art, "capsule") ?? ArtImage(art, "hero");
+            var icon = ArtImage(art, "icon");
+            if (cover != null || icon != null)
             {
-                Style = (Style)Application.Current.Resources["IconText"],
-                Text = target == "global" ? "\uE28E" : "\uE26E", FontSize = 17,
-                Foreground = active && Theme.IsContrast ? new SolidColorBrush(Theme.OnAccent) : Brush(active ? "TextBrush" : "MutedBrush"),
-            });
+                // Carátula (o icono) del juego, como en la biblioteca de Steam
+                content.Children.Add(new Border
+                {
+                    Width = cover != null ? 56 : 26, Height = 26, CornerRadius = new CornerRadius(5),
+                    Background = new ImageBrush { ImageSource = cover ?? icon, Stretch = Stretch.UniformToFill },
+                });
+            }
+            else
+            {
+                content.Children.Add(new TextBlock
+                {
+                    Style = (Style)Application.Current.Resources["IconText"],
+                    Text = target == "global" ? "\uE28E" : "\uE26E", FontSize = 17, Width = 26, TextAlignment = TextAlignment.Center,
+                    Foreground = active && Theme.IsContrast ? new SolidColorBrush(Theme.OnAccent) : Brush(active ? "TextBrush" : "MutedBrush"),
+                });
+            }
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             texts.Children.Add(new TextBlock { Text = name, FontSize = 12.5, FontWeight = Windows.UI.Text.FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
             texts.Children.Add(new TextBlock { Text = target == "global" ? "Sin juego" : ProfileSummary(p), FontSize = 11, Foreground = Brush(active ? "TextBrush" : "MutedBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
@@ -1359,7 +1388,37 @@ namespace GoSPanel.Widget
 
         private JsonObject _profilesData;
 
-        private string _currentExe;
+        private string _currentExe, _gamePath;
+        private string _artShown;
+        private bool _artPending;
+
+        /// <summary>Arte de un perfil (lo busca el agente: Steam, app de Xbox o icono del .exe). Null si no hay conexión.</summary>
+        private async Task<JsonObject> GetArtAsync(JsonObject profile)
+        {
+            var exe = profile.GetNamedString("exe", "");
+            if (exe.Length == 0) return null;
+            var args = new JsonObject { ["exe"] = JsonValue.CreateStringValue(exe) };
+            // La ruta del juego: la guardada en el perfil o, si es el que está abierto, la de ahora
+            var path = StringOrNull(profile, "path") ?? (exe == _currentExe ? _gamePath : null);
+            if (path != null) args["path"] = JsonValue.CreateStringValue(path);
+            return await CallAsync("art.get", args, false);
+        }
+
+        private static ImageSource ArtImage(JsonObject art, string key)
+        {
+            var relative = art != null ? StringOrNull(art, key) : null;
+            return relative == null ? null : new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("ms-appdata:///local/" + relative));
+        }
+
+        /// <summary>Baldosa Perfil con el fondo y el icono del juego (Global: sin arte).</summary>
+        private async Task ApplyProfileArtAsync(JsonObject profile)
+        {
+            var art = profile != null ? await GetArtAsync(profile) : null;
+            var signature = profile == null ? null : profile.GetNamedString("exe", "") + "|" + (art?.Stringify() ?? "");
+            if (signature == _artShown) return;
+            _artShown = signature;
+            ProfileCard.SetArt(ArtImage(art, "hero"), ArtImage(art, "icon"));
+        }
 
         /// <summary>A en la baldosa Perfil (con juego): alterna entre el perfil del juego y Global.</summary>
         private async void OnProfileCardClick(object sender, RoutedEventArgs e)

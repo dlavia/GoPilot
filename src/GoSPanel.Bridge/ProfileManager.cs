@@ -89,6 +89,7 @@ internal static class ProfileManager
                 var previous = Profiles[_active] as JsonObject;
                 var ownGame = current != null && current.Value.Exe == _active;
                 profile["name"] = ownGame ? current!.Value.Name : previous?["name"]?.GetValue<string>() ?? _active;
+                profile["path"] = ownGame ? ForegroundTracker.CurrentPath : previous?["path"]?.GetValue<string>();
                 // Lossless solo se puede leer con el juego delante; si no, se conserva lo guardado.
                 profile["lossless"] = ownGame
                     ? LosslessScaling.Get()["active"]?.GetValue<bool>() ?? false
@@ -147,6 +148,7 @@ internal static class ProfileManager
                     // Sin perfil todavía: el juego hereda lo que hay ahora y queda guardado como su perfil.
                     var profile = await CaptureAsync();
                     profile["name"] = current.Value.Name;
+                    profile["path"] = ForegroundTracker.CurrentPath;
                     profile["lossless"] = false;
                     Profiles[current.Value.Exe] = profile;
                     Save();
@@ -213,6 +215,7 @@ internal static class ProfileManager
         {
             var profile = await CaptureAsync();
             profile["name"] = current.Value.Name;
+            profile["path"] = ForegroundTracker.CurrentPath;
             profile["lossless"] = false;
             Profiles[current.Value.Exe] = profile;
             Save();
@@ -271,7 +274,8 @@ internal static class ProfileManager
         var changed = !Same("mode") || !Same("boost") || !Same("width") || !Same("height") || !Same("hz")
                       || (mode == "custom" && !Same("tdp")) || (mode == "auto" && !Same("autoTdp")) || (ownGame && !Same("lossless"))
                       || (captured["amd"] != null && !Same("amd")) || (captured["lights"] != null && !Same("lights"))
-                      || (captured["gyroMode"] != null && !Same("gyroMode"));
+                      || (captured["gyroMode"] != null && !Same("gyroMode"))
+                      || (ownGame && stored["path"] == null && ForegroundTracker.CurrentPath != null);   // perfiles de antes: la ruta (para el arte)
         if (!changed) return;
 
         foreach (var (key, value) in captured)

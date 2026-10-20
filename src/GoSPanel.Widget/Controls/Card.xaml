@@ -9,6 +9,17 @@
          sus opciones cuando se amplía. El fondo y el tinte los lleva el marco; el botón solo recibe el foco. -->
     <Border x:Name="Frame" CornerRadius="12" BorderThickness="1">
         <Grid>
+        <!-- Arte del juego (baldosa Perfil): su fondo oscurecido detrás de la cabecera -->
+        <Border x:Name="ArtLayer" VerticalAlignment="Top" Height="92" CornerRadius="11" Visibility="Collapsed">
+            <Border CornerRadius="11">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#40000000" Offset="0" />
+                        <GradientStop Color="#D90A0A0C" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+        </Border>
         <!-- Mantener A: la cabecera se va llenando de color de izquierda a derecha; al llenarse se abren las opciones -->
         <Border x:Name="HoldFill" VerticalAlignment="Top" Height="92" CornerRadius="11" Opacity="0" RenderTransformOrigin="0,0.5">
             <Border.RenderTransform>

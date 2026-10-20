@@ -179,6 +179,16 @@ namespace GoSPanel.Widget.Controls
 
         public static bool Animate { get; set; } = true;
 
+        private ImageSource _art, _iconImage;
+
+        /// <summary>Arte del juego: fondo detrás de la cabecera e icono en el cuadrado (null = sin arte).</summary>
+        public void SetArt(ImageSource art, ImageSource icon)
+        {
+            _art = art;
+            _iconImage = icon;
+            ApplyVisuals();
+        }
+
         public Control FocusTarget => Root;
 
         /// <summary>Lo que dice la barra de botones para A.</summary>
@@ -286,7 +296,7 @@ namespace GoSPanel.Widget.Controls
         {
             // Ampliada: cabecera de una línea (icono, «Brillo · 71 %» y ⌃); ya se sabe dónde se está y deja sitio a las opciones
             Root.Height = _expanded ? 46 : 92;
-            HoldFill.Height = Root.Height;
+            HoldFill.Height = ArtLayer.Height = Root.Height;
             if (_expanded)
             {
                 TitleText.Visibility = Visibility.Visible;
@@ -359,6 +369,15 @@ namespace GoSPanel.Widget.Controls
                 Dot.Fill = on ? new SolidColorBrush(accent) : new SolidColorBrush(Color.FromArgb(0xFF, 0x5A, 0x5B, 0x62));
             }
             IconBox.Background = _key ? new SolidColorBrush(Color.FromArgb(0x30, accent.R, accent.G, accent.B)) : new SolidColorBrush(Colors.Transparent);
+            // Con arte: el icono del juego ocupa el cuadrado y su fondo va detrás de la cabecera
+            if (_iconImage != null) IconBox.Background = new ImageBrush { ImageSource = _iconImage, Stretch = Stretch.UniformToFill };
+            IconText.Visibility = _iconImage != null ? Visibility.Collapsed : Visibility.Visible;
+            ArtLayer.Visibility = _art != null ? Visibility.Visible : Visibility.Collapsed;
+            if (_art != null)
+            {
+                ArtLayer.Background = new ImageBrush { ImageSource = _art, Stretch = Stretch.UniformToFill, AlignmentY = AlignmentY.Center };
+                ValueText.Foreground = TitleText.Foreground = new SolidColorBrush(Colors.White);
+            }
             Frame.Opacity = _selection == false ? 0.45 : 1;
         }
 
