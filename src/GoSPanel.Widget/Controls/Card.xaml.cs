@@ -197,6 +197,7 @@ namespace GoSPanel.Widget.Controls
             get
             {
                 if (_selection.HasValue) return _selection.Value ? "Quitar de Todo" : "Añadir a Todo";
+                if (_expanded) return "Cerrar";
                 if (!string.IsNullOrEmpty(_actionText) && _quick != "") return _actionText;
                 switch (_quick)
                 {
@@ -217,7 +218,8 @@ namespace GoSPanel.Widget.Controls
 
         private void OnTap(object sender, EventArgs e)
         {
-            if (_selection.HasValue || _quick == "")
+            // Abierta: A en su cabecera la cierra (la acción rápida es solo de la baldosa cerrada)
+            if (_selection.HasValue || _quick == "" || _expanded)
             {
                 ExpandRequested?.Invoke(this, EventArgs.Empty);
                 return;
@@ -233,7 +235,7 @@ namespace GoSPanel.Widget.Controls
 
         private void StartHold(object sender, EventArgs e)
         {
-            if (!HasBody || _selection.HasValue || _quick == "") return;   // sin opciones aparte, A ya las abre
+            if (!HasBody || _selection.HasValue || _quick == "" || _expanded) return;   // sin opciones aparte, A ya las abre
             _holdTimer.Start();
             HoldBar.Opacity = 1;
             var accent = ((SolidColorBrush)Brush("AccentBrush")).Color;
