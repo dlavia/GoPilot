@@ -20,6 +20,8 @@
                 </Border.Background>
             </Border>
         </Border>
+        <!-- Nivel (Brillo, Volumen): el fondo de la cabecera se rellena hasta el valor -->
+        <Border x:Name="LevelFill" HorizontalAlignment="Left" VerticalAlignment="Top" Height="78" CornerRadius="11" Width="0" Visibility="Collapsed" />
         <!-- Mantener A: la cabecera se va llenando de color de izquierda a derecha; al llenarse se abren las opciones -->
         <Border x:Name="HoldFill" VerticalAlignment="Top" Height="78" CornerRadius="11" Opacity="0" RenderTransformOrigin="0,0.5">
             <Border.RenderTransform>

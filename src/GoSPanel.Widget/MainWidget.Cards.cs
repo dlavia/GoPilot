@@ -22,7 +22,7 @@ namespace GoSPanel.Widget
 
         private static readonly string[] DefaultTodo =
         {
-            "AfmfCard", "VrrCard", "BoostCard", "LightsCard", "RefreshCard", "FanCard",
+            "BrightnessCard", "VolumeCard", "AfmfCard", "VrrCard", "BoostCard", "LightsCard", "RefreshCard", "FanCard",
         };
 
         private string _filter = "Todo";
@@ -34,10 +34,13 @@ namespace GoSPanel.Widget
         {
             if (_cards.Count > 0) return;
             _cards = CardsGrid.Children.OfType<Card>().ToList();
+            BrightnessCard.LevelChanged += OnBrightnessLevelChanged;
+            VolumeCard.LevelChanged += OnVolumeLevelChanged;
             foreach (var card in _cards)
             {
                 card.ExpandRequested += (s, e) => OnCardExpandRequested((Card)s);
                 card.VisualChanged += (s, e) => UpdateHints();
+                card.EngagedChanged += (s, e) => ShowLevels();
             }
 
             var saved = Pref("todoCards", "");
@@ -73,7 +76,6 @@ namespace GoSPanel.Widget
             if (changed && _editingTodo) EndEditTodo();
             foreach (var card in _cards) if (card.Expanded && changed) Collapse(card);
             ApplyFilterVisibility();
-            ShowQuickBars(_filter == "Todo");
 
             for (var i = 0; i < FiltersBar.Children.Count; i++)
             {
@@ -198,7 +200,7 @@ namespace GoSPanel.Widget
 
             var focused = FocusManager.GetFocusedElement() as Control;
             if (focused == null || (focused as Slider)?.IsFocusEngaged == true || !IsInside(focused, LayoutRoot)) return false;
-            if (focused is LevelButton && dx != 0) return false;   // ← → mueven la barra de brillo o volumen
+            if ((focused as CardButton)?.Engaged == true && dx != 0) return false;   // ← → cambian el brillo o el volumen
 
             var from = Bounds(focused);
             Control best = null;
@@ -275,12 +277,9 @@ namespace GoSPanel.Widget
             for (var e = focused; e != null; e = VisualTreeHelper.GetParent(e))
                 if ((card = e as Card) != null) break;
             var onHeader = card != null && focused == card.FocusTarget;
-            var bar = focused == BrightnessBar.FocusTarget ? BrightnessBar : focused == VolumeBar.FocusTarget ? VolumeBar : null;
-            HintPad.Visibility = bar != null ? Visibility.Visible : Visibility.Collapsed;
-            HintA.Visibility = focused is Control && !(bar == BrightnessBar && !_lightSensor) ? Visibility.Visible : Visibility.Collapsed;
-            HintAText.Text = bar == VolumeBar ? (_muted ? "Activar el sonido" : "Silenciar")
-                : bar == BrightnessBar ? (_autoBrightness ? "Brillo manual" : "Brillo automático")
-                : onHeader ? card.HintA : focused is Slider ? "Ajustar" : "Elegir";
+            HintPad.Visibility = onHeader && card.Engaged ? Visibility.Visible : Visibility.Collapsed;
+            HintA.Visibility = focused is Control ? Visibility.Visible : Visibility.Collapsed;
+            HintAText.Text = onHeader ? card.HintA : focused is Slider ? "Ajustar" : "Elegir";
             HintY.Visibility = onHeader && card.HintY && !card.Expanded ? Visibility.Visible : Visibility.Collapsed;
             HintB.Visibility = card != null && card.Expanded ? Visibility.Visible : Visibility.Collapsed;
         }

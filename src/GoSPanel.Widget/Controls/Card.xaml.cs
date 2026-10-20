@@ -27,6 +27,12 @@ namespace GoSPanel.Widget.Controls
         /// <summary>Pide abrir o cerrar las opciones (mantener A, Y, B o A sin acción rápida). Lo decide la página.</summary>
         public event EventHandler ExpandRequested;
 
+        /// <summary>Baldosa de nivel: el usuario ha cambiado el valor (← → enganchada, o arrastrando con el dedo).</summary>
+        public event EventHandler<double> LevelChanged;
+
+        /// <summary>Se ha enganchado o soltado (la página cambia sus textos).</summary>
+        public event EventHandler EngagedChanged;
+
         /// <summary>Cambió algo visible (estado, textos): la página repinta la barra de botones.</summary>
         public event EventHandler VisualChanged;
 
@@ -47,6 +53,10 @@ namespace GoSPanel.Widget.Controls
                 ExpandRequested?.Invoke(this, EventArgs.Empty);
             };
             AddHandler(KeyDownEvent, new KeyEventHandler(OnCardKeyDown), false);
+            Root.Step += (s, direction) => SetLevelByUser(Math.Round((_level + direction * LevelStep) / LevelStep) * LevelStep);
+            Root.Drag += (s, fraction) => SetLevelByUser(Math.Round(fraction * 100 / 5) * 5);
+            Root.LostFocus += (s, e) => Engaged = false;
+            Frame.SizeChanged += (s, e) => ApplyLevel();
             ApplyLayout();
             ApplyVisuals();
             EventHandler onTheme = (s, e) => ApplyVisuals();
@@ -107,7 +117,7 @@ namespace GoSPanel.Widget.Controls
         public string Quick
         {
             get => _quick;
-            set { _quick = value ?? ""; ApplyLayout(); Changed(); }
+            set { _quick = value ?? ""; Root.Draggable = _quick == "level"; ApplyLayout(); ApplyLevel(); Changed(); }
         }
         private string _quick = "";
 
@@ -179,6 +189,53 @@ namespace GoSPanel.Widget.Controls
 
         public static bool Animate { get; set; } = true;
 
+        // ---------------------------------------------------------------------
+        // Baldosa de nivel (Quick="level"): A la engancha y ← → cambian el valor al momento; A o B la sueltan
+        // ---------------------------------------------------------------------
+
+        private double _level = double.NaN;
+        public double Level
+        {
+            get => _level;
+            set { _level = Math.Max(0, Math.Min(100, value)); ApplyLevel(); }
+        }
+
+        public double LevelStep { get; set; } = 10;
+
+        private bool _engaged;
+        public bool Engaged
+        {
+            get => _engaged;
+            set
+            {
+                if (_engaged == value) return;
+                _engaged = value;
+                Root.Engaged = value;
+                EngagedChanged?.Invoke(this, EventArgs.Empty);
+                ApplyLevel();
+                ApplyVisuals();
+                Changed();
+            }
+        }
+
+        private void SetLevelByUser(double value)
+        {
+            value = Math.Max(0, Math.Min(100, value));
+            if (value == _level) return;
+            Level = value;
+            LevelChanged?.Invoke(this, value);
+        }
+
+        private void ApplyLevel()
+        {
+            var on = _quick == "level" && !double.IsNaN(_level);
+            LevelFill.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            if (!on) return;
+            LevelFill.Width = Math.Max(0, Frame.ActualWidth - 2) * _level / 100;
+            var accent = ((SolidColorBrush)Brush("AccentBrush")).Color;
+            LevelFill.Background = new SolidColorBrush(_engaged ? Color.FromArgb(0x66, accent.R, accent.G, accent.B) : Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF));
+        }
+
         private ImageSource _art, _iconImage;
 
         /// <summary>Arte del juego: fondo detrás de la cabecera e icono en el cuadrado (null = sin arte).</summary>
@@ -204,6 +261,7 @@ namespace GoSPanel.Widget.Controls
                     case "toggle": return _isOn ? "Apagar" : "Encender";
                     case "cycle": return "Cambiar";
                     case "action": return "Activar";
+                    case "level": return _engaged ? "Listo" : "Ajustar";
                     default: return _expanded ? "Cerrar" : "Opciones";
                 }
             }
@@ -224,6 +282,7 @@ namespace GoSPanel.Widget.Controls
                 ExpandRequested?.Invoke(this, EventArgs.Empty);
                 return;
             }
+            if (_quick == "level") { Engaged = !_engaged; return; }
             if (_available) Click?.Invoke(this, new RoutedEventArgs());
         }
 
@@ -270,6 +329,11 @@ namespace GoSPanel.Widget.Controls
                 e.Handled = true;
                 ExpandRequested?.Invoke(this, EventArgs.Empty);
             }
+            else if ((e.Key == VirtualKey.GamepadB || e.Key == VirtualKey.Escape) && _engaged)
+            {
+                e.Handled = true;
+                Engaged = false;
+            }
             else if ((e.Key == VirtualKey.GamepadB || e.Key == VirtualKey.Escape) && _expanded)
             {
                 e.Handled = true;
@@ -298,7 +362,7 @@ namespace GoSPanel.Widget.Controls
         {
             // Ampliada: cabecera de una línea (icono, «Brillo · 71 %» y ⌃); ya se sabe dónde se está y deja sitio a las opciones
             Root.Height = _expanded ? 40 : 78;
-            HoldFill.Height = ArtLayer.Height = Root.Height;
+            HoldFill.Height = ArtLayer.Height = LevelFill.Height = Root.Height;
             if (_expanded)
             {
                 TitleText.Visibility = Visibility.Visible;
@@ -382,6 +446,7 @@ namespace GoSPanel.Widget.Controls
                 ValueText.Foreground = TitleText.Foreground = new SolidColorBrush(Colors.White);
             }
             Frame.Opacity = _selection == false ? 0.45 : 1;
+            if (_engaged) Frame.BorderBrush = new SolidColorBrush(accent);
         }
 
         /// <summary>Acento aclarado para iconos y textos sobre el tinte (se lee mejor que el acento puro).</summary>
@@ -398,7 +463,16 @@ namespace GoSPanel.Widget.Controls
     public sealed class CardButton : Button
     {
         public event EventHandler Tap, HoldStarted, HoldEnded;
-        private bool _keyDown, _suppress;
+        public event EventHandler<int> Step;
+        public event EventHandler<double> Drag;
+        private bool _keyDown, _suppress, _pressed;
+        private double _pressX;
+
+        /// <summary>Baldosa de nivel enganchada: ← → cambian el valor en vez de mover el foco.</summary>
+        public bool Engaged { get; set; }
+
+        /// <summary>Baldosa de nivel: arrastrar con el dedo o el ratón cambia el valor.</summary>
+        public bool Draggable { get; set; }
 
         public CardButton()
         {
@@ -407,8 +481,24 @@ namespace GoSPanel.Widget.Controls
                 if (_suppress) { _suppress = false; return; }
                 Tap?.Invoke(this, EventArgs.Empty);
             };
-            AddHandler(PointerPressedEvent, new PointerEventHandler((s, e) => { _suppress = false; HoldStarted?.Invoke(this, EventArgs.Empty); }), true);
-            AddHandler(PointerReleasedEvent, new PointerEventHandler((s, e) => HoldEnded?.Invoke(this, EventArgs.Empty)), true);
+            AddHandler(PointerPressedEvent, new PointerEventHandler((s, e) =>
+            {
+                _suppress = false;
+                _pressed = true;
+                _pressX = e.GetCurrentPoint(this).Position.X;
+                HoldStarted?.Invoke(this, EventArgs.Empty);
+            }), true);
+            AddHandler(PointerMovedEvent, new PointerEventHandler((s, e) =>
+            {
+                if (!_pressed || !Draggable) return;
+                var x = e.GetCurrentPoint(this).Position.X;
+                if (Math.Abs(x - _pressX) < 6 && !_suppress) return;
+                // Arrastrando: no es un toque ni «mantener»
+                _suppress = true;
+                HoldEnded?.Invoke(this, EventArgs.Empty);
+                Drag?.Invoke(this, ActualWidth > 0 ? Math.Max(0, Math.Min(1, x / ActualWidth)) : 0);
+            }), true);
+            AddHandler(PointerReleasedEvent, new PointerEventHandler((s, e) => { _pressed = false; HoldEnded?.Invoke(this, EventArgs.Empty); }), true);
             PointerExited += (s, e) => HoldEnded?.Invoke(this, EventArgs.Empty);
             PointerCaptureLost += (s, e) => HoldEnded?.Invoke(this, EventArgs.Empty);
             LostFocus += (s, e) => { _keyDown = false; HoldEnded?.Invoke(this, EventArgs.Empty); };
@@ -417,10 +507,19 @@ namespace GoSPanel.Widget.Controls
         /// <summary>El clic que llega al soltar después de mantener no cuenta.</summary>
         public void SuppressNextTap() => _suppress = true;
 
+        public static bool IsLeft(VirtualKey k) => k == VirtualKey.GamepadDPadLeft || k == VirtualKey.GamepadLeftThumbstickLeft || k == VirtualKey.Left;
+        public static bool IsRight(VirtualKey k) => k == VirtualKey.GamepadDPadRight || k == VirtualKey.GamepadLeftThumbstickRight || k == VirtualKey.Right;
+
         private static bool IsAccept(VirtualKey key) => key == VirtualKey.GamepadA || key == VirtualKey.Enter || key == VirtualKey.Space;
 
         protected override void OnKeyDown(KeyRoutedEventArgs e)
         {
+            if (Engaged && (IsLeft(e.Key) || IsRight(e.Key)))
+            {
+                e.Handled = true;
+                Step?.Invoke(this, IsRight(e.Key) ? 1 : -1);
+                return;
+            }
             if (!IsAccept(e.Key)) { base.OnKeyDown(e); return; }
             e.Handled = true;
             if (_keyDown) return;   // repetición de la tecla mantenida

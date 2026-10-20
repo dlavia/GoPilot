@@ -1711,23 +1711,25 @@ namespace GoSPanel.Widget
         /// </summary>
         private async Task RefreshQuickSlidersAsync()
         {
-            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3) return;   // el usuario lo está cambiando
+            // No pisar al usuario mientras ajusta (baldosa enganchada) ni justo después
+            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3 || BrightnessCard.Engaged || VolumeCard.Engaged) return;
 
             var brightness = await CallAsync("brightness.get", null, false);
             var volume = await CallAsync("volume.get", null, false);
             var auto = await CallAsync("display.autobrightness.get", null, false);
-            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3) return;   // el usuario lo tocó mientras se leía
+            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3 || BrightnessCard.Engaged || VolumeCard.Engaged) return;
 
-            if (brightness != null) BrightnessBar.Value = brightness.GetNamedNumber("value", 0);
             _autoBrightness = auto != null && auto.GetNamedBoolean("enabled", false);
             _lightSensor = auto != null && auto.GetNamedBoolean("sensor", false);
-            BrightnessBar.Note = brightness == null ? "—" : _autoBrightness ? "Auto · " + BrightnessBar.Value.ToString("0") + " %" : null;
-            if (volume != null) VolumeBar.Value = volume.GetNamedNumber("value", 0);
+            AutoBrightnessTile.Available = _lightSensor;
+            AutoBrightnessTile.IsOn = _autoBrightness;
+            AutoBrightnessTile.State = !_lightSensor ? "Sin sensor de luz" : _autoBrightness ? "Activado" : "Desactivado";
+            if (brightness != null) BrightnessCard.Level = brightness.GetNamedNumber("value", 0);
             _muted = volume != null && volume.GetNamedBoolean("muted", false);
-            VolumeBar.Note = volume == null ? "—" : _muted ? "Silencio" : null;
-            VolumeBar.Dimmed = _muted;
-            UpdateHints();
+            if (volume != null) VolumeCard.Level = volume.GetNamedNumber("value", 0);
+            ShowLevels();
         }
+
         // =====================================================================
         // Modos y TDP
         // =====================================================================
@@ -2023,86 +2025,48 @@ namespace GoSPanel.Widget
 
         private bool _autoBrightness, _lightSensor, _muted;
 
-        private void OnBrightnessBarChanged(object sender, double value)
+        /// <summary>Textos de las baldosas Brillo y Volumen (valor, silencio, automático).</summary>
+        private void ShowLevels()
+        {
+            BrightnessCard.Value = double.IsNaN(BrightnessCard.Level) ? "—" : BrightnessCard.Level.ToString("0") + " %";
+            BrightnessCard.State = BrightnessCard.Engaged ? "← → para cambiar" : _autoBrightness ? "Automático" : "A para ajustar";
+            VolumeCard.Value = double.IsNaN(VolumeCard.Level) ? "—" : _muted ? "Silencio" : VolumeCard.Level.ToString("0") + " %";
+            VolumeCard.State = VolumeCard.Engaged ? "← → para cambiar" : _muted ? VolumeCard.Level.ToString("0") + " % · silenciado" : "A para ajustar";
+            MuteTile.IsOn = _muted;
+            MuteTile.State = _muted ? "Activado" : "Desactivado";
+        }
+
+        private void OnBrightnessLevelChanged(object sender, double value)
         {
             _lastQuickInput = DateTime.UtcNow;
-            if (_autoBrightness) BrightnessBar.Note = "Auto · " + value.ToString("0") + " %";
+            ShowLevels();
             _brightness.Run(() => CallAsync("brightness.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
         }
 
-        private void OnVolumeBarChanged(object sender, double value)
+        private void OnVolumeLevelChanged(object sender, double value)
         {
             _lastQuickInput = DateTime.UtcNow;
-            // Subir el volumen quita el silencio (lo hace el agente)
-            if (_muted && value > 0) { _muted = false; VolumeBar.Note = null; VolumeBar.Dimmed = false; }
+            if (value > 0) _muted = false;   // subir el volumen quita el silencio (lo hace el agente)
+            ShowLevels();
             _volume.Run(() => CallAsync("volume.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
         }
 
-        /// <summary>A en el volumen: silenciar o volver a activar el sonido.</summary>
-        private async void OnVolumeBarClick(object sender, RoutedEventArgs e)
+        private async void OnMuteClick(object sender, RoutedEventArgs e)
         {
-            if (VolumeBar.FromPointer) return;   // con el dedo, tocar la barra pone el nivel
             var data = await CallAsync("volume.mute", new JsonObject { ["muted"] = JsonValue.CreateBooleanValue(!_muted) });
             if (data == null) return;
             _muted = data.GetNamedBoolean("muted", false);
-            VolumeBar.Note = _muted ? "Silencio" : null;
-            VolumeBar.Dimmed = _muted;
-            UpdateHints();
+            ShowLevels();
         }
 
-        /// <summary>A en el brillo: brillo automático (solo si la consola tiene sensor de luz).</summary>
-        private async void OnBrightnessBarClick(object sender, RoutedEventArgs e)
+        private async void OnAutoBrightnessClick(object sender, RoutedEventArgs e)
         {
-            if (BrightnessBar.FromPointer || !_lightSensor) return;
             var data = await CallAsync("display.autobrightness.set", new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!_autoBrightness) });
             if (data == null) return;
             _autoBrightness = data.GetNamedBoolean("enabled", false);
-            BrightnessBar.Note = _autoBrightness ? "Auto · " + BrightnessBar.Value.ToString("0") + " %" : null;
-            UpdateHints();
-        }
-
-        // ----- Barras de brillo y volumen: solo en «Todo», se pliegan con animación -----
-
-        private Storyboard _barsAnimation;
-
-        private void ShowQuickBars(bool show)
-        {
-            var target = show ? QuickBarsHeight : 0;
-            if (Math.Abs(QuickBars.ActualHeight - target) < 0.5 && QuickBars.Opacity == (show ? 1 : 0)) return;
-            // Si el foco estaba en una barra que se va, pasa a la primera baldosa
-            if (!show && (FocusManager.GetFocusedElement() == BrightnessBar.FocusTarget || FocusManager.GetFocusedElement() == VolumeBar.FocusTarget))
-                ProfileCard.FocusTarget.Focus(FocusState.Keyboard);
-            BrightnessBar.FocusTarget.IsTabStop = VolumeBar.FocusTarget.IsTabStop = show;
-            _barsAnimation?.Stop();
-            if (!_animate)
-            {
-                QuickBars.Height = target;
-                QuickBars.Opacity = show ? 1 : 0;
-                return;
-            }
-            var sb = new Storyboard();
-            var height = new DoubleAnimation
-            {
-                From = QuickBars.ActualHeight, To = target, Duration = TimeSpan.FromMilliseconds(260), EnableDependentAnimation = true,
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-            };
-            Storyboard.SetTarget(height, QuickBars);
-            Storyboard.SetTargetProperty(height, "Height");
-            var opacity = new DoubleAnimation { To = show ? 1 : 0, Duration = TimeSpan.FromMilliseconds(show ? 260 : 160) };
-            Storyboard.SetTarget(opacity, QuickBars);
-            Storyboard.SetTargetProperty(opacity, "Opacity");
-            sb.Children.Add(height);
-            sb.Children.Add(opacity);
-            _barsAnimation = sb;
-            sb.Begin();
-        }
-
-        private const double QuickBarsHeight = 76;   // 2 barras de 32 + 5 de separación + 7 hasta los filtros
-
-        private void OnQuickBarsSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            // Que no se salgan mientras se pliegan
-            QuickBars.Clip = new RectangleGeometry { Rect = new Windows.Foundation.Rect(0, 0, e.NewSize.Width, e.NewSize.Height) };
+            AutoBrightnessTile.IsOn = _autoBrightness;
+            AutoBrightnessTile.State = _autoBrightness ? "Activado" : "Desactivado";
+            ShowLevels();
         }
 
         // =====================================================================

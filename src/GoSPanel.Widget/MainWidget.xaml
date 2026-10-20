@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
 
         <!-- ===== Información del sistema: batería (o carga), FPS, W, temperatura y ventilador en una tarjeta ===== -->
-        <Grid x:Name="StatusCard" Background="{StaticResource Panel2Brush}" CornerRadius="12" Padding="4,8" Visibility="Collapsed">
+        <Grid x:Name="StatusCard" Background="{StaticResource Panel2Brush}" CornerRadius="12" Padding="4,7">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.75*" />
                 <ColumnDefinition Width="*" />
@@ -63,21 +63,11 @@
             </Border>
         </Grid>
 
-        <StackPanel Grid.Row="1">
-            <!-- ===== Brillo y volumen (solo en «Todo»; maqueta design/brillo-volumen.html, opción 1): con el foco encima,
-                 ← → los cambian al momento. A: brillo automático / silenciar. Se pliegan con animación en los demás filtros. ===== -->
-            <Grid x:Name="QuickBars" SizeChanged="OnQuickBarsSizeChanged">
-                <StackPanel Spacing="5" Padding="0,0,0,7" VerticalAlignment="Top">
-                    <c:LevelBar x:Name="BrightnessBar" Glyph="&#xE472;" Label="Brillo" ValueChanged="OnBrightnessBarChanged" Click="OnBrightnessBarClick" />
-                    <c:LevelBar x:Name="VolumeBar" Glyph="&#xE44A;" Label="Volumen" StepSize="5" ValueChanged="OnVolumeBarChanged" Click="OnVolumeBarClick" />
-                </StackPanel>
-            </Grid>
-            <!-- ===== Filtros (LT / RT; LB / RB son de Game Bar). No reciben el foco: se cambian con los gatillos o tocando. ===== -->
-            <ScrollViewer x:Name="FiltersScroll" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
-                          HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsTabStop="False">
-                <StackPanel x:Name="FiltersBar" Orientation="Horizontal" Spacing="5" />
-            </ScrollViewer>
-        </StackPanel>
+        <!-- ===== Filtros (LT / RT; LB / RB son de Game Bar). No reciben el foco: se cambian con los gatillos o tocando. ===== -->
+        <ScrollViewer x:Name="FiltersScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                      HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsTabStop="False">
+            <StackPanel x:Name="FiltersBar" Orientation="Horizontal" Spacing="5" />
+        </ScrollViewer>
 
         <!-- ===== Baldosas ===== -->
         <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" IsTabStop="False">
@@ -229,6 +219,21 @@
                     </c:Card>
 
                     <!-- ===== Más usadas (salen en «Todo» por defecto) ===== -->
+                    <!-- Brillo y volumen: A la engancha y ← → cambian el valor al momento (el fondo se rellena); mantener A o Y:
+                         brillo automático / silenciar (maqueta design/brillo-volumen.html, idea de baldosa del usuario) -->
+                    <c:Card x:Name="BrightnessCard" Filter="Pantalla" Quick="level" Glyph="&#xE472;" Title="Brillo" Value="—" State="A para ajustar">
+                        <StackPanel Spacing="3" Margin="0,4,0,0">
+                            <c:Tile Row="switch" x:Name="AutoBrightnessTile" Glyph="&#xE472;" Title="Brillo automático" State="—" Available="False" Click="OnAutoBrightnessClick" />
+                            <TextBlock x:Name="AutoBrightnessNote" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="2,2,0,0"
+                                       Text="Windows ajusta el brillo con la luz que hay alrededor (necesita sensor de luz)." />
+                        </StackPanel>
+                    </c:Card>
+                    <c:Card x:Name="VolumeCard" Filter="Sistema" Quick="level" LevelStep="5" Glyph="&#xE44A;" Title="Volumen" Value="—" State="A para ajustar">
+                        <StackPanel Spacing="3" Margin="0,4,0,0">
+                            <c:Tile Row="switch" x:Name="MuteTile" Glyph="&#xE44A;" Title="Silenciar" State="—" Click="OnMuteClick" />
+                        </StackPanel>
+                    </c:Card>
+
                     <c:Card x:Name="AfmfCard" Filter="AMD" Quick="toggle" Glyph="&#xE792;" Title="AFMF" State="—" Available="False" Tag="afmf" Click="OnAmdClick" />
                     <c:Card x:Name="VrrCard" Filter="Pantalla AMD" Quick="toggle" Glyph="&#xE094;" Title="VRR" State="—" Available="False" Tag="freesync" Click="OnAmdClick" />
                     <c:Card x:Name="BoostCard" Filter="Rendimiento" Quick="toggle" Glyph="&#xE3FE;" Title="CPU Boost" State="—" Click="OnBoostClick" />
