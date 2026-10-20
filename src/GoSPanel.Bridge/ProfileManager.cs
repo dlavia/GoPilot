@@ -269,7 +269,7 @@ internal static class ProfileManager
         bool Same(string key) => JsonNode.DeepEquals(captured[key], stored[key]);
         var mode = captured["mode"]?.GetValue<string>();
         var changed = !Same("mode") || !Same("boost") || !Same("width") || !Same("height") || !Same("hz")
-                      || (mode == "custom" && !Same("tdp")) || (ownGame && !Same("lossless"))
+                      || (mode == "custom" && !Same("tdp")) || (mode == "auto" && !Same("autoTdp")) || (ownGame && !Same("lossless"))
                       || (captured["amd"] != null && !Same("amd")) || (captured["lights"] != null && !Same("lights"))
                       || (captured["gyroMode"] != null && !Same("gyroMode"));
         if (!changed) return;
@@ -288,7 +288,9 @@ internal static class ProfileManager
         var display = DisplayControl.Get()["current"]!.AsObject();
         var profile = new JsonObject
         {
-            ["mode"] = power["mode"]?.GetValue<string>(),
+            // AutoTDP va como un modo más: su configuración, no el TDP que va cambiando
+            ["mode"] = AutoTdp.Enabled ? "auto" : power["mode"]?.GetValue<string>(),
+            ["autoTdp"] = AutoTdp.Config(),
             ["tdp"] = new JsonObject { ["spl"] = tdp["spl"]?.GetValue<double>(), ["sppt"] = tdp["sppt"]?.GetValue<double>(), ["fppt"] = tdp["fppt"]?.GetValue<double>() },
             ["boost"] = boost["enabled"]?.GetValue<bool>(),
             ["width"] = display["width"]!.GetValue<int>(),
@@ -337,7 +339,17 @@ internal static class ProfileManager
     private static async Task ApplyAsync(JsonObject p, int gamePid)
     {
         var mode = p["mode"]?.GetValue<string>();
-        if (mode == "custom" && p["tdp"] is JsonObject tdp)
+        if (mode == "auto")
+        {
+            var config = p["autoTdp"] as JsonObject ?? AutoTdp.Config();
+            config = (JsonObject)config.DeepClone();
+            config["enabled"] = true;
+            await AutoTdp.SetAsync(config);
+        }
+        else if (AutoTdp.Enabled) await AutoTdp.SetAsync(new JsonObject { ["enabled"] = false });
+
+        if (mode == "auto") { /* el TDP lo lleva AutoTDP */ }
+        else if (mode == "custom" && p["tdp"] is JsonObject tdp)
             await Program.CallServiceAsync("tdp.set", (JsonObject)tdp.DeepClone());   // tdp.set ya pone el modo Manual
         else if (mode != null)
             await Program.CallServiceAsync("power.set", new JsonObject { ["mode"] = mode });

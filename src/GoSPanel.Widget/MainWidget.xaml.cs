@@ -26,14 +26,14 @@ namespace GoSPanel.Widget
         {
             ["quiet"] = 10, ["balanced"] = 16, ["performance"] = 30,
         };
-        private static readonly string[] ModeOrder = { "quiet", "balanced", "performance", "custom" };
+        private static readonly string[] ModeOrder = { "quiet", "balanced", "performance", "custom", "auto" };
         private static readonly Dictionary<string, string> ModeNames = new Dictionary<string, string>
         {
-            ["quiet"] = "Silencio", ["balanced"] = "Equilibrado", ["performance"] = "Rendimiento", ["custom"] = "Manual",
+            ["quiet"] = "Silencio", ["balanced"] = "Equilibrado", ["performance"] = "Rendimiento", ["custom"] = "Manual", ["auto"] = "Auto",
         };
         private static readonly Dictionary<string, string> ModeGlyphs = new Dictionary<string, string>
         {
-            ["quiet"] = "", ["balanced"] = "", ["performance"] = "", ["custom"] = "",
+            ["quiet"] = "", ["balanced"] = "", ["performance"] = "", ["custom"] = "", ["auto"] = "",
         };
 
         private static readonly CultureInfo Es = new CultureInfo("es-ES");
@@ -86,6 +86,7 @@ namespace GoSPanel.Widget
                     await RefreshStatusAsync();
                     await FollowPowerModeAsync();
                     if (_connected) await RefreshDesktopAsync();   // «activo» cambia con la app que hay delante
+                    if (_connected) await RefreshAutoTdpAsync();   // vatios y FPS de AutoTDP en vivo
                 }
                 catch (Exception ex)
                 {
@@ -136,9 +137,10 @@ namespace GoSPanel.Widget
             // Sliders: hay que «entrar» con A para moverlos (así no se mueven sin querer al bajar con el stick);
             // una vez dentro, el D-pad avanza de SmallChange en SmallChange (10 % brillo, 5 % volumen, 1 W TDP).
             BuildSwatches();
+            BuildAutoTargets();
             foreach (var slider in new[] { BrightnessSlider, VolumeSlider, SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
                                            LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider,
-                                           DesktopPointerSlider, DesktopScrollSlider })
+                                           DesktopPointerSlider, DesktopScrollSlider, AutoMinSlider, AutoMaxSlider })
             {
                 slider.IsFocusEngagementEnabled = true;
                 slider.PreviewKeyDown += OnSliderPreviewKeyDown;
@@ -594,6 +596,7 @@ namespace GoSPanel.Widget
             var fanCurve = await CallAsync("fancurve.get", null, false);
             if (fanCurve != null) ApplyFanCurve(fanCurve);
             await RefreshDesktopAsync();
+            await RefreshAutoTdpAsync();
         }
 
         // =====================================================================
@@ -1393,7 +1396,7 @@ namespace GoSPanel.Widget
 
         private static readonly Dictionary<string, string> ShortModeNames = new Dictionary<string, string>
         {
-            ["quiet"] = "Silencio", ["balanced"] = "Equilibrado", ["performance"] = "Rendimiento",
+            ["quiet"] = "Silencio", ["balanced"] = "Equilibrado", ["performance"] = "Rendimiento", ["auto"] = "Auto",
         };
 
         private bool _autoProfiles = true;
@@ -1880,28 +1883,39 @@ namespace GoSPanel.Widget
 
         private async void OnHomeModeClick(object sender, RoutedEventArgs e)
         {
-            var index = Array.IndexOf(ModeOrder, _mode);
+            var index = Array.IndexOf(ModeOrder, _autoTdp ? "auto" : _mode);
             await SetModeAsync(ModeOrder[(index + 1) % ModeOrder.Length]);
         }
 
         private async Task SetModeAsync(string mode)
         {
+            // Auto lo lleva el agente (el firmware queda en Manual); cualquier otro modo lo apaga
+            if (mode == "auto")
+            {
+                await SetAutoTdpAsync(new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(true) });
+                await RefreshPowerModeAsync();
+                return;
+            }
+            if (_autoTdp) await SetAutoTdpAsync(new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(false) });
             var data = await CallAsync("power.set", new JsonObject { ["mode"] = JsonValue.CreateStringValue(mode) });
             if (data != null) ApplyMode(data.GetNamedString("mode", ""), true);
         }
 
         private void ApplyMode(string mode, bool animate)
         {
-            var wasCustom = _mode == "custom";
             _mode = mode;
-            ModeQuiet.IsOn = mode == "quiet";
-            ModeBalanced.IsOn = mode == "balanced";
-            ModePerformance.IsOn = mode == "performance";
-            ModeCustom.IsOn = mode == "custom";
+            // Con AutoTDP el firmware está en Manual, pero se muestra «Auto»
+            var shown = _autoTdp ? "auto" : mode;
+            ModeQuiet.IsOn = shown == "quiet";
+            ModeBalanced.IsOn = shown == "balanced";
+            ModePerformance.IsOn = shown == "performance";
+            ModeCustom.IsOn = shown == "custom";
+            ModeAuto.IsOn = shown == "auto";
 
-            var isCustom = mode == "custom";
-            if (isCustom != wasCustom || TdpPanel.Visibility == Visibility.Visible != isCustom)
+            var isCustom = shown == "custom";
+            if (TdpPanel.Visibility == Visibility.Visible != isCustom)
                 ToggleTdpPanel(isCustom, animate && _animate);
+            AutoPanel.Visibility = shown == "auto" ? Visibility.Visible : Visibility.Collapsed;
             UpdateModeSummary();
         }
 
@@ -1922,14 +1936,15 @@ namespace GoSPanel.Widget
 
         private void UpdateModeSummary()
         {
-            if (!ModeNames.ContainsKey(_mode))
+            var shown = _autoTdp ? "auto" : _mode;
+            if (!ModeNames.ContainsKey(shown))
             {
                 return;
             }
-            var watts = _mode == "custom" ? _customSpl : _presetSpl[_mode];
-            var summary = ModeNames[_mode] + " · " + watts + " W";
+            var summary = shown == "auto" ? "Auto · " + _autoTarget + " FPS"
+                : ModeNames[shown] + " · " + (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
             HomeModeTile.State = summary;
-            HomeModeTile.Glyph = ModeGlyphs[_mode];
+            HomeModeTile.Glyph = ModeGlyphs[shown];
             HomeModeTile.IsOn = true;
         }
 

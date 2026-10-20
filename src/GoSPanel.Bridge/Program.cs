@@ -17,7 +17,7 @@ internal static class Program
     private const string AppServiceName = "GoSPanel.Bridge";
     private static readonly string AgentPipe = $"GoSPanel.Agent.{System.Diagnostics.Process.GetCurrentProcess().SessionId}";
     private static readonly string[] UserSessionCommands =
-        { "display.", "volume.", "foreground.", "keyboard.", "profiles.", "ls.", "amd.", "lights.", "gyro.", "overlay.", "buttons.", "controller.", "vrr.", "legionwidget.", "desktop." };
+        { "display.", "volume.", "foreground.", "keyboard.", "profiles.", "ls.", "amd.", "lights.", "gyro.", "overlay.", "buttons.", "controller.", "vrr.", "legionwidget.", "desktop.", "autotdp." };
 
     private static readonly ServiceClient Service = new();
     private static readonly SemaphoreSlim ConnectGate = new(1, 1);
@@ -116,6 +116,7 @@ internal static class Program
         GameOverlay.Start();
         LegionButtons.Start();
         DesktopMode.Start();
+        AutoTdp.Start();
         _ = Task.Run(StickLights.ResumeReactiveAsync);
         _ = Task.Run(ListenForSignalsAsync);
         if (relay) await ConnectToWidgetAsync();
@@ -265,6 +266,8 @@ internal static class Program
                     "ls.get" => LosslessScaling.Get(),
                     "desktop.get" => DesktopMode.Get(),
                     "desktop.set" => DesktopMode.Set(args),
+                    "autotdp.get" => AutoTdp.Get(),
+                    "autotdp.set" => await AutoTdp.SetAsync(args),
                     "ls.toggle" => await LosslessScaling.ToggleAsync(),
                     _ => throw new ArgumentException($"Comando desconocido: {cmd}"),
                 };

@@ -214,8 +214,9 @@
                     <Border Style="{StaticResource SectionStyle}">
                         <StackPanel>
                             <TextBlock Text="MODO DE FUNCIONAMIENTO" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
-                            <Grid ColumnSpacing="6" Height="78">
+                            <Grid ColumnSpacing="5" Height="78">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
@@ -225,8 +226,40 @@
                                 <c:Tile x:Name="ModeBalanced" Grid.Column="1" Vertical="True" Glyph="&#xE750;" Title="16 W" State="" AutomationProperties.Name="Equilibrado" Tag="balanced" Click="OnModeTileClick" />
                                 <c:Tile x:Name="ModePerformance" Grid.Column="2" Vertical="True" Glyph="&#xE2DE;" Title="30 W" State="" AutomationProperties.Name="Rendimiento" Tag="performance" Click="OnModeTileClick" />
                                 <c:Tile x:Name="ModeCustom" Grid.Column="3" Vertical="True" Glyph="&#xE434;" Title="—" State="" AutomationProperties.Name="Manual" Tag="custom" Click="OnModeTileClick" />
+                                <c:Tile x:Name="ModeAuto" Grid.Column="4" Vertical="True" Glyph="&#xE6B6;" Title="Auto" State="" AutomationProperties.Name="AutoTDP" Tag="auto" Click="OnModeTileClick" />
                             </Grid>
 
+                            <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
+                            <StackPanel x:Name="AutoPanel" Spacing="6" Margin="0,10,0,0" Visibility="Collapsed">
+                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Padding="12,10,12,12">
+                                    <StackPanel Spacing="8">
+                                        <Grid>
+                                            <TextBlock Text="FPS objetivo" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                                            <TextBlock x:Name="AutoTargetValue" Text="60" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid x:Name="AutoTargetButtons" ColumnSpacing="5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                        </Grid>
+                                        <Grid>
+                                            <TextBlock Text="Mínimo" FontSize="12" />
+                                            <TextBlock x:Name="AutoMinValue" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                        <Slider x:Name="AutoMinSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Mínimo de AutoTDP" />
+                                        <Grid>
+                                            <TextBlock Text="Máximo" FontSize="12" />
+                                            <TextBlock x:Name="AutoMaxValue" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                        <Slider x:Name="AutoMaxSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Máximo de AutoTDP" />
+                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="9,7">
+                                            <TextBlock x:Name="AutoLiveText" FontSize="11.5" TextWrapping="Wrap" />
+                                        </Border>
+                                        <c:Tile Row="switch" x:Name="AutoChillTile" Glyph="&#xE5AA;" Title="Limitar FPS con Radeon Chill" State="—" Click="OnAutoChillClick" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                             <!-- Manual, como la Steam Deck: un límite de potencia (SPL); ráfagas (sPPT) y picos (fPPT) se calculan
                                  solos por encima. Se aplica al soltar el deslizador (sin botón «Aplicar»). Avanzado: tocarlos a mano. -->
                             <StackPanel x:Name="TdpPanel" Spacing="6" Margin="0,10,0,0" Visibility="Collapsed">
