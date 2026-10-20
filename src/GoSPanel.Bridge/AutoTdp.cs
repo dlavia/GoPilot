@@ -26,6 +26,7 @@ internal static class AutoTdp
     private static int _watts;
     private static double? _fps;
     private static string _status = "";
+    private static bool _afmf;            // AFMF activo: el contador ve los FPS reales y en pantalla salen ~el doble
 
     public static bool Enabled { get { lock (Lock) return _enabled; } }
 
@@ -49,6 +50,7 @@ internal static class AutoTdp
             {
                 ["enabled"] = _enabled, ["target"] = _target, ["min"] = _min, ["max"] = _max, ["chill"] = _chill,
                 ["watts"] = _watts == 0 ? null : _watts, ["fps"] = _fps, ["status"] = _status, ["targets"] = targets,
+                ["afmf"] = _afmf,
             };
         }
     }
@@ -80,8 +82,10 @@ internal static class AutoTdp
 
         if (enabled && !wasEnabled)
         {
-            // Se empieza arriba para no dar tirones y se baja a medida que sobran FPS
-            await ApplyWattsAsync(Get()["max"]!.GetValue<int>());
+            // Se empieza a mitad del margen: arrancar en el máximo disparaba el ventilador al entrar al juego
+            int start;
+            lock (Lock) start = (_min + _max + 1) / 2;
+            await ApplyWattsAsync(start);
             ApplyChill();
         }
         else if (!enabled && wasEnabled) ReleaseChill();
@@ -154,6 +158,25 @@ internal static class AutoTdp
                     continue;
                 }
 
+                // AFMF (cada 5 s): el contador ETW solo ve los fotogramas reales del juego; los de AFMF van aparte.
+                // El objetivo cuenta FPS reales y el widget avisa de que en pantalla salen el doble.
+                if (tick % 5 == 0)
+                {
+                    try
+                    {
+                        var amd = AmdAdlx.Get();
+                        lock (Lock) _afmf = (amd["afmf"] as JsonObject)?["enabled"]?.GetValue<bool>() == true;
+                        // Chill siempre en los FPS objetivo (al cargar, con otro perfil o si se tocó a mano en Pantalla)
+                        bool wantChill;
+                        lock (Lock) wantChill = _chill;
+                        var chill = amd["chill"] as JsonObject;
+                        if (wantChill && chill?["supported"]?.GetValue<bool>() == true
+                            && (chill["enabled"]?.GetValue<bool>() != true || chill["minFps"]?.GetValue<int>() != target || chill["maxFps"]?.GetValue<int>() != target))
+                            ApplyChill();
+                    }
+                    catch (Exception) { }
+                }
+
                 var fps = (await Program.CallServiceAsync("fps.get", new JsonObject { ["pid"] = game.Value.Pid }))["fps"]?.GetValue<double>();
                 if (fps is null or <= 0) { lock (Lock) { _fps = null; _status = "Esperando FPS del juego"; } continue; }
 
@@ -183,9 +206,12 @@ internal static class AutoTdp
 
     private static async Task ApplyWattsAsync(int spl)
     {
-        // Ráfagas y picos como en Manual automático (sin pasar del máximo del firmware)
-        var sppt = Math.Min(32, Math.Max(spl, (int)Math.Round(spl * 1.25)));
-        var fppt = Math.Min(41, Math.Max(spl, (int)Math.Round(spl * 1.5)));
+        // Ráfagas y picos como en Manual automático, pero sin pasar del máximo elegido: es un tope de consumo real
+        // (con ×1,25 / ×1,5 encima, un máximo de 25 W gastaba 31–38 W)
+        int max;
+        lock (Lock) max = _max;
+        var sppt = Math.Min(Math.Min(32, max), Math.Max(spl, (int)Math.Round(spl * 1.25)));
+        var fppt = Math.Min(Math.Min(41, max), Math.Max(spl, (int)Math.Round(spl * 1.5)));
         await Program.CallServiceAsync("tdp.set", new JsonObject { ["spl"] = spl, ["sppt"] = sppt, ["fppt"] = fppt });
         lock (Lock) _watts = spl;
     }

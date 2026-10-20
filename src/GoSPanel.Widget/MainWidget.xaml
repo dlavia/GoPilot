@@ -234,7 +234,7 @@
                                 <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Padding="12,10,12,12">
                                     <StackPanel Spacing="8">
                                         <Grid>
-                                            <TextBlock Text="FPS objetivo" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                                            <TextBlock VerticalAlignment="Bottom" Margin="0,0,0,3"><Run Text="FPS objetivo" FontSize="13" FontWeight="SemiBold" /><Run Text="  reales (AFMF los duplica)" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
                                             <TextBlock x:Name="AutoTargetValue" Text="60" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
                                         </Grid>
                                         <Grid x:Name="AutoTargetButtons" ColumnSpacing="5">

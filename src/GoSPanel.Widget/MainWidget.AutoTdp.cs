@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Data.Json;
@@ -80,7 +80,8 @@ namespace GoSPanel.Widget
             var fps = Num(data, "fps");
             var status = StringOrNull(data, "status") ?? "";
             AutoLiveText.Text = !_autoTdp ? "Elige los FPS y GoPilot ajusta el consumo solo, gastando lo mínimo para llegar."
-                : fps.HasValue && watts.HasValue ? "Ahora: " + watts.Value.ToString("0") + " W para " + fps.Value.ToString("0") + " FPS · " + status.ToLowerInvariant()
+                : fps.HasValue && watts.HasValue ? "Ahora: " + watts.Value.ToString("0") + " W para " + fps.Value.ToString("0")
+                    + (data.GetNamedBoolean("afmf", false) ? " FPS reales · ~" + (fps.Value * 2).ToString("0") + " con AFMF" : " FPS") + " · " + status.ToLowerInvariant()
                 : status;
 
             if (was != _autoTdp) ApplyMode(_mode, true);
