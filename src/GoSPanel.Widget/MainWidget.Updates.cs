@@ -140,7 +140,10 @@ namespace GoSPanel.Widget
                     ? "comprobado a las " + checkedAt.ToLocalTime().ToString("HH:mm") : "";
             }
 
-            UpdateDot.Visibility = _latestVersion != null ? Visibility.Visible : Visibility.Collapsed;
+            // Baldosa GoPilot: la versión instalada; con una nueva, en naranja
+            GoPilotCard.Value = v.Major + "." + v.Minor + "." + v.Build + "." + v.Revision;
+            GoPilotCard.Warning = _latestVersion != null;
+            GoPilotCard.State = busy ? "Actualizando…" : _latestVersion != null ? "Versión nueva: " + _latestVersion : "Al día";
             var notice = _latestVersion != null && !busy && Pref("updateDismissed", "") != _latestVersion;
             UpdateNoticeTitle.Text = "GoPilot " + _latestVersion + " disponible";
             SetUpdateNotice(notice);
@@ -222,18 +225,7 @@ namespace GoSPanel.Widget
             if (UpdateNotice.Visibility == target) return;
             var hadFocus = FocusManager.GetFocusedElement() == UpdateNoticeButton;
             UpdateNotice.Visibility = target;
-            // El StackPanel cuenta el hueco del aviso aunque esté oculto: el margen negativo lo compensa.
-            QuickSlidersSection.Margin = new Thickness(0, visible ? 0 : -10, 0, -8);
-            LinkHomeTop();
-            if (hadFocus) BrightnessSlider.Focus(FocusState.Keyboard);
-        }
-
-        /// <summary>Aviso (si se ve) → brillo, con la cruceta.</summary>
-        private void LinkHomeTop()
-        {
-            var notice = UpdateNotice.Visibility == Visibility.Visible;
-            UpdateNoticeButton.XYFocusDown = BrightnessSlider;
-            BrightnessSlider.XYFocusUp = notice ? UpdateNoticeButton : null;
+            if (hadFocus) ProfileCard.FocusTarget.Focus(FocusState.Keyboard);
         }
 
         private void DismissUpdateNotice()
@@ -247,11 +239,12 @@ namespace GoSPanel.Widget
         private async void OnUpdateNoticeClick(object sender, RoutedEventArgs e)
         {
             _updateBodyOpen = true;
-            ShowTab(4);
             UpdateBody.Visibility = Visibility.Visible;
+            ShowFilter(Array.IndexOf(Filters, "Sistema"));
+            ExpandCard(GoPilotCard);
             await Task.Delay(50);
-            UpdatesSection.StartBringIntoView();
             UpdateTile.FocusTarget.Focus(FocusState.Keyboard);
+            UpdateTile.FocusTarget.StartBringIntoView();
         }
 
         // ---------------------------------------------------------------------

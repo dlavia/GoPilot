@@ -1,0 +1,57 @@
+<UserControl
+    x:Class="GoSPanel.Widget.Controls.Card"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:GoSPanel.Widget.Controls"
+    IsTabStop="False">
+
+    <!-- Baldosa del diseño de una sola página (design/perfil-modo-baldosas.html): cabecera de altura fija y, debajo,
+         sus opciones cuando se amplía. El fondo y el tinte los lleva el marco; el botón solo recibe el foco. -->
+    <Border x:Name="Frame" CornerRadius="12" BorderThickness="1">
+        <StackPanel>
+            <c:CardButton x:Name="Root" Style="{StaticResource FlatButton}" Height="92" Padding="11,10,11,9">
+                <Grid>
+                    <Grid x:Name="Layout" RowSpacing="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid ColumnSpacing="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <!-- Icono: suelto o, en Perfil y Modo, dentro de un cuadrado de color -->
+                            <Border x:Name="IconBox" CornerRadius="8" VerticalAlignment="Top">
+                                <TextBlock x:Name="IconText" FontFamily="{StaticResource Phosphor}" FontSize="16"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock x:Name="TitleText" Grid.Column="1" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <Ellipse x:Name="Dot" Grid.Column="2" Width="7" Height="7" VerticalAlignment="Center" Visibility="Collapsed" />
+                            <TextBlock x:Name="ChevronText" Grid.Column="3" FontFamily="{StaticResource Phosphor}" FontSize="11" Text="&#xE136;"
+                                       VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock.RenderTransform>
+                                    <RotateTransform x:Name="ChevronRotation" CenterX="5.5" CenterY="7" />
+                                </TextBlock.RenderTransform>
+                            </TextBlock>
+                        </Grid>
+                        <TextBlock x:Name="ValueText" Grid.Row="1" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Bottom"
+                                   TextTrimming="CharacterEllipsis" Margin="0,0,0,1" />
+                        <TextBlock x:Name="StateText" Grid.Row="2" FontSize="10.5" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                    <!-- Mantener A: la barra se llena y al acabar se abren las opciones -->
+                    <Border x:Name="HoldBar" Height="3" CornerRadius="2" VerticalAlignment="Bottom" Margin="-6,0,-6,-6"
+                            Background="{StaticResource AccentBrush}" Opacity="0" RenderTransformOrigin="0,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform x:Name="HoldScale" ScaleX="0" />
+                        </Border.RenderTransform>
+                    </Border>
+                </Grid>
+            </c:CardButton>
+            <ContentPresenter x:Name="BodyHost" Margin="11,0,11,11" Visibility="Collapsed" />
+        </StackPanel>
+    </Border>
+</UserControl>
