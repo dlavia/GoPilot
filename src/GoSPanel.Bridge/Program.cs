@@ -230,6 +230,9 @@ internal static class Program
                     "keyboard.toggle" => TouchKeyboard.Toggle(),
                     "volume.get" => Volume.Get(),
                     "volume.set" => Volume.Set((int)args["value"]!.GetValue<double>()),
+                    "volume.mute" => Volume.SetMute(args!["muted"]!.GetValue<bool>()),
+                    "display.autobrightness.get" => AutoBrightness.Get(),
+                    "display.autobrightness.set" => AutoBrightness.Set(args!["enabled"]!.GetValue<bool>()),
                     "display.get" => DisplayControl.Get(),
                     "display.set" => DisplayControl.Set(
                         args["width"]!.GetValue<int>(),

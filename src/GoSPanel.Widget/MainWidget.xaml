@@ -63,11 +63,21 @@
             </Border>
         </Grid>
 
-        <!-- ===== Filtros (LT / RT; LB / RB son de Game Bar). No reciben el foco: se cambian con los gatillos o tocando. ===== -->
-        <ScrollViewer x:Name="FiltersScroll" Grid.Row="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
-                      HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsTabStop="False">
-            <StackPanel x:Name="FiltersBar" Orientation="Horizontal" Spacing="5" />
-        </ScrollViewer>
+        <StackPanel Grid.Row="1">
+            <!-- ===== Brillo y volumen (solo en «Todo»; maqueta design/brillo-volumen.html, opción 1): con el foco encima,
+                 ← → los cambian al momento. A: brillo automático / silenciar. Se pliegan con animación en los demás filtros. ===== -->
+            <Grid x:Name="QuickBars" SizeChanged="OnQuickBarsSizeChanged">
+                <StackPanel Spacing="6" Padding="0,0,0,8" VerticalAlignment="Top">
+                    <c:LevelBar x:Name="BrightnessBar" Glyph="&#xE472;" Label="Brillo" ValueChanged="OnBrightnessBarChanged" Click="OnBrightnessBarClick" />
+                    <c:LevelBar x:Name="VolumeBar" Glyph="&#xE44A;" Label="Volumen" StepSize="5" ValueChanged="OnVolumeBarChanged" Click="OnVolumeBarClick" />
+                </StackPanel>
+            </Grid>
+            <!-- ===== Filtros (LT / RT; LB / RB son de Game Bar). No reciben el foco: se cambian con los gatillos o tocando. ===== -->
+            <ScrollViewer x:Name="FiltersScroll" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                          HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" IsTabStop="False">
+                <StackPanel x:Name="FiltersBar" Orientation="Horizontal" Spacing="5" />
+            </ScrollViewer>
+        </StackPanel>
 
         <!-- ===== Baldosas ===== -->
         <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" IsTabStop="False">
@@ -219,30 +229,6 @@
                     </c:Card>
 
                     <!-- ===== Más usadas (salen en «Todo» por defecto) ===== -->
-                    <c:Card x:Name="BrightnessCard" Filter="Pantalla" Glyph="&#xE472;" Title="Brillo" Value="—" State="Pantalla">
-                        <Grid ColumnSpacing="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="44" />
-                            </Grid.ColumnDefinitions>
-                            <Slider x:Name="BrightnessSlider" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="10" LargeChange="20"
-                                    ValueChanged="OnBrightnessChanged" AutomationProperties.Name="Brillo" />
-                            <TextBlock x:Name="BrightnessValue" Grid.Column="1" Style="{StaticResource ValueText}" Text="—" />
-                        </Grid>
-                    </c:Card>
-
-                    <c:Card x:Name="VolumeCard" Filter="Sistema" Glyph="&#xE44A;" Title="Volumen" Value="—" State="Sonido">
-                        <Grid ColumnSpacing="10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="44" />
-                            </Grid.ColumnDefinitions>
-                            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="5" LargeChange="20"
-                                    ValueChanged="OnVolumeChanged" AutomationProperties.Name="Volumen" />
-                            <TextBlock x:Name="VolumeValue" Grid.Column="1" Style="{StaticResource ValueText}" Text="—" />
-                        </Grid>
-                    </c:Card>
-
                     <c:Card x:Name="AfmfCard" Filter="AMD" Quick="toggle" Glyph="&#xE792;" Title="AFMF" State="—" Available="False" Tag="afmf" Click="OnAmdClick" />
                     <c:Card x:Name="VrrCard" Filter="Pantalla AMD" Quick="toggle" Glyph="&#xE094;" Title="VRR" State="—" Available="False" Tag="freesync" Click="OnAmdClick" />
                     <c:Card x:Name="BoostCard" Filter="Rendimiento" Quick="toggle" Glyph="&#xE3FE;" Title="CPU Boost" State="—" Click="OnBoostClick" />
@@ -762,6 +748,10 @@
                 <StackPanel x:Name="HintY" Orientation="Horizontal" Spacing="5">
                     <Border Width="16" Height="16" CornerRadius="8" Background="#FFF5C542"><TextBlock Text="Y" FontSize="9.5" FontWeight="Bold" Foreground="#FF101010" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                     <TextBlock Text="Opciones" FontSize="11" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel x:Name="HintPad" Orientation="Horizontal" Spacing="5">
+                    <Border Height="16" CornerRadius="4" Padding="3,0" Background="#FFC9CAD0"><TextBlock Text="← →" FontSize="9.5" FontWeight="Bold" Foreground="#FF101010" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                    <TextBlock Text="Ajustar" FontSize="11" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel x:Name="HintB" Orientation="Horizontal" Spacing="5">
                     <Border Width="16" Height="16" CornerRadius="8" Background="#FFFF5B5B"><TextBlock Text="B" FontSize="9.5" FontWeight="Bold" Foreground="#FF101010" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>

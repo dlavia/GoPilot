@@ -76,6 +76,9 @@
       <DependentUpon>Card.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TileGrid.cs" />
+    <Compile Include="Controls\LevelBar.xaml.cs">
+      <DependentUpon>LevelBar.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Tile.xaml.cs">
       <DependentUpon>Tile.xaml</DependentUpon>
     </Compile>
@@ -118,6 +121,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Controls\Selector.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\LevelBar.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

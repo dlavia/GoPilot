@@ -1,0 +1,25 @@
+<UserControl
+    x:Class="GoSPanel.Widget.Controls.LevelBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="using:GoSPanel.Widget.Controls"
+    IsTabStop="False">
+
+    <!-- Barra de brillo o volumen (maqueta design/brillo-volumen.html, opción 1): la barra entera es el deslizador.
+         Con el foco encima, ← → la mueven al momento (sin «entrar» con A); A silencia o activa el brillo automático. -->
+    <c:LevelButton x:Name="Root" Style="{StaticResource FlatButton}" Height="36" Background="{StaticResource Panel2Brush}">
+        <Grid>
+            <Border x:Name="Fill" HorizontalAlignment="Left" CornerRadius="8" Width="0" />
+            <Grid Padding="12,0" ColumnSpacing="9">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="IconText" FontFamily="{StaticResource Phosphor}" FontSize="16" VerticalAlignment="Center" />
+                <TextBlock x:Name="LabelText" Grid.Column="1" FontSize="12.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="ValueText" Grid.Column="2" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </Grid>
+        </Grid>
+    </c:LevelButton>
+</UserControl>

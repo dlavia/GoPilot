@@ -25,6 +25,15 @@ internal static class Volume
         }).GetAwaiter().GetResult();
     }
 
+    /// <summary>Silenciar o volver a activar el sonido (A en la barra de volumen).</summary>
+    public static JsonObject SetMute(bool muted) => Task.Run(() =>
+    {
+        using var enumerator = new MMDeviceEnumerator();
+        using var device = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+        device.AudioEndpointVolume.Mute = muted;
+        return Read();
+    }).GetAwaiter().GetResult();
+
     private static JsonObject Read()
     {
         using var enumerator = new MMDeviceEnumerator();

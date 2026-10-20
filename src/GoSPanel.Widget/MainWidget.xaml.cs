@@ -126,7 +126,7 @@ namespace GoSPanel.Widget
             // una vez dentro, el D-pad avanza de SmallChange en SmallChange (10 % brillo, 5 % volumen, 1 W TDP).
             BuildSwatches();
             BuildAutoTargets();
-            foreach (var slider in new[] { BrightnessSlider, VolumeSlider, SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
+            foreach (var slider in new[] { SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
                                            LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider,
                                            DesktopPointerSlider, DesktopScrollSlider, AutoMinSlider, AutoMaxSlider })
             {
@@ -1711,28 +1711,23 @@ namespace GoSPanel.Widget
         /// </summary>
         private async Task RefreshQuickSlidersAsync()
         {
-            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3
-                || BrightnessSlider.IsFocusEngaged || VolumeSlider.IsFocusEngaged) return;
+            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3) return;   // el usuario lo está cambiando
 
             var brightness = await CallAsync("brightness.get", null, false);
             var volume = await CallAsync("volume.get", null, false);
+            var auto = await CallAsync("display.autobrightness.get", null, false);
             if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3) return;   // el usuario lo tocó mientras se leía
-            _loading = true;
-            try
-            {
-                if (brightness != null) BrightnessSlider.Value = brightness.GetNamedNumber("value", 0);
-                if (volume != null) VolumeSlider.Value = volume.GetNamedNumber("value", 0);
-            }
-            finally
-            {
-                _loading = false;
-            }
 
-            // Sin desactivarla: una barra desactivada corta la navegación con la cruceta hacia las baldosas.
-            BrightnessValue.Text = BrightnessCard.Value = brightness != null ? BrightnessSlider.Value.ToString("0") + " %" : "—";
-            VolumeValue.Text = VolumeCard.Value = volume != null ? VolumeSlider.Value.ToString("0") + " %" : "—";
+            if (brightness != null) BrightnessBar.Value = brightness.GetNamedNumber("value", 0);
+            _autoBrightness = auto != null && auto.GetNamedBoolean("enabled", false);
+            _lightSensor = auto != null && auto.GetNamedBoolean("sensor", false);
+            BrightnessBar.Note = brightness == null ? "—" : _autoBrightness ? "Auto · " + BrightnessBar.Value.ToString("0") + " %" : null;
+            if (volume != null) VolumeBar.Value = volume.GetNamedNumber("value", 0);
+            _muted = volume != null && volume.GetNamedBoolean("muted", false);
+            VolumeBar.Note = volume == null ? "—" : _muted ? "Silencio" : null;
+            VolumeBar.Dimmed = _muted;
+            UpdateHints();
         }
-
         // =====================================================================
         // Modos y TDP
         // =====================================================================
@@ -2026,24 +2021,88 @@ namespace GoSPanel.Widget
         // Brillo y volumen
         // =====================================================================
 
-        private void OnBrightnessChanged(object sender, RangeBaseValueChangedEventArgs e)
+        private bool _autoBrightness, _lightSensor, _muted;
+
+        private void OnBrightnessBarChanged(object sender, double value)
         {
-            if (BrightnessValue == null) return;
-            BrightnessValue.Text = BrightnessCard.Value = e.NewValue.ToString("0") + " %";
-            if (_loading) return;
             _lastQuickInput = DateTime.UtcNow;
-            var value = e.NewValue;
+            if (_autoBrightness) BrightnessBar.Note = "Auto · " + value.ToString("0") + " %";
             _brightness.Run(() => CallAsync("brightness.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
         }
 
-        private void OnVolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
+        private void OnVolumeBarChanged(object sender, double value)
         {
-            if (VolumeValue == null) return;
-            VolumeValue.Text = VolumeCard.Value = e.NewValue.ToString("0") + " %";
-            if (_loading) return;
             _lastQuickInput = DateTime.UtcNow;
-            var value = e.NewValue;
+            // Subir el volumen quita el silencio (lo hace el agente)
+            if (_muted && value > 0) { _muted = false; VolumeBar.Note = null; VolumeBar.Dimmed = false; }
             _volume.Run(() => CallAsync("volume.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
+        }
+
+        /// <summary>A en el volumen: silenciar o volver a activar el sonido.</summary>
+        private async void OnVolumeBarClick(object sender, RoutedEventArgs e)
+        {
+            if (VolumeBar.FromPointer) return;   // con el dedo, tocar la barra pone el nivel
+            var data = await CallAsync("volume.mute", new JsonObject { ["muted"] = JsonValue.CreateBooleanValue(!_muted) });
+            if (data == null) return;
+            _muted = data.GetNamedBoolean("muted", false);
+            VolumeBar.Note = _muted ? "Silencio" : null;
+            VolumeBar.Dimmed = _muted;
+            UpdateHints();
+        }
+
+        /// <summary>A en el brillo: brillo automático (solo si la consola tiene sensor de luz).</summary>
+        private async void OnBrightnessBarClick(object sender, RoutedEventArgs e)
+        {
+            if (BrightnessBar.FromPointer || !_lightSensor) return;
+            var data = await CallAsync("display.autobrightness.set", new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!_autoBrightness) });
+            if (data == null) return;
+            _autoBrightness = data.GetNamedBoolean("enabled", false);
+            BrightnessBar.Note = _autoBrightness ? "Auto · " + BrightnessBar.Value.ToString("0") + " %" : null;
+            UpdateHints();
+        }
+
+        // ----- Barras de brillo y volumen: solo en «Todo», se pliegan con animación -----
+
+        private Storyboard _barsAnimation;
+
+        private void ShowQuickBars(bool show)
+        {
+            var target = show ? QuickBarsHeight : 0;
+            if (Math.Abs(QuickBars.ActualHeight - target) < 0.5 && QuickBars.Opacity == (show ? 1 : 0)) return;
+            // Si el foco estaba en una barra que se va, pasa a la primera baldosa
+            if (!show && (FocusManager.GetFocusedElement() == BrightnessBar.FocusTarget || FocusManager.GetFocusedElement() == VolumeBar.FocusTarget))
+                ProfileCard.FocusTarget.Focus(FocusState.Keyboard);
+            BrightnessBar.FocusTarget.IsTabStop = VolumeBar.FocusTarget.IsTabStop = show;
+            _barsAnimation?.Stop();
+            if (!_animate)
+            {
+                QuickBars.Height = target;
+                QuickBars.Opacity = show ? 1 : 0;
+                return;
+            }
+            var sb = new Storyboard();
+            var height = new DoubleAnimation
+            {
+                From = QuickBars.ActualHeight, To = target, Duration = TimeSpan.FromMilliseconds(260), EnableDependentAnimation = true,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            };
+            Storyboard.SetTarget(height, QuickBars);
+            Storyboard.SetTargetProperty(height, "Height");
+            var opacity = new DoubleAnimation { To = show ? 1 : 0, Duration = TimeSpan.FromMilliseconds(show ? 260 : 160) };
+            Storyboard.SetTarget(opacity, QuickBars);
+            Storyboard.SetTargetProperty(opacity, "Opacity");
+            sb.Children.Add(height);
+            sb.Children.Add(opacity);
+            _barsAnimation = sb;
+            sb.Begin();
+        }
+
+        private const double QuickBarsHeight = 86;   // 2 barras de 36 + 6 de separación + 8 hasta los filtros
+
+        private void OnQuickBarsSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // Que no se salgan mientras se pliegan
+            QuickBars.Clip = new RectangleGeometry { Rect = new Windows.Foundation.Rect(0, 0, e.NewSize.Width, e.NewSize.Height) };
         }
 
         // =====================================================================
