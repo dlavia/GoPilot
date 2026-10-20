@@ -231,6 +231,9 @@ internal static class DesktopMode
         else if (manual == false) { active = false; reason = "Desactivado con el botón"; }
         else if (manual == true) { active = true; reason = "Activado con el botón"; }
         else if (mode == "off") { active = false; reason = ""; }
+        // Sin ventana delante (pid 0): la experiencia a pantalla completa de Xbox, la pantalla de bloqueo… Antes contaba
+        // como «sin juego» y el modo escritorio mandaba flechas, Intro y Esc a la vez que el mando (iba lento y torpe).
+        else if (pid == 0) { active = false; reason = "Sin ventana delante"; }
         else if (IsControllerApp(pid)) { active = false; reason = "App que ya usa el mando"; }
         else if (mode == "always") { active = true; reason = ""; }
         else if (pid != 0 && pid == ForegroundTracker.CurrentPid) { active = false; reason = "Juego delante"; }

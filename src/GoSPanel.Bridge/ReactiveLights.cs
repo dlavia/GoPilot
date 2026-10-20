@@ -17,8 +17,7 @@ namespace GoSPanel.Bridge;
 /// </summary>
 internal static class ReactiveLights
 {
-    // 30 actualizaciones por segundo como mucho: a 60 el mando (mismo USB que los botones) respondía con retraso.
-    private const int FrameMs = 33;
+    private const int FrameMs = 16;
     // Al volver de la suspensión (o al reaparecer las luces) no se les manda nada durante un rato: el mando se está
     // despertando y escribirle entonces podía dejarlo sin responder.
     private static readonly TimeSpan WakePause = TimeSpan.FromSeconds(8);
@@ -146,10 +145,9 @@ internal static class ReactiveLights
         // Del brillo de reposo al de pico con los golpes (por defecto 20 → 80 %: con menos rango apenas se notaba).
         var scale = _low + (_high - _low) * _pulse;
         Color color = Color.FromArgb(255, Mix(_base.R * scale, 0), Mix(_base.G * scale, 0), Mix(_base.B * scale, 0));
-        _pulse *= 0.8;   // ~250 ms en volver al reposo (a 30 fotogramas por segundo)
+        _pulse *= 0.9;   // ~250 ms en volver al reposo
 
-        // Solo si el cambio se nota: cada orden que se ahorra es una menos para el mando
-        if (!lamps.IsAvailable || Close(color, _last)) return;
+        if (color.Equals(_last) || !lamps.IsAvailable) return;
         try
         {
             lamps.SetColor(color);
@@ -157,9 +155,6 @@ internal static class ReactiveLights
         }
         catch (Exception) { }
     }
-
-    private static bool Close(Color a, Color b) =>
-        a.A == b.A && Math.Abs(a.R - b.R) <= 4 && Math.Abs(a.G - b.G) <= 4 && Math.Abs(a.B - b.B) <= 4;
 
     private static byte Mix(double channel, double white) => (byte)Math.Clamp(channel + (255 - channel) * white, 0, 255);
 
