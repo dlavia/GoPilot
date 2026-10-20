@@ -127,10 +127,7 @@ internal static class DesktopMode
                 if (DateTime.UtcNow >= nextCheck)
                 {
                     active = Decide();
-                    var center = active ? TouchKeyboard.VisibleCenter() : null;
-                    // Al abrirse el teclado, el puntero salta a su centro para empezar a escribir enseguida
-                    if (center != null && !keyboardOpen) SetCursorPos(center.Value.X, center.Value.Y);
-                    keyboardOpen = center != null;
+                    keyboardOpen = active && TouchKeyboard.IsVisible();
                     nextCheck = DateTime.UtcNow.AddMilliseconds(250);
                 }
                 if (!LegionButtons.Snapshot(input)) { active = false; }
@@ -159,13 +156,23 @@ internal static class DesktopMode
                 if (dx != 0 || dy != 0) MouseMove(dx, dy);
 
                 // Rueda: stick izquierdo (vertical y horizontal)
-                var (wx, wy) = Curve((sbyte)input[5], (sbyte)input[6]);
+                var (wx, wy) = keyboardOpen ? (0.0, 0.0) : Curve((sbyte)input[5], (sbyte)input[6]);   // con el teclado, el stick es suyo
                 restWheel += wy * scroll * 0.6;
                 restHWheel += wx * scroll * 0.6;
                 var wheel = (int)restWheel; var hwheel = (int)restHWheel;
                 restWheel -= wheel; restHWheel -= hwheel;
                 if (wheel != 0) Mouse(0x0800, wheel);
                 if (hwheel != 0) Mouse(0x1000, hwheel);
+
+                // Teclado en pantalla abierto: con su distribución «Mando» se maneja él solo (cruceta, A, X borrar,
+                // Y espacio, LB/RB…); el modo escritorio no toca botones ni gatillos, solo deja el ratón en el stick.
+                if (keyboardOpen)
+                {
+                    if (leftDown || aDown) { Mouse(0x0004); leftDown = aDown = false; }
+                    if (rightDown) { Mouse(0x0010); rightDown = false; }
+                    previous = buttons;
+                    continue;
+                }
 
                 // Gatillos analógicos como clics (con histéresis para que no repiquen)
                 var rt = input[14]; var lt = input[13];
@@ -178,22 +185,6 @@ internal static class DesktopMode
                 // cada pulsación llegaría dos veces (A escribía la tecla y además Intro).
                 var pressed = buttons & ~previous;
                 previous = buttons;
-                // Teclado en pantalla abierto (no se maneja con el mando él solo): A pulsa la tecla bajo el puntero,
-                // B borra, Y es espacio, X o Start lo cierran y la cruceta mueve el cursor del texto.
-                if (keyboardOpen)
-                {
-                    var aNow = (buttons & BtnA) != 0;
-                    if (aNow && !aDown) { Mouse(0x0002); aDown = true; }
-                    else if (!aNow && aDown) { Mouse(0x0004); aDown = false; }
-                    if ((pressed & BtnB) != 0) Keys(0x08);
-                    if ((pressed & BtnY) != 0) Keys(0x20);
-                    if ((pressed & (BtnX | BtnStart)) != 0) TouchKeyboard.Toggle();
-                    if ((pressed & Up) != 0) Keys(0x26);
-                    if ((pressed & Down) != 0) Keys(0x28);
-                    if ((pressed & Left) != 0) Keys(0x25);
-                    if ((pressed & Right) != 0) Keys(0x27);
-                    continue;
-                }
                 if (aDown) { Mouse(0x0004); aDown = false; }
                 if (pressed == 0) continue;
                 if ((pressed & BtnA) != 0) Keys(0x0D);                    // Intro
@@ -292,6 +283,5 @@ internal static class DesktopMode
     [StructLayout(LayoutKind.Sequential)] private struct MOUSEINPUT { public int dx, dy; public uint mouseData, dwFlags, time; public IntPtr dwExtraInfo; }
     [DllImport("user32.dll")] private static extern uint SendInput(uint count, INPUT[] inputs, int size);
     [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] private static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
 }

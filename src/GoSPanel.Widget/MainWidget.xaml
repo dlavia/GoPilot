@@ -451,7 +451,7 @@
                                         </Grid>
                                         <Slider x:Name="DesktopScrollSlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del desplazamiento" />
                                         <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
-                                                   Text="Automático: se activa sin juego delante y se apaga al abrir uno. Con el teclado en pantalla: A pulsa la tecla bajo el puntero, B borra, Y es espacio y X lo cierra. Para activarlo con un botón, asígnalo en Ajustes › Botones Legion." />
+                                                   Text="Automático: se activa sin juego delante y se apaga al abrir uno. Para escribir con el mando, en el teclado en pantalla elige una vez ⚙ › Distribución de teclado › Controlador para juegos; con él abierto, el mando es del teclado. Para activarlo con un botón, asígnalo en Ajustes › Botones Legion." />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

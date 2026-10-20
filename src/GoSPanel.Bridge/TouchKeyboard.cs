@@ -29,44 +29,65 @@ internal static class TouchKeyboard
         return new JsonObject { ["toggled"] = true };
     }
 
-    /// <summary>
-    /// ¿Está el teclado táctil en pantalla? En Windows 11 lo dibuja TextInputHost en una ventana CoreWindow que, oculta,
-    /// queda «cloaked» (DWM); en Windows 10, la ventana IPTip_Main_Window de TabTip.
-    /// </summary>
-    public static bool IsVisible() => VisibleCenter() != null;
+    // ¿Está el teclado táctil a la vista? Lo dice IFrameworkInputPane::Location (rectángulo vacío si está oculto). La
+    // ventana de TextInputHost no sirve: sigue «cloaked» aunque el teclado se vea. Se consulta desde un hilo STA propio
+    // cuatro veces por segundo y se guarda el resultado.
+    private static volatile bool _visible;
+    private static Thread? _paneThread;
 
-    /// <summary>Centro del teclado en pantalla (píxeles físicos), o null si no se ve.</summary>
-    public static (int X, int Y)? VisibleCenter()
+    public static bool IsVisible()
     {
-        var hosts = Process.GetProcessesByName("TextInputHost").Select(p => p.Id).ToHashSet();
-        (int X, int Y)? center = null;
-        EnumWindows((hwnd, _) =>
+        if (_paneThread == null)
         {
-            GetWindowThreadProcessId(hwnd, out var pid);
-            var cls = new System.Text.StringBuilder(64);
-            GetClassName(hwnd, cls, cls.Capacity);
-            var name = cls.ToString();
-            var candidate = (hosts.Contains((int)pid) && name == "Windows.UI.Core.CoreWindow") || name == "IPTip_Main_Window";
-            if (candidate && IsWindowVisible(hwnd) && !IsCloaked(hwnd) && GetWindowRect(hwnd, out var r) && r.Bottom - r.Top > 100)
-            {
-                center = ((r.Left + r.Right) / 2, (r.Top + r.Bottom) / 2);
-                return false;
-            }
-            return true;
-        }, IntPtr.Zero);
-        return center;
+            _paneThread = new Thread(WatchPane) { IsBackground = true, Name = "InputPane" };
+            _paneThread.SetApartmentState(ApartmentState.STA);
+            _paneThread.Start();
+        }
+        return _visible;
     }
 
-    private static bool IsCloaked(IntPtr hwnd) => DwmGetWindowAttribute(hwnd, 14 /*DWMWA_CLOAKED*/, out var cloaked, 4) == 0 && cloaked != 0;
+    private static void WatchPane()
+    {
+        while (true)
+        {
+            try
+            {
+                var pane = (IFrameworkInputPane)new FrameworkInputPane();
+                try
+                {
+                    while (true)
+                    {
+                        _visible = pane.Location(out var r) == 0 && r.Right - r.Left > 0 && r.Bottom - r.Top > 0;
+                        Thread.Sleep(250);
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(pane);
+                }
+            }
+            catch (Exception)
+            {
+                _visible = false;
+                Thread.Sleep(2000);
+            }
+        }
+    }
 
-    private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr param);
+    [ComImport, Guid("D5120AA3-46BA-44C5-822D-CA8092C1FC72")]
+    private class FrameworkInputPane { }
+
+    [ComImport, Guid("5752238B-24F0-495A-82F1-2FD593056796"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IFrameworkInputPane
+    {
+        [PreserveSig] int Advise([MarshalAs(UnmanagedType.IUnknown)] object window, IntPtr handler, out int cookie);
+        [PreserveSig] int AdviseWithHWND(IntPtr hwnd, IntPtr handler, out int cookie);
+        [PreserveSig] int Unadvise(int cookie);
+        [PreserveSig] int Location(out Rect location);
+    }
+
+
     [StructLayout(LayoutKind.Sequential)] private struct Rect { public int Left, Top, Right, Bottom; }
-    [DllImport("user32.dll")] private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
-    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder name, int max);
-    [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr hwnd);
-    [DllImport("user32.dll")] private static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
-    [DllImport("dwmapi.dll")] private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
 
     [ComImport, Guid("4ce576fa-83dc-4F88-951c-9d0782b4e376")]
     private class UIHostNoLaunch { }
