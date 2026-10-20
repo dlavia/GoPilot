@@ -8,6 +8,13 @@
     <!-- Baldosa del diseño de una sola página (design/perfil-modo-baldosas.html): cabecera de altura fija y, debajo,
          sus opciones cuando se amplía. El fondo y el tinte los lleva el marco; el botón solo recibe el foco. -->
     <Border x:Name="Frame" CornerRadius="12" BorderThickness="1">
+        <Grid>
+        <!-- Mantener A: la cabecera se va llenando de color de izquierda a derecha; al llenarse se abren las opciones -->
+        <Border x:Name="HoldFill" VerticalAlignment="Top" Height="92" CornerRadius="11" Opacity="0" RenderTransformOrigin="0,0.5">
+            <Border.RenderTransform>
+                <ScaleTransform x:Name="HoldFillScale" ScaleX="0" />
+            </Border.RenderTransform>
+        </Border>
         <StackPanel>
             <c:CardButton x:Name="Root" Style="{StaticResource FlatButton}" Height="92" Padding="11,10,11,9">
                 <Grid>
@@ -53,5 +60,6 @@
             </c:CardButton>
             <ContentPresenter x:Name="BodyHost" Margin="11,0,11,11" Visibility="Collapsed" />
         </StackPanel>
+        </Grid>
     </Border>
 </UserControl>

@@ -83,7 +83,7 @@ namespace GoSPanel.Widget.Controls
         public string State
         {
             get => StateText.Text;
-            set { StateText.Text = value ?? ""; Changed(); }
+            set { StateText.Text = value ?? ""; if (_expanded) ApplyLayout(); Changed(); }
         }
 
         /// <summary>Opciones que se ven al ampliar (contenido XAML de la baldosa).</summary>
@@ -162,6 +162,7 @@ namespace GoSPanel.Widget.Controls
                 _expanded = value;
                 BodyHost.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
                 ChevronRotation.Angle = value ? 180 : 0;
+                ApplyLayout();
                 if (value && Animate) FadeInBody();
                 (Parent as FrameworkElement)?.InvalidateMeasure();
                 Changed();
@@ -225,12 +226,18 @@ namespace GoSPanel.Widget.Controls
             if (!HasBody || _selection.HasValue || _quick == "") return;   // sin opciones aparte, A ya las abre
             _holdTimer.Start();
             HoldBar.Opacity = 1;
+            var accent = ((SolidColorBrush)Brush("AccentBrush")).Color;
+            HoldFill.Background = new SolidColorBrush(Color.FromArgb(0x55, accent.R, accent.G, accent.B));
+            HoldFill.Opacity = 1;
             _holdAnimation?.Stop();
             var sb = new Storyboard();
-            var anim = new DoubleAnimation { From = 0, To = 1, Duration = HoldTime };
-            Storyboard.SetTarget(anim, HoldScale);
-            Storyboard.SetTargetProperty(anim, "ScaleX");
-            sb.Children.Add(anim);
+            foreach (var target in new DependencyObject[] { HoldScale, HoldFillScale })
+            {
+                var anim = new DoubleAnimation { From = 0, To = 1, Duration = HoldTime };
+                Storyboard.SetTarget(anim, target);
+                Storyboard.SetTargetProperty(anim, "ScaleX");
+                sb.Children.Add(anim);
+            }
             _holdAnimation = sb;
             sb.Begin();
         }
@@ -239,8 +246,8 @@ namespace GoSPanel.Widget.Controls
         {
             _holdTimer.Stop();
             _holdAnimation?.Stop();
-            HoldScale.ScaleX = 0;
-            HoldBar.Opacity = 0;
+            HoldScale.ScaleX = HoldFillScale.ScaleX = 0;
+            HoldBar.Opacity = HoldFill.Opacity = 0;
         }
 
         private void OnCardKeyDown(object sender, KeyRoutedEventArgs e)
@@ -277,6 +284,30 @@ namespace GoSPanel.Widget.Controls
 
         private void ApplyLayout()
         {
+            // Ampliada: cabecera de una línea (icono, «Brillo · 71 %» y ⌃); ya se sabe dónde se está y deja sitio a las opciones
+            Root.Height = _expanded ? 46 : 92;
+            HoldFill.Height = Root.Height;
+            if (_expanded)
+            {
+                TitleText.Visibility = Visibility.Visible;
+                TitleText.Text = string.IsNullOrEmpty(_value) ? _title + (string.IsNullOrEmpty(StateText.Text) ? "" : " · " + StateText.Text)
+                    : _key ? _value : _title + " · " + _value;
+                TitleText.FontSize = 13.5;
+                TitleText.FontWeight = Windows.UI.Text.FontWeights.SemiBold;
+                ValueText.Visibility = StateText.Visibility = Visibility.Collapsed;
+                Dot.Visibility = Visibility.Collapsed;
+                ChevronText.Visibility = Visibility.Visible;
+                ChevronText.Text = "";
+                ChevronText.FontSize = 11;
+                IconBox.Width = IconBox.Height = _key ? 26 : double.NaN;
+                IconText.FontSize = _key ? 15 : 16;
+                IconBox.VerticalAlignment = VerticalAlignment.Center;
+                return;
+            }
+            TitleText.FontSize = 12;
+            TitleText.FontWeight = Windows.UI.Text.FontWeights.Normal;
+            ValueText.Visibility = StateText.Visibility = Visibility.Visible;
+            IconBox.VerticalAlignment = VerticalAlignment.Top;
             var toggleLook = string.IsNullOrEmpty(_value);
             // Interruptor: icono y punto arriba, el nombre abajo en grande. Valor: icono + nombre arriba y el dato grande.
             TitleText.Visibility = toggleLook || _key ? Visibility.Collapsed : Visibility.Visible;
