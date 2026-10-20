@@ -10,8 +10,8 @@ using Windows.UI.Xaml.Controls.Primitives;
 namespace GoSPanel.Widget
 {
     /// <summary>
-    /// Equipo › Ajustes avanzados: Sticks, Gatillos y Giroscopio se despliegan debajo (uno a la vez), cada uno
-    /// con sus ajustes y los botones Calibrar, Probar (valores en directo del mando) y Por defecto.
+    /// Baldosas Sticks y gatillos (Sticks / Gatillos se despliegan dentro, uno a la vez) y Giroscopio, cada uno con sus
+    /// ajustes y los botones Calibrar, Probar (valores en directo del mando) y Por defecto.
     /// Los ajustes se guardan en el propio mando (los escribe el agente con el protocolo de Lenovo).
     /// </summary>
     public sealed partial class MainWidget
@@ -28,7 +28,7 @@ namespace GoSPanel.Widget
         private void ApplyAdvanced(JsonObject data)
         {
             var available = data.GetNamedBoolean("available", false);
-            AdvancedSection.Visibility = available ? Visibility.Visible : Visibility.Collapsed;
+            SticksCard.Available = available;
             if (!available) return;
 
             _loadingAdvanced = true;
@@ -51,7 +51,7 @@ namespace GoSPanel.Widget
             var modeName = _gyroMode >= 0 && _gyroMode < GyroModeNames.Length ? GyroModeNames[_gyroMode] : "—";
             GyroModeTile.State = modeName;
             GyroModeTile.IsOn = _gyroMode > 0;
-            AdvGyroTile.State = modeName;
+            if (GyroCard.IsOn) GyroCard.State = "Activado · " + modeName.ToLowerInvariant();
             GyroSensitivityRow.Visibility = _gyroMode > 0 ? Visibility.Visible : Visibility.Collapsed;
             if (data.TryGetValue("gyroSensitivity", out v) && v.ValueType == JsonValueType.Number)
             {
@@ -80,12 +80,8 @@ namespace GoSPanel.Widget
             _calibrating = null;
             SticksPanel.Visibility = _advancedOpen == "sticks" ? Visibility.Visible : Visibility.Collapsed;
             TriggersPanel.Visibility = _advancedOpen == "triggers" ? Visibility.Visible : Visibility.Collapsed;
-            GyroPanel.Visibility = _advancedOpen == "gyro" ? Visibility.Visible : Visibility.Collapsed;
-            LightsPanel.Visibility = _advancedOpen == "lights" ? Visibility.Visible : Visibility.Collapsed;
-            AdvLightsTile.IsOn = _advancedOpen == "lights";
             AdvSticksTile.IsOn = _advancedOpen == "sticks";
             AdvTriggersTile.IsOn = _advancedOpen == "triggers";
-            AdvGyroTile.IsOn = _advancedOpen == "gyro" || _gyroMode > 0;
         }
 
         // ---------------------------------------------------------------------
@@ -202,7 +198,7 @@ namespace GoSPanel.Widget
                 _testTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(70) };
                 _testTimer.Tick += async (s, a) =>
                 {
-                    if (_testing == null || _tab != 3) { StopTest(); return; }
+                    if (_testing == null || !(SticksCard.Expanded || GyroCard.Expanded)) { StopTest(); return; }
                     var d = await CallAsync("controller.input", null, false);
                     if (d != null) ShowInput(d);
                 };

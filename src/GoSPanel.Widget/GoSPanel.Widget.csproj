@@ -56,7 +56,7 @@
     <Compile Include="MainWidget.Controller.cs">
       <DependentUpon>MainWidget.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainWidget.Home.cs">
+    <Compile Include="MainWidget.Cards.cs">
       <DependentUpon>MainWidget.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWidget.Updates.cs">
@@ -72,6 +72,10 @@
     <Compile Include="Controls\Selector.xaml.cs">
       <DependentUpon>Selector.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Card.xaml.cs">
+      <DependentUpon>Card.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TileGrid.cs" />
     <Compile Include="Controls\Tile.xaml.cs">
       <DependentUpon>Tile.xaml</DependentUpon>
     </Compile>
@@ -114,6 +118,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Controls\Selector.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\Card.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

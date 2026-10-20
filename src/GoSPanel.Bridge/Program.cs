@@ -17,7 +17,7 @@ internal static class Program
     private const string AppServiceName = "GoSPanel.Bridge";
     private static readonly string AgentPipe = $"GoSPanel.Agent.{System.Diagnostics.Process.GetCurrentProcess().SessionId}";
     private static readonly string[] UserSessionCommands =
-        { "display.", "volume.", "foreground.", "keyboard.", "profiles.", "ls.", "amd.", "lights.", "gyro.", "overlay.", "buttons.", "controller.", "vrr.", "legionwidget.", "desktop.", "autotdp." };
+        { "display.", "volume.", "foreground.", "keyboard.", "profiles.", "ls.", "amd.", "lights.", "gyro.", "overlay.", "buttons.", "controller.", "vrr.", "legionwidget.", "desktop.", "autotdp.", "art." };
 
     private static readonly ServiceClient Service = new();
     private static readonly SemaphoreSlim ConnectGate = new(1, 1);
@@ -230,6 +230,9 @@ internal static class Program
                     "keyboard.toggle" => TouchKeyboard.Toggle(),
                     "volume.get" => Volume.Get(),
                     "volume.set" => Volume.Set((int)args["value"]!.GetValue<double>()),
+                    "volume.mute" => Volume.SetMute(args!["muted"]!.GetValue<bool>()),
+                    "display.autobrightness.get" => AutoBrightness.Get(),
+                    "display.autobrightness.set" => AutoBrightness.Set(args!["enabled"]!.GetValue<bool>()),
                     "display.get" => DisplayControl.Get(),
                     "display.set" => DisplayControl.Set(
                         args["width"]!.GetValue<int>(),
@@ -264,6 +267,7 @@ internal static class Program
                     "overlay.get" => GameOverlay.Get(),
                     "overlay.set" => GameOverlay.Set(args),
                     "ls.get" => LosslessScaling.Get(),
+                    "art.get" => GameArt.Get(args!["exe"]!.GetValue<string>(), args["path"]?.GetValue<string>()),
                     "desktop.get" => DesktopMode.Get(),
                     "desktop.set" => DesktopMode.Set(args),
                     "autotdp.get" => AutoTdp.Get(),

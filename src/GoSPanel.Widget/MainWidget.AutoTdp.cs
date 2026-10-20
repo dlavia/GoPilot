@@ -18,6 +18,7 @@ namespace GoSPanel.Widget
         private bool _autoTdp;
         private int _autoTarget = 60;
         private bool _autoChill = true;
+        private double? _autoWatts;
         // Los Slider con Minimum > 0 lanzan ValueChanged durante InitializeComponent: nada se envía hasta leerlos.
         private bool _autoLoaded;
         private DispatcherTimer _autoSaveTimer;
@@ -78,6 +79,7 @@ namespace GoSPanel.Widget
 
             var watts = Num(data, "watts");
             var fps = Num(data, "fps");
+            _autoWatts = _autoTdp ? watts : null;
             var status = StringOrNull(data, "status") ?? "";
             AutoLiveText.Text = !_autoTdp ? "Elige los FPS y GoPilot ajusta el consumo solo, gastando lo mínimo para llegar."
                 : fps.HasValue && watts.HasValue ? "Ahora: " + watts.Value.ToString("0") + " W para " + fps.Value.ToString("0")

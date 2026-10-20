@@ -20,7 +20,7 @@
             </Grid.RowDefinitions>
             <TextBlock x:Name="IconText" FontFamily="{StaticResource Phosphor}" FontSize="20"
                        Foreground="{StaticResource IconBrush}" />
-            <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextWrapping="Wrap" MaxLines="2" />
             <TextBlock x:Name="StateText" FontSize="11" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
             <Border x:Name="BadgeBorder" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5"
                     Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">

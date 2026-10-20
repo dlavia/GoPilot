@@ -45,11 +45,6 @@ namespace GoSPanel.Widget
         private bool _animate => _systemAnimations && Pref("animations", true);
         private XboxGameBarWidget _widget;
 
-        private ScrollViewer[] _panels;
-        private Button[] _tabs;
-        private int _tab;
-        private Storyboard _slide;
-
         private string _mode = "";
         private int _customSpl;
         private bool _polling, _loading, _connected, _initialized;
@@ -67,17 +62,12 @@ namespace GoSPanel.Widget
             Sounds.Enabled = Pref("sounds", true);
             _ = Sounds.InitAsync();
             InitializeComponent();
-            ProfilesFlyout.Opened += (s, e) => Sounds.Play("Show");
-            ProfilesFlyout.Closed += (s, e) => Sounds.Play("Hide");
             AddHandler(PointerReleasedEvent, new PointerEventHandler(OnSoundPointerReleased), true);
             EventHandler onTheme = (s, e) => ApplyThemeShapes();
             Theme.Changed += onTheme;
             Unloaded += (s, e) => Theme.Changed -= onTheme;
             AccentColors.Attach(Dispatcher);
             ApplyInterfacePrefs();
-            _panels = new[] { HomePanel, PowerPanel, DisplayPanel, DevicePanel, ProfilesPanel };
-            _tabs = new[] { TabHome, TabPower, TabDisplay, TabDevice, TabProfiles };
-            foreach (var panel in _panels) panel.RenderTransform = new TranslateTransform();
 
             _timer.Tick += async (s, e) =>
             {
@@ -96,10 +86,8 @@ namespace GoSPanel.Widget
             Loaded += async (s, e) =>
             {
                 ApplyThemeShapes();
-                InitHomeTiles();
+                InitCards();
                 InitUpdates();
-                TabsBar.SizeChanged += (_, __) => MovePill(false);
-                MovePill(false);
                 Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
                 FocusManager.GotFocus += OnAnyGotFocus;
                 _timer.Start();
@@ -116,14 +104,14 @@ namespace GoSPanel.Widget
                 FocusManager.GotFocus -= OnAnyGotFocus;
             };
 
-            // Cambio de pestaña con el mando: se escucha en la página (incluidos eventos ya gestionados) y en la ventana.
+            // Cambio de filtro con el mando: se escucha en la página (incluidos eventos ya gestionados) y en la ventana.
             AddHandler(KeyDownEvent, new KeyEventHandler(OnPageKeyDown), true);
-            // Los ScrollViewer de las pestañas usan LT/RT/LB/RB para pasar página: se interceptan antes (fase de
-            // «preview») para que solo cambien de pestaña y no desplacen el contenido.
+            // El ScrollViewer usa LT/RT/LB/RB para pasar página: se interceptan antes (fase de «preview») para que solo
+            // cambien de filtro. La cruceta también se gestiona aquí: la navegación automática se equivoca en este widget.
             PreviewKeyDown += (s, e) =>
             {
                 var k = e.Key;
-                if (HandleFooterNavigation(k))
+                if (MoveFocus(k))
                 {
                     e.Handled = true;
                     return;
@@ -138,7 +126,7 @@ namespace GoSPanel.Widget
             // una vez dentro, el D-pad avanza de SmallChange en SmallChange (10 % brillo, 5 % volumen, 1 W TDP).
             BuildSwatches();
             BuildAutoTargets();
-            foreach (var slider in new[] { BrightnessSlider, VolumeSlider, SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
+            foreach (var slider in new[] { SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
                                            LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider,
                                            DesktopPointerSlider, DesktopScrollSlider, AutoMinSlider, AutoMaxSlider })
             {
@@ -166,45 +154,6 @@ namespace GoSPanel.Widget
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             _widget = e.Parameter as XboxGameBarWidget;
-        }
-
-        // =====================================================================
-        // Pestañas
-        // =====================================================================
-
-        private void OnTabClick(object sender, RoutedEventArgs e)
-        {
-            ShowTab(int.Parse((string)((Button)sender).Tag));
-        }
-
-        // Pie: con la cruceta, desde el último control de la pestaña se baja al perfil y desde el perfil se vuelve a
-        // donde se estaba. Se decide al pulsar (el contenido cambia al abrir desplegables) porque la navegación
-        // automática del mando se equivoca en este widget.
-        private Control _lastContentFocus;
-
-        private bool HandleFooterNavigation(VirtualKey key)
-        {
-            var down = key == VirtualKey.GamepadDPadDown || key == VirtualKey.GamepadLeftThumbstickDown || key == VirtualKey.Down;
-            var up = key == VirtualKey.GamepadDPadUp || key == VirtualKey.GamepadLeftThumbstickUp || key == VirtualKey.Up;
-            if (!down && !up) return false;
-            var focused = FocusManager.GetFocusedElement() as Control;
-            if (focused == null || (focused as Slider)?.IsFocusEngaged == true) return false;
-            var inFooter = focused == GameBanner || focused == SaveProfileButton;
-            if (up && inFooter)
-            {
-                var target = _lastContentFocus ?? FocusManager.FindLastFocusableElement(_panels[_tab]) as Control;
-                return target != null && target.Focus(FocusState.Keyboard);
-            }
-            if (down && !inFooter && focused == FocusManager.FindLastFocusableElement(_panels[_tab]))
-                return GameBanner.Focus(FocusState.Keyboard);
-            return false;
-        }
-
-        private bool IsInCurrentPanel(DependencyObject element)
-        {
-            for (; element != null; element = VisualTreeHelper.GetParent(element))
-                if (element == _panels[_tab]) return true;
-            return false;
         }
 
         private DateTime _lastTabKey;
@@ -247,7 +196,7 @@ namespace GoSPanel.Widget
         {
             var control = e.NewFocusedElement as Control;
             if (control != null && control.FocusState == FocusState.Keyboard) Sounds.Focus();
-            if (control != null && IsInCurrentPanel(control)) _lastContentFocus = control;
+            UpdateHints();
         }
 
         private void OnSoundPointerReleased(object sender, PointerRoutedEventArgs e)
@@ -258,10 +207,7 @@ namespace GoSPanel.Widget
             }
         }
 
-        /// <summary>
-        /// LT / RT cambian de pestaña (comprobado en la consola: Game Bar se queda LB / RB para moverse entre
-        /// widgets). LB / RB se mantienen para cuando el widget se abre como ventana normal.
-        /// </summary>
+        /// <summary>LT / RT cambian de filtro (Game Bar se queda LB / RB para moverse entre widgets).</summary>
         private bool HandleTabKey(VirtualKey key)
         {
             if (_testing == "triggers" && (key == VirtualKey.GamepadLeftTrigger || key == VirtualKey.GamepadRightTrigger))
@@ -275,98 +221,8 @@ namespace GoSPanel.Widget
             // La misma pulsación llega por la página y por la ventana: ignorar el duplicado.
             if ((DateTime.UtcNow - _lastTabKey).TotalMilliseconds < 150) return true;
             _lastTabKey = DateTime.UtcNow;
-            ShowTab((_tab + _tabs.Length + direction) % _tabs.Length);
+            ShowFilter((Array.IndexOf(Filters, _filter) + Filters.Length + direction) % Filters.Length);
             return true;
-        }
-
-        private void ShowTab(int index)
-        {
-            if (index == _tab) return;
-            var from = _panels[_tab];
-            var to = _panels[index];
-            var direction = index > _tab ? 1 : -1;
-            _tab = index;
-            UpdateTabVisuals();
-            MovePill(_animate);
-
-            // Si había una transición en curso, se termina al instante.
-            if (_slide != null) { _slide.SkipToFill(); _slide = null; }
-            foreach (var panel in _panels)
-            {
-                if (panel == to || panel == from) continue;
-                panel.Visibility = Visibility.Collapsed;
-                ResetSlide(panel);
-            }
-
-            // Cada pestaña se abre siempre arriba y con el foco en su primer control (cómodo con el mando).
-            to.Visibility = Visibility.Visible;
-            to.ChangeView(null, 0, null, true);
-            to.UpdateLayout();
-            var first = FocusManager.FindFirstFocusableElement(to) as Control;
-            _lastContentFocus = null;
-            if (first != null) first.Focus(FocusState.Keyboard);
-            if (!_animate)
-            {
-                from.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            var offset = PanelHost.ActualWidth * 0.35;
-            var sb = new Storyboard();
-            AddSpline(sb, from.RenderTransform, "X", 0, -direction * offset);
-            AddSpline(sb, from, "Opacity", 1, 0);
-            AddSpline(sb, to.RenderTransform, "X", direction * offset, 0);
-            AddSpline(sb, to, "Opacity", 0, 1);
-            sb.Completed += (s, e) =>
-            {
-                if (_panels[_tab] != from) from.Visibility = Visibility.Collapsed;
-                ResetSlide(from);
-                ResetSlide(to);
-                if (_slide == sb) _slide = null;
-            };
-            _slide = sb;
-            sb.Begin();
-        }
-
-        private static void ResetSlide(UIElement panel)
-        {
-            ((TranslateTransform)panel.RenderTransform).X = 0;
-            panel.Opacity = 1;
-        }
-
-        private void UpdateTabVisuals()
-        {
-            for (var i = 0; i < _tabs.Length; i++)
-            {
-                var content = (StackPanel)_tabs[i].Content;
-                var selected = i == _tab;
-                // Sencillo: icono de la pestaña activa en color de acento y subrayado blanco.
-                ((TextBlock)content.Children[0]).Foreground = !selected ? Brush("MutedBrush")
-                    : Theme.IsContrast ? new SolidColorBrush(Theme.OnAccent) : Brush("AccentBrush");
-                ((TextBlock)content.Children[1]).Foreground = Brush(selected ? "TextBrush" : "MutedBrush");
-            }
-        }
-
-        private void MovePill(bool animate)
-        {
-            var tab = _tabs[_tab];
-            if (tab.ActualWidth <= 0) return;
-            TabPill.Width = tab.ActualWidth;
-            var x = tab.TransformToVisual(TabHome).TransformPoint(new Windows.Foundation.Point(0, 0)).X;
-            if (!animate)
-            {
-                TabPillTransform.X = x;
-                return;
-            }
-            var sb = new Storyboard();
-            AddSpline(sb, TabPillTransform, "X", TabPillTransform.X, x);
-            sb.Begin();
-        }
-
-        private void OnPanelHostSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            // Recortar el contenido para que el deslizamiento no se salga del widget.
-            PanelHost.Clip = new RectangleGeometry { Rect = new Windows.Foundation.Rect(0, 0, e.NewSize.Width, e.NewSize.Height) };
         }
 
         private static void AddSpline(Storyboard sb, DependencyObject target, string property, double from, double to)
@@ -420,18 +276,18 @@ namespace GoSPanel.Widget
             ["freesync"] = new[] { "Desactivado", "Activado" },
         };
 
-        private IEnumerable<Tile> AmdTiles(string feature)
+        private Card AmdCard(string feature)
         {
             switch (feature)
             {
-                case "afmf": return new[] { HomeAfmfTile, AmdAfmfTile };
-                case "rsr": return new[] { HomeRsrTile, AmdRsrTile };
-                case "chill": return new[] { HomeChillTile, AmdChillTile };
-                case "sharpening": return new[] { HomeSharpTile, AmdSharpTile };
-                case "antilag": return new[] { AmdAntiLagTile };
-                case "varibright": return new[] { AmdVariBrightTile };
-                case "freesync": return new[] { AmdFreeSyncTile };
-                default: return new Tile[0];
+                case "afmf": return AfmfCard;
+                case "rsr": return RsrCard;
+                case "chill": return ChillCard;
+                case "sharpening": return SharpCard;
+                case "antilag": return AntiLagCard;
+                case "varibright": return VariBrightCard;
+                case "freesync": return VrrCard;
+                default: return null;
             }
         }
 
@@ -463,13 +319,17 @@ namespace GoSPanel.Widget
 
                 if (feature == "chill") ApplyChillRange(info, on);
 
-                foreach (var tile in AmdTiles(feature))
+                var card = AmdCard(feature);
+                if (card == null) continue;
+                card.Available = supported;
+                card.IsOn = on;
+                if (feature == "chill")
                 {
-                    tile.Available = supported;
-                    tile.IsOn = on;
-                    var inGrid = tile == HomeAfmfTile || tile == HomeRsrTile || tile == HomeChillTile || tile == HomeSharpTile;
-                    tile.State = !supported ? "No disponible" : inGrid ? (on ? "Activado" : "Desactivado") : detail;
+                    // Chill: el rango en grande; apagado, «Apagado»
+                    card.Value = !supported ? "—" : on ? detail.Replace(" FPS", "") : "Apagado";
+                    card.State = !supported ? "No disponible" : on ? "FPS mínimos y máximos" : "Límite de FPS";
                 }
+                else card.State = !supported ? "No disponible" : on ? "Activado" + (detail != "Activado" ? " · " + detail : "") : "Desactivado";
             }
         }
 
@@ -481,6 +341,7 @@ namespace GoSPanel.Widget
         private void ApplyChillRange(JsonObject info, bool on)
         {
             ChillPanel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+            ChillOffText.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
             if (!on || info == null) return;
             if (ChillMinSlider.IsFocusEngaged || ChillMaxSlider.IsFocusEngaged) return;   // no pisar al usuario
 
@@ -550,7 +411,7 @@ namespace GoSPanel.Widget
 
         private async void OnAmdClick(object sender, RoutedEventArgs e)
         {
-            var feature = (string)((Tile)sender).Tag;
+            var feature = (string)((FrameworkElement)sender).Tag;
             bool current;
             _amd.TryGetValue(feature, out current);
             var data = await CallAsync("amd.set", new JsonObject
@@ -612,7 +473,8 @@ namespace GoSPanel.Widget
         private void ApplyController(JsonObject data)
         {
             var available = data.GetNamedBoolean("available", false);
-            foreach (var tile in new[] { VibrationTile, TouchVibrationTile, AutoSleepTile, PollRateTile, DpadTile }) tile.Available = available;
+            foreach (var tile in new[] { VibrationTile, TouchVibrationTile, PollRateTile, DpadTile }) tile.Available = available;
+            VibrationCard.Available = AutoSleepCard.Available = available;
             if (!available) return;
             IJsonValue v;
             _vibration = data.TryGetValue("vibration", out v) && v.ValueType == JsonValueType.Number ? (int)v.GetNumber() : -1;
@@ -625,8 +487,13 @@ namespace GoSPanel.Widget
             VibrationTile.IsOn = _vibration > 0;
             TouchVibrationTile.State = _touchVibration >= 0 ? VibrationNames[_touchVibration] : "—";
             TouchVibrationTile.IsOn = _touchVibration > 0;
-            AutoSleepTile.State = _autoSleep < 0 ? "—" : _autoSleep == 0 ? "Nunca" : _autoSleep + " min";
-            AutoSleepTile.IsOn = _autoSleep > 0;
+            // Baldosa: A sube la intensidad del mando (Apagada → Suave → Media → Fuerte); dentro, mando y touchpad
+            VibrationCard.Value = _vibration >= 0 ? VibrationNames[_vibration] : "—";
+            VibrationCard.State = "Touchpad: " + (_touchVibration >= 0 ? VibrationNames[_touchVibration].ToLowerInvariant() : "—");
+            VibrationCard.IsOn = _vibration > 0;
+            VibrationCard.ActionText = _vibration >= 0 ? "Vibración " + VibrationNames[(_vibration + 1) % 4].ToLowerInvariant() : null;
+            AutoSleepCard.Value = _autoSleep < 0 ? "—" : _autoSleep == 0 ? "Nunca" : _autoSleep + " min";
+            AutoSleepCard.IsOn = _autoSleep > 0;
             PollRateTile.State = _pollRate > 0 ? _pollRate + " Hz" : "—";
             DpadTile.State = _dpad == null ? "—" : _dpad + " direcciones";
         }
@@ -779,74 +646,16 @@ namespace GoSPanel.Widget
         // Tema (Sencillo / Contraste)
         // =====================================================================
 
-        private bool _profileOnGlobal = true;
-
-        private void ApplyProfileChip()
-        {
-            if (Theme.IsContrast)
-            {
-                ProfileChip.Background = Brush(_profileOnGlobal ? "Panel3Brush" : "AccentBrush");
-                ConnectionText.Foreground = _profileOnGlobal ? Brush("MutedBrush") : new SolidColorBrush(Theme.OnAccent);
-            }
-            else
-            {
-                ProfileChip.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                ConnectionText.Foreground = Brush(_profileOnGlobal ? "MutedBrush" : "AccentBrush");
-            }
-        }
-
-        /// <summary>Lo que cambia de forma entre temas: barra de pestañas, resalte de la activa y etiqueta del perfil.</summary>
+        /// <summary>Textos de la baldosa Apariencia (tema y sonidos).</summary>
         private void ApplyThemeShapes()
         {
-            if (Theme.IsContrast)
-            {
-                TabsBar.Background = Brush("PanelBrush");
-                TabsBar.BorderThickness = new Thickness(0);
-                TabsBar.CornerRadius = new CornerRadius(10);
-                TabPill.Background = Brush("AccentBrush");
-                TabPill.BorderThickness = new Thickness(0);
-                TabPill.CornerRadius = new CornerRadius(8);
-            }
-            else
-            {
-                TabsBar.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                TabsBar.BorderBrush = Brush("LineBrush");
-                TabsBar.BorderThickness = new Thickness(0, 0, 0, 1);
-                TabsBar.CornerRadius = new CornerRadius(0);
-                TabPill.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                TabPill.BorderBrush = Brush("TextBrush");
-                TabPill.BorderThickness = new Thickness(0, 0, 0, 2);
-                TabPill.CornerRadius = new CornerRadius(0);
-            }
-            ThemeTile.State = Theme.IsContrast ? "Contraste" : "Sencillo";
+            var theme = Theme.IsContrast ? "Contraste" : "Sencillo";
+            ThemeTile.State = theme;
+            AppearanceCard.Value = theme;
             var sounds = Sounds.Enabled;
             SoundsTile.IsOn = sounds;
             SoundsTile.State = sounds ? "Activados" : "Desactivados";
-            UpdateTabVisuals();
-            ApplyProfileChip();
-            ApplySectionPadding();
-        }
-
-        private readonly Dictionary<Border, Thickness> _sectionPadding = new Dictionary<Border, Thickness>();
-
-        /// <summary>
-        /// En el tema Sencillo las secciones no tienen fondo, así que su relleno se ve como hueco: el título de un grupo
-        /// quedaba muy lejos del control anterior. Se recorta el relleno de arriba (y algo el de abajo); en Contraste
-        /// se deja el original porque la caja se ve.
-        /// </summary>
-        private void ApplySectionPadding()
-        {
-            if (_sectionPadding.Count == 0)
-            {
-                var style = (Style)Application.Current.Resources["SectionStyle"];
-                foreach (var border in Descendants(LayoutRoot).OfType<Border>().Where(b => b.Style == style))
-                    _sectionPadding[border] = border.Padding;
-            }
-            foreach (var pair in _sectionPadding)
-            {
-                var p = pair.Value;
-                pair.Key.Padding = Theme.IsContrast ? p : new Thickness(p.Left, Math.Min(p.Top, 2), p.Right, Math.Min(p.Bottom, 6));
-            }
+            AppearanceCard.State = "Sonidos " + (sounds ? "activados" : "desactivados");
         }
 
         /// <summary>Recorre el árbol lógico (también lo que está oculto en otras pestañas).</summary>
@@ -937,7 +746,9 @@ namespace GoSPanel.Widget
             _buttonsEnabled = data.GetNamedBoolean("enabled", true);
             ButtonsTile.IsOn = _buttonsEnabled;
             ButtonsTile.State = _buttonsEnabled ? "Activado" : "Desactivado";
+            ButtonsCard.Value = _buttonsEnabled ? "GoPilot" : "Apagados";
             ButtonsHint.Text = data.GetNamedBoolean("controller", false) ? "" : "Mando no encontrado";
+            ButtonsHint.Visibility = string.IsNullOrEmpty(ButtonsHint.Text) ? Visibility.Collapsed : Visibility.Visible;
             ButtonsWarning.Visibility = _buttonsEnabled && data.GetNamedBoolean("legionSpace", false) ? Visibility.Visible : Visibility.Collapsed;
             ButtonsBody.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
 
@@ -1027,8 +838,8 @@ namespace GoSPanel.Widget
             GameOverlayTile.IsOn = _gameOverlay;
             GameOverlayTile.State = !_gameOverlay ? "Desactivado" : _overlayAlways ? "Siempre" : "En juegos";
             OverlaySettings.Visibility = _gameOverlay ? Visibility.Visible : Visibility.Collapsed;
-            HomeOverlayTile.IsOn = _gameOverlay;
-            HomeOverlayTile.State = _gameOverlay ? "Activado" : "Desactivado";
+            OverlayCard.IsOn = _gameOverlay;
+            OverlayCard.Value = !_gameOverlay ? "Apagado" : _overlayAlways ? "Siempre" : "En juegos";
             OverlayContentSelector.SetOptions(OverlayContents, data.GetNamedString("content", "full"));
             OverlayPositionSelector.SetOptions(OverlayPositions, data.GetNamedString("position", "tl"));
         }
@@ -1080,10 +891,9 @@ namespace GoSPanel.Widget
         private void ApplyFan(bool on)
         {
             _fullFan = on;
-            HomeFanTile.IsOn = PowerFanTile.IsOn = on;
-            HomeFanTile.State = on ? "Al máximo" : "Automático";
-            PowerFanTile.State = on ? "Activado" : "Desactivado";
-            FanHintText.Text = on ? "Velocidad máxima" : "Curva automática";
+            FanCard.IsOn = on;
+            FanCard.Value = on ? "Máximo" : "Auto";
+            FanCard.ActionText = on ? "Ventilador automático" : "Ventilador al máximo";
         }
 
         private async void OnChargeClick(object sender, RoutedEventArgs e)
@@ -1095,8 +905,8 @@ namespace GoSPanel.Widget
         private void ApplyCharge(bool on)
         {
             _chargeLimit = on;
-            ChargeTile.IsOn = on;
-            ChargeTile.State = on ? "Hasta el 80 %" : "Completa";
+            ChargeCard.IsOn = on;
+            ChargeCard.State = on ? "Activado · cuida la batería" : "Carga completa";
         }
 
         // =====================================================================
@@ -1154,20 +964,20 @@ namespace GoSPanel.Widget
             var effect = state.GetNamedString("effect", "solid");
             var color = state.GetNamedString("color", "#242299").ToUpperInvariant();
 
-            foreach (var tile in new[] { HomeLightsTile, DeviceLightsTile })
-            {
-                tile.Available = available;
-                tile.IsOn = on;
-                tile.State = !available ? "Sin mando" : on ? "Encendidas" : "Apagadas";
-            }
+            // Baldosa: A recorre Apagadas → Bajo → Medio → Alto; dentro, efecto, color y velocidad
+            var level = on ? LightLevel(state) : 0;
+            LightsCard.Available = available;
+            LightsCard.IsOn = on;
+            LightsCard.Value = !available ? "—" : LightLevelNames[level];
+            LightsCard.State = !available ? "Sin mando" : on ? EffectOptions.First(o => (string)o.Value == effect).Key : "Luces de los sticks";
+            LightsCard.ActionText = "Luces: " + LightLevelNames[(level + 1) % LightLevelNames.Length].ToLowerInvariant();
             LightsOffText.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
             LightsSettings.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
 
             _gyro = !state.ContainsKey("gyro") || state["gyro"].ValueType != JsonValueType.Boolean || state.GetNamedBoolean("gyro");
-            GyroTile.Available = available;
-            GyroTile.IsOn = available && _gyro;
-            GyroTile.State = !available ? "Sin mando" : _gyro ? "Activado" : "Desactivado";
-            AdvLightsTile.State = !available ? "Sin mando" : on ? EffectOptions.First(o => (string)o.Value == effect).Key : "Apagadas";
+            GyroCard.Available = available;
+            GyroCard.IsOn = available && _gyro;
+            GyroCard.State = !available ? "Sin mando" : !_gyro ? "Desactivado" : "Activado · " + GyroModeNames[Math.Max(0, Math.Min(_gyroMode, GyroModeNames.Length - 1))].ToLowerInvariant();
 
             _applyingLights = true;
             try
@@ -1207,10 +1017,34 @@ namespace GoSPanel.Widget
             if (data != null) ApplyLights(data);
         }
 
-        private async void OnLightsClick(object sender, RoutedEventArgs e)
+        // Niveles de la baldosa: el brillo (o el pico, en Reactivo) de cada uno
+        private static readonly string[] LightLevelNames = { "Apagadas", "Bajo", "Medio", "Alto" };
+        private static readonly int[] LightLevelBrightness = { 0, 30, 60, 100 };
+
+        private static int LightLevel(JsonObject state)
         {
-            var on = _lights != null && _lights.GetNamedBoolean("enabled", false);
-            await SetLightsAsync(new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!on) });
+            var reactive = state.GetNamedString("effect", "solid") == "reactive";
+            var value = reactive && state.ContainsKey("reactiveHigh") ? state.GetNamedNumber("reactiveHigh") : state.GetNamedNumber("brightness", 80);
+            return value <= 40 ? 1 : value <= 75 ? 2 : 3;
+        }
+
+        private async void OnLightsCardClick(object sender, RoutedEventArgs e)
+        {
+            if (_lights == null) return;
+            var on = _lights.GetNamedBoolean("enabled", false);
+            var next = ((on ? LightLevel(_lights) : 0) + 1) % LightLevelNames.Length;
+            if (next == 0)
+            {
+                await SetLightsAsync(new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(false) });
+                return;
+            }
+            var value = JsonValue.CreateNumberValue(LightLevelBrightness[next]);
+            await SetLightsAsync(new JsonObject
+            {
+                ["enabled"] = JsonValue.CreateBooleanValue(true),
+                ["brightness"] = value,
+                ["reactiveHigh"] = JsonValue.CreateNumberValue(LightLevelBrightness[next]),
+            });
         }
 
         private async void OnEffectSelected(object sender, object value)
@@ -1246,9 +1080,8 @@ namespace GoSPanel.Widget
         private void ApplyBoost(bool on)
         {
             _boost = on;
-            HomeBoostTile.IsOn = PowerBoostTile.IsOn = on;
-            HomeBoostTile.State = on ? "Activado" : "Desactivado";
-            PowerBoostTile.State = on ? "Hasta 5,1 GHz" : "Off · ahorra batería";
+            BoostCard.IsOn = on;
+            BoostCard.State = on ? "Activado · hasta 5,1 GHz" : "Desactivado · ahorra batería";
         }
 
         private async void OnTouchpadClick(object sender, RoutedEventArgs e)
@@ -1260,8 +1093,8 @@ namespace GoSPanel.Widget
         private void ApplyTouchpad(bool on)
         {
             _touchpad = on;
-            HomeTouchpadTile.IsOn = DeviceTouchpadTile.IsOn = on;
-            HomeTouchpadTile.State = DeviceTouchpadTile.State = on ? "Activado" : "Desactivado";
+            TouchpadCard.IsOn = on;
+            TouchpadCard.State = on ? "Activado" : "Desactivado";
         }
 
         private bool _touchscreen;
@@ -1275,9 +1108,9 @@ namespace GoSPanel.Widget
         private void ApplyTouchscreen(JsonObject data)
         {
             _touchscreen = data.GetNamedBoolean("enabled", true);
-            HomeTouchscreenTile.Available = TouchscreenTile.Available = data.GetNamedBoolean("supported", true);
-            HomeTouchscreenTile.IsOn = TouchscreenTile.IsOn = _touchscreen;
-            HomeTouchscreenTile.State = TouchscreenTile.State = !TouchscreenTile.Available ? "No disponible" : _touchscreen ? "Activada" : "Desactivada";
+            TouchscreenCard.Available = data.GetNamedBoolean("supported", true);
+            TouchscreenCard.IsOn = _touchscreen;
+            TouchscreenCard.State = !TouchscreenCard.Available ? "No disponible" : _touchscreen ? "Activada" : "Desactivada";
         }
 
         private async void OnResumeClick(object sender, RoutedEventArgs e)
@@ -1313,28 +1146,17 @@ namespace GoSPanel.Widget
 
         private void ApplyInterfacePrefs()
         {
-            var showMonitor = Pref("showMonitor", true);
             var animations = Pref("animations", true);
             var seconds = Pref("refreshSeconds", 2);
-
-            // El pie siempre está (lleva el perfil); lo que se oculta son los datos de la derecha.
-            FooterStats.Visibility = showMonitor ? Visibility.Visible : Visibility.Collapsed;
             _timer.Interval = TimeSpan.FromSeconds(seconds);
+            Card.Animate = TileGrid.Animate = _animate;
+            CardsGrid.RefreshAnimations();
 
-            ShowMonitorTile.IsOn = showMonitor;
-            ShowMonitorTile.State = showMonitor ? "Visibles" : "Ocultos";
             AnimationsTile.IsOn = animations && _systemAnimations;
             AnimationsTile.State = !_systemAnimations ? "Off en Windows" : animations ? "Activadas" : "Desactivadas";
             AnimationsTile.Available = _systemAnimations;
             RefreshRateSelector.SetOptions(RefreshRates, seconds);
             UpdateAbout();
-        }
-
-        // Datos del pie (FPS, temperatura, consumo y ventilador): visibles u ocultos
-        private void OnShowMonitorClick(object sender, RoutedEventArgs e)
-        {
-            SetPref("showMonitor", !Pref("showMonitor", true));
-            ApplyInterfacePrefs();
         }
 
         private void OnAnimationsClick(object sender, RoutedEventArgs e)
@@ -1371,10 +1193,11 @@ namespace GoSPanel.Widget
             var data = await CallAsync("foreground.get", null, false);
             var active = data != null && data.GetNamedBoolean("active", false);
             _gameName = active ? data.GetNamedString("name", "") : null;
+            _gamePath = active ? StringOrNull(data, "path") : null;
 
 
-            HomeKillTile.Available = active;
-            if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
+            KillCard.Available = active;
+            if (!_killArmed) KillCard.State = active ? _gameName : "Sin juego";
 
             await RefreshProfilesAsync(active);
             await RefreshLosslessAsync(active);
@@ -1387,7 +1210,6 @@ namespace GoSPanel.Widget
                 fps = Num(fpsData, "fps");
             }
             FpsValue.Text = fps.HasValue ? fps.Value.ToString("0") : "—";
-            FpsItem.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // =====================================================================
@@ -1411,7 +1233,7 @@ namespace GoSPanel.Widget
             _autoProfiles = data.GetNamedBoolean("auto", true);
             _autoSave = data.GetNamedBoolean("autosave", true);
             AutoSaveTile.IsOn = _autoSave;
-            AutoSaveTile.State = _autoSave ? "Activado" : "Solo con el disquete";
+            AutoSaveTile.State = _autoSave ? "Activado" : "Solo con el botón Guardar";
             SaveProfileButton.Visibility = _autoSave ? Visibility.Collapsed : Visibility.Visible;
             AutoProfilesTile.IsOn = _autoProfiles;
             AutoProfilesTile.State = _autoProfiles ? "Activado" : "Desactivado";
@@ -1425,26 +1247,41 @@ namespace GoSPanel.Widget
             _activeTarget = StringOrNull(data, "active") ?? "global";
             var onGlobal = _activeTarget == "global";
             var global = Obj(data, "global");
-            // Una sola línea: el juego y la etiqueta «Perfil», en color si se usa el perfil del juego.
+            // Baldosa Perfil: siempre el perfil APLICADO (no el juego abierto). Con juego, A alterna entre su perfil y Global.
             var activeProfile = profiles.FirstOrDefault(p => p.GetNamedString("exe", "") == _activeTarget);
-            // Siempre el perfil aplicado (no el juego abierto): mando en color = perfil de juego, globo = Global.
-            GameTitle.Text = !onGlobal && activeProfile != null ? activeProfile.GetNamedString("name", _activeTarget) : "Global";
-            GameIcon.Text = onGlobal ? "" : "";
-            GameIcon.Foreground = Brush(onGlobal ? "MutedBrush" : "AccentBrush");
-            ConnectionText.Text = "PERFIL";
-            _profileOnGlobal = onGlobal;
-            ApplyProfileChip();
+            _currentExe = currentExe;
+            ProfileCard.Value = !onGlobal && activeProfile != null ? activeProfile.GetNamedString("name", _activeTarget) : "Global";
+            ProfileCard.Glyph = onGlobal ? "\uE28E" : "\uE26E";
+            ProfileCard.IsOn = !onGlobal;
+            ProfileCard.Quick = _gameName != null && currentExe != null ? "toggle" : "";
+            ProfileCard.ActionText = !onGlobal ? "Usar Global" : current != null ? "Usar el perfil del juego" : "Crear perfil del juego";
+            ProfileCard.State = !onGlobal ? "Perfil del juego" : _gameName != null ? "Global · " + _gameName + " abierto" : "Perfil Global";
+            await ApplyProfileArtAsync(onGlobal ? null : activeProfile);
 
-            // Reconstruir la lista solo si ha cambiado (para no perder el foco del mando).
+            // Reconstruir la lista solo si ha cambiado (para no perder el foco del mando). El arte que aún se estaba
+            // buscando también cuenta: cuando llega, se rehace (salvo que el mando esté dentro de la lista).
             var signature = data.Stringify();
-            if (signature == _profilesSignature) return;
+            var focusInList = IsInside(FocusManager.GetFocusedElement() as DependencyObject, ProfilesList);
+            if (signature == _profilesSignature && !(_artPending && !focusInList)) return;
             _profilesSignature = signature;
-
-            ProfilesList.Children.Clear();
+            _artPending = false;
+            var arts = new Dictionary<string, JsonObject>();
             foreach (var p in profiles)
             {
+                var art = await GetArtAsync(p);
+                if (art == null) continue;
+                arts[p.GetNamedString("exe", "")] = art;
+                if (art.GetNamedBoolean("pending", false)) _artPending = true;
+            }
+
+            ProfilesList.Children.Clear();
+            ProfilesList.Children.Add(ProfileRow(global ?? new JsonObject(), "global", "Global", onGlobal, null));
+            foreach (var p in profiles.OrderBy(p => p.GetNamedString("name", "")))
+            {
                 var exe = p.GetNamedString("exe", "");
-                ProfilesList.Children.Add(ProfileRow(p, exe == appliedExe || exe == currentExe));
+                JsonObject art;
+                arts.TryGetValue(exe, out art);
+                ProfilesList.Children.Add(ProfileRow(p, exe, p.GetNamedString("name", exe), exe == _activeTarget, art));
             }
             ProfilesEmptyText.Visibility = profiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             ProfileCountText.Text = profiles.Count == 1 ? "1 perfil" : profiles.Count + " perfiles";
@@ -1467,53 +1304,76 @@ namespace GoSPanel.Widget
             return string.Join(" · ", parts);
         }
 
-        private UIElement ProfileRow(JsonObject p, bool active)
+        /// <summary>Fila de la lista de perfiles: A lo aplica (también sin su juego abierto); la papelera lo borra.</summary>
+        private UIElement ProfileRow(JsonObject p, string target, string name, bool active, JsonObject art)
         {
-            var exe = p.GetNamedString("exe", "");
-            var grid = new Grid { ColumnSpacing = 10, Padding = new Thickness(10, 8, 6, 8) };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var grid = new Grid { ColumnSpacing = 4 };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var icon = new TextBlock
+            var content = new Grid { ColumnSpacing = 10 };
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            var cover = ArtImage(art, "capsule") ?? ArtImage(art, "hero");
+            var icon = ArtImage(art, "icon");
+            if (cover != null || icon != null)
             {
-                Style = (Style)Application.Current.Resources["IconText"],
-                Text = "", FontSize = 18,
-                Foreground = Brush(active ? "AccentBrush" : "MutedBrush"),
-            };
+                // Carátula (o icono) del juego, como en la biblioteca de Steam
+                content.Children.Add(new Border
+                {
+                    Width = cover != null ? 56 : 26, Height = 26, CornerRadius = new CornerRadius(5),
+                    Background = new ImageBrush { ImageSource = cover ?? icon, Stretch = Stretch.UniformToFill },
+                });
+            }
+            else
+            {
+                content.Children.Add(new TextBlock
+                {
+                    Style = (Style)Application.Current.Resources["IconText"],
+                    Text = target == "global" ? "\uE28E" : "\uE26E", FontSize = 17, Width = 26, TextAlignment = TextAlignment.Center,
+                    Foreground = active && Theme.IsContrast ? new SolidColorBrush(Theme.OnAccent) : Brush(active ? "TextBrush" : "MutedBrush"),
+                });
+            }
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            texts.Children.Add(new TextBlock { Text = p.GetNamedString("name", exe), FontSize = 12.5, FontWeight = Windows.UI.Text.FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
-            texts.Children.Add(new TextBlock { Text = ProfileSummary(p), FontSize = 11, Foreground = Brush("MutedBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
+            texts.Children.Add(new TextBlock { Text = name, FontSize = 12.5, FontWeight = Windows.UI.Text.FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+            texts.Children.Add(new TextBlock { Text = target == "global" ? "Sin juego" : ProfileSummary(p), FontSize = 11, Foreground = Brush(active ? "TextBrush" : "MutedBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
             Grid.SetColumn(texts, 1);
+            content.Children.Add(texts);
 
-            var delete = new Button
+            var use = new Button
             {
                 Style = (Style)Application.Current.Resources["FlatButton"],
-                Width = 34, Height = 34,
-                HorizontalContentAlignment = HorizontalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center,
-                Content = new TextBlock { Style = (Style)Application.Current.Resources["IconText"], Text = "", FontSize = 16 },
+                Background = active ? Brush("AccentBrush") : Brush("Panel3Brush"),
+                Padding = new Thickness(10, 7, 10, 7),
+                Content = content,
+                Tag = target,
             };
-            ToolTipService.SetToolTip(delete, "Borrar perfil");
-            delete.Click += async (s, e) =>
-            {
-                await CallAsync("profiles.delete", new JsonObject { ["exe"] = JsonValue.CreateStringValue(exe) });
-                _profilesSignature = null;
-                await RefreshProfilesAsync(_gameName != null);
-            };
-            Grid.SetColumn(delete, 2);
+            use.Click += async (s, e) => await UseProfileAsync(target);
+            grid.Children.Add(use);
 
-            grid.Children.Add(icon);
-            grid.Children.Add(texts);
-            grid.Children.Add(delete);
-            return new Border
+            if (target != "global")
             {
-                Background = Brush("Panel2Brush"),
-                BorderBrush = Brush(active ? "AccentBrush" : "LineBrush"),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(8),
-                Child = grid,
-            };
+                var delete = new Button
+                {
+                    Style = (Style)Application.Current.Resources["FlatButton"],
+                    Background = Brush("Panel3Brush"),
+                    Width = 38,
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    VerticalContentAlignment = VerticalAlignment.Center,
+                    Content = new TextBlock { Style = (Style)Application.Current.Resources["IconText"], Text = "\uE4A6", FontSize = 16 },
+                };
+                ToolTipService.SetToolTip(delete, "Borrar perfil");
+                Windows.UI.Xaml.Automation.AutomationProperties.SetName(delete, "Borrar el perfil de " + name);
+                delete.Click += async (s, e) =>
+                {
+                    await CallAsync("profiles.delete", new JsonObject { ["exe"] = JsonValue.CreateStringValue(target) });
+                    _profilesSignature = null;
+                    await RefreshProfilesAsync(_gameName != null);
+                };
+                Grid.SetColumn(delete, 1);
+                grid.Children.Add(delete);
+            }
+            return grid;
         }
 
         private string _activeTarget = "global";
@@ -1528,73 +1388,48 @@ namespace GoSPanel.Widget
 
         private JsonObject _profilesData;
 
-        // Tocar el perfil abre la lista de todos: se puede activar cualquiera (y editarlo con el disquete)
-        // aunque su juego no esté abierto.
-        private void OnBannerClick(object sender, RoutedEventArgs e)
+        private string _currentExe, _gamePath;
+        private string _artShown;
+        private bool _artPending;
+
+        /// <summary>Arte de un perfil (lo busca el agente: Steam, app de Xbox o icono del .exe). Null si no hay conexión.</summary>
+        private async Task<JsonObject> GetArtAsync(JsonObject profile)
         {
-            ProfilesFlyoutPanel.Children.Clear();
-            Button selected = null;
-            // Arriba, el juego abierto: el perfil aplicado puede no ser el suyo (Global elegido a mano)
-            ProfilesFlyoutPanel.Children.Add(new TextBlock
-            {
-                Text = _gameName != null ? _gameName + " abierto" : "Sin juego abierto",
-                FontSize = 14, Foreground = Brush("MutedBrush"), Margin = new Thickness(14, 6, 14, 4),
-                TextTrimming = TextTrimming.CharacterEllipsis,
-            });
-
-            void Add(string text, string sub, string target, bool isActive)
-            {
-                var label = new StackPanel { Spacing = 0 };
-                label.Children.Add(new TextBlock
-                {
-                    Text = text, FontSize = 19, TextTrimming = TextTrimming.CharacterEllipsis,
-                    FontWeight = isActive ? Windows.UI.Text.FontWeights.SemiBold : Windows.UI.Text.FontWeights.Normal,
-                    Foreground = Brush(isActive ? "AccentBrush" : "TextBrush"),
-                });
-                // Solo el nombre, grande: el resumen de ajustes (sub) se queda para la pestaña Ajustes › Perfiles.
-                var button = new Button
-                {
-                    Style = (Style)Application.Current.Resources["FlatButton"],
-                    Background = Brush(isActive ? "AccentSoftBrush" : "Panel2Brush"),
-                    // La lista flotante no hereda la escala del widget (ContentScale): se dimensiona aquí.
-                    Width = Math.Max((TabsBar.ActualWidth - 8) * ContentScale, 280),
-                    HorizontalContentAlignment = HorizontalAlignment.Left,
-                    MinHeight = 54,
-                    Padding = new Thickness(14, 6, 14, 6),
-                    Content = label,
-                    Tag = target,
-                };
-                button.Click += OnProfileOptionClick;
-                ProfilesFlyoutPanel.Children.Add(button);
-                if (isActive) selected = button;
-            }
-
-            var profiles = _profilesData?.GetNamedArray("profiles").Select(v => v.GetObject()).ToList() ?? new List<JsonObject>();
-            var global = Obj(_profilesData, "global");
-            Add("Global", global != null ? ProfileSummary(global) : "Ajustes cuando no hay juego", "global", _activeTarget == "global");
-            foreach (var p in profiles.OrderBy(p => p.GetNamedString("name", "")))
-            {
-                var exe = p.GetNamedString("exe", "");
-                Add(p.GetNamedString("name", exe), ProfileSummary(p), exe, _activeTarget == exe);
-            }
-            var currentExe = _profilesData != null ? StringOrNull(_profilesData, "currentExe") : null;
-            if (_gameName != null && currentExe != null && profiles.All(p => p.GetNamedString("exe", "") != currentExe))
-                Add("+ Crear perfil para " + _gameName, "Con los ajustes actuales", "game", false);
-
-            ProfilesFlyout.Opened += FocusSelected;
-            FlyoutBase.ShowAttachedFlyout(GameBanner);
-
-            void FocusSelected(object s, object a)
-            {
-                ProfilesFlyout.Opened -= FocusSelected;
-                (selected ?? ProfilesFlyoutPanel.Children.OfType<Button>().FirstOrDefault())?.Focus(FocusState.Keyboard);
-            }
+            var exe = profile.GetNamedString("exe", "");
+            if (exe.Length == 0) return null;
+            var args = new JsonObject { ["exe"] = JsonValue.CreateStringValue(exe) };
+            // La ruta del juego: la guardada en el perfil o, si es el que está abierto, la de ahora
+            var path = StringOrNull(profile, "path") ?? (exe == _currentExe ? _gamePath : null);
+            if (path != null) args["path"] = JsonValue.CreateStringValue(path);
+            return await CallAsync("art.get", args, false);
         }
 
-        private async void OnProfileOptionClick(object sender, RoutedEventArgs e)
+        private static ImageSource ArtImage(JsonObject art, string key)
         {
-            ProfilesFlyout.Hide();
-            var target = (string)((Button)sender).Tag;
+            var relative = art != null ? StringOrNull(art, key) : null;
+            return relative == null ? null : new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("ms-appdata:///local/" + relative));
+        }
+
+        /// <summary>Baldosa Perfil con el fondo y el icono del juego (Global: sin arte).</summary>
+        private async Task ApplyProfileArtAsync(JsonObject profile)
+        {
+            var art = profile != null ? await GetArtAsync(profile) : null;
+            var signature = profile == null ? null : profile.GetNamedString("exe", "") + "|" + (art?.Stringify() ?? "");
+            if (signature == _artShown) return;
+            _artShown = signature;
+            ProfileCard.SetArt(ArtImage(art, "hero"), ArtImage(art, "icon"));
+        }
+
+        /// <summary>A en la baldosa Perfil (con juego): alterna entre el perfil del juego y Global.</summary>
+        private async void OnProfileCardClick(object sender, RoutedEventArgs e)
+        {
+            if (_currentExe == null) return;
+            await UseProfileAsync(_activeTarget == "global" ? "game" : "global");
+        }
+
+        /// <summary>Aplica un perfil: «global», «game» (el del juego abierto, se crea si no hay) o el exe de uno guardado.</summary>
+        private async Task UseProfileAsync(string target)
+        {
             if (target == _activeTarget) return;
             await CallAsync("profiles.use", new JsonObject { ["target"] = JsonValue.CreateStringValue(target) });
             _profilesSignature = null;
@@ -1607,7 +1442,7 @@ namespace GoSPanel.Widget
             if (await CallAsync("profiles.save") != null)
             {
                 _profilesSignature = null;
-                SaveProfileIcon.Foreground = Brush("AccentBrush");   // confirmación en el botón del banner
+                SaveProfileIcon.Foreground = Brush("AccentBrush");   // confirmación en el propio botón
                 SaveProfileButton.BorderBrush = Brush("AccentBrush");
                 await Task.Delay(1200);
                 SaveProfileIcon.Foreground = Brush("MutedBrush");
@@ -1636,12 +1471,9 @@ namespace GoSPanel.Widget
             var state = !installed ? "No instalado" : !gameActive ? "Sin juego"
                 : pending ? "Cierra Game Bar…" : on ? "Escalando" : "Desactivado";
 
-            foreach (var tile in new[] { HomeLosslessTile })
-            {
-                tile.Available = installed && gameActive;
-                tile.IsOn = on;
-                tile.State = state;
-            }
+            LosslessCard.Available = installed && gameActive;
+            LosslessCard.IsOn = on;
+            LosslessCard.State = state;
         }
 
         private async void OnLosslessClick(object sender, RoutedEventArgs e)
@@ -1668,8 +1500,8 @@ namespace GoSPanel.Widget
             {
                 // Primera pulsación: pedir confirmación durante 3 s (evita cerrar el juego sin querer con el mando).
                 _killArmed = true;
-                HomeKillTile.Warning = true;
-                HomeKillTile.State = "Pulsa otra vez";
+                KillCard.Warning = true;
+                KillCard.State = "Pulsa A otra vez para cerrar";
                 if (_killTimer == null)
                 {
                     _killTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
@@ -1687,8 +1519,8 @@ namespace GoSPanel.Widget
         private void DisarmKill()
         {
             _killArmed = false;
-            HomeKillTile.Warning = false;
-            HomeKillTile.State = _gameName ?? "Sin juego";
+            KillCard.Warning = false;
+            KillCard.State = _gameName ?? "Sin juego";
         }
 
         private async Task RefreshStatusAsync()
@@ -1700,17 +1532,8 @@ namespace GoSPanel.Widget
                 var data = await CallAsync("status", null, false);
                 // La etiqueta del banner la gestionan los perfiles (Global / Juego); aquí solo se toca si no hay
                 // conexión o antes de la primera carga, para que no parpadee «Conectado» en cada lectura.
-                if (data == null)
-                {
-                    ConnectionText.Text = "Sin servicio";
-                    ConnectionText.Foreground = Brush("WarnBrush");
-                    GameTitle.Text = "Sin servicio";
-                }
-                else if (!_initialized || !_connected)
-                {
-                    ConnectionText.Text = "PERFIL";
-                    ConnectionText.Foreground = Brush("MutedBrush");
-                }
+                // Sin conexión con el agente: se dice abajo a la derecha (en la barra de botones)
+                ConnectionText.Text = data == null ? "Sin servicio" : "";
                 var wasConnected = _connected;
                 _connected = data != null;
                 if (wasConnected != _connected) UpdateAbout();
@@ -1730,7 +1553,8 @@ namespace GoSPanel.Widget
                 TempValue.Foreground = Brush(temp >= 85 ? "WarnBrush" : "TextBrush");
                 PowerValue.Text = watts.HasValue ? watts.Value.ToString(watts.Value < 10 ? "0.0" : "0", Es) : "—";
                 TdpNowText.Text = watts.HasValue ? "Ahora: " + watts.Value.ToString("0", Es) + " W de consumo real" : "";
-                FanValue.Text = rpm.HasValue ? (rpm.Value / 1000).ToString("0.0", Es) + "k" : "—";
+                FanValue.Text = !rpm.HasValue ? "—" : rpm.Value < 100 ? "0" : (rpm.Value / 1000).ToString("0.0", Es) + "k";
+                FanCard.State = !rpm.HasValue ? "—" : rpm.Value < 100 ? "Parado" : rpm.Value.ToString("#,0", Es) + " RPM";
 
                 UpdateBattery(Obj(data, "battery"));
                 await RefreshForegroundAsync();
@@ -1755,14 +1579,51 @@ namespace GoSPanel.Widget
 
 
             if (health.HasValue && full.HasValue)
-                BatteryHealthText.Text = "Salud de la batería: " + health.Value.ToString("0") + " % · capacidad actual " + full.Value.ToString("0.0", Es) + " Wh";
+                BatteryHealthText.Text = "Cargar solo hasta el 80 % alarga la vida de la batería si la consola pasa mucho tiempo enchufada."
+                                         + "\nSalud de la batería: " + health.Value.ToString("0") + " % · capacidad actual " + full.Value.ToString("0.0", Es) + " Wh";
+
+            // Consumo suavizado (la descarga instantánea salta mucho): media exponencial de unos 30 s
+            if (rate.HasValue && rate.Value > 0.5)
+                _rateAvg = _rateAvg <= 0 || charging != _rateCharging ? rate.Value : _rateAvg * 0.85 + rate.Value * 0.15;
+            _rateCharging = charging;
+            var pct = percent.HasValue ? percent.Value.ToString("0") + " %" : "";
+            if (charging && _rateAvg > 0 && remaining.HasValue && full.HasValue)
+            {
+                BatteryIcon.Text = "\uE0BA";
+                BatteryIcon.Foreground = Brush("OkBrush");
+                BatteryValue.Text = Duration((full.Value * (Pref("chargeLimitPct", _chargeLimit ? 80 : 100) / 100.0) - remaining.Value) / _rateAvg);
+                BatterySub.Text = "hasta llena · " + pct;
+            }
+            else if (acOnline)
+            {
+                BatteryIcon.Text = "\uE0BA";
+                BatteryIcon.Foreground = Brush("OkBrush");
+                BatteryValue.Text = pct;
+                BatterySub.Text = "enchufada";
+            }
+            else if (_rateAvg > 0 && remaining.HasValue)
+            {
+                BatteryIcon.Text = percent < 20 ? "\uE0C8" : percent < 50 ? "\uE0C6" : "\uE0C2";
+                BatteryIcon.Foreground = Brush(percent < 20 ? "WarnBrush" : "IconBrush");
+                BatteryValue.Text = Duration(remaining.Value / _rateAvg);
+                BatterySub.Text = "restante · " + pct;
+            }
+            else
+            {
+                BatteryValue.Text = pct.Length > 0 ? pct : "—";
+                BatterySub.Text = "batería";
+            }
         }
+
+        private double _rateAvg;
+        private bool _rateCharging;
 
         private static string Duration(double hours)
         {
             if (double.IsInfinity(hours) || double.IsNaN(hours) || hours < 0) return "—";
             var total = (int)Math.Round(hours * 60);
-            return total >= 60 ? (total / 60) + " h " + (total % 60) + " min" : total + " min";
+            if (total > 24 * 60) return "—";
+            return total >= 60 ? (total / 60) + " h " + (total % 60).ToString("00") : total + " min";
         }
 
         /// <summary>El modo puede cambiar fuera del widget (Legion L + Y lo cambia el firmware): seguirlo.</summary>
@@ -1805,7 +1666,7 @@ namespace GoSPanel.Widget
                 var mode = (string)tile.Tag;
                 var spl = Num(Obj(limits, mode), "spl");
                 if (!spl.HasValue) continue;
-                tile.Title = spl.Value.ToString("0") + " W";
+                tile.State = spl.Value.ToString("0") + " W";
                 changed |= _presetSpl[mode] != (int)spl.Value;
                 _presetSpl[mode] = (int)spl.Value;
             }
@@ -1833,7 +1694,7 @@ namespace GoSPanel.Widget
                 _loading = false;
             }
             _customSpl = (int)SplSlider.Value;
-            ModeCustom.Title = _customSpl + " W";
+            ModeCustom.State = _customSpl + " W";
             _tdpLoaded = true;
             SplMinText.Text = SplSlider.Minimum.ToString("0") + " W";
             SplMaxText.Text = SplSlider.Maximum.ToString("0") + " W";
@@ -1850,26 +1711,23 @@ namespace GoSPanel.Widget
         /// </summary>
         private async Task RefreshQuickSlidersAsync()
         {
-            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3
-                || BrightnessSlider.IsFocusEngaged || VolumeSlider.IsFocusEngaged) return;
+            // No pisar al usuario mientras ajusta (baldosa enganchada) ni justo después
+            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3 || BrightnessCard.Engaged || VolumeCard.Engaged) return;
 
             var brightness = await CallAsync("brightness.get", null, false);
             var volume = await CallAsync("volume.get", null, false);
-            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3) return;   // el usuario lo tocó mientras se leía
-            _loading = true;
-            try
-            {
-                if (brightness != null) BrightnessSlider.Value = brightness.GetNamedNumber("value", 0);
-                if (volume != null) VolumeSlider.Value = volume.GetNamedNumber("value", 0);
-            }
-            finally
-            {
-                _loading = false;
-            }
+            var auto = await CallAsync("display.autobrightness.get", null, false);
+            if ((DateTime.UtcNow - _lastQuickInput).TotalSeconds < 3 || BrightnessCard.Engaged || VolumeCard.Engaged) return;
 
-            // Sin desactivarla: una barra desactivada corta la navegación con la cruceta hacia las baldosas.
-            BrightnessValue.Text = brightness != null ? BrightnessSlider.Value.ToString("0") + " %" : "—";
-            VolumeValue.Text = volume != null ? VolumeSlider.Value.ToString("0") + " %" : "—";
+            _autoBrightness = auto != null && auto.GetNamedBoolean("enabled", false);
+            _lightSensor = auto != null && auto.GetNamedBoolean("sensor", false);
+            AutoBrightnessTile.Available = _lightSensor;
+            AutoBrightnessTile.IsOn = _autoBrightness;
+            AutoBrightnessTile.State = !_lightSensor ? "Sin sensor de luz" : _autoBrightness ? "Activado" : "Desactivado";
+            if (brightness != null) BrightnessCard.Level = brightness.GetNamedNumber("value", 0);
+            _muted = volume != null && volume.GetNamedBoolean("muted", false);
+            if (volume != null) VolumeCard.Level = volume.GetNamedNumber("value", 0);
+            ShowLevels();
         }
 
         // =====================================================================
@@ -1881,7 +1739,8 @@ namespace GoSPanel.Widget
             await SetModeAsync((string)((Tile)sender).Tag);
         }
 
-        private async void OnHomeModeClick(object sender, RoutedEventArgs e)
+        /// <summary>A en la baldosa Modo: el siguiente (Silencio → Equilibrado → Rendimiento → Manual → Auto → …).</summary>
+        private async void OnModeCardClick(object sender, RoutedEventArgs e)
         {
             var index = Array.IndexOf(ModeOrder, _autoTdp ? "auto" : _mode);
             await SetModeAsync(ModeOrder[(index + 1) % ModeOrder.Length]);
@@ -1941,11 +1800,12 @@ namespace GoSPanel.Widget
             {
                 return;
             }
-            var summary = shown == "auto" ? "Auto · " + _autoTarget + " FPS"
-                : ModeNames[shown] + " · " + (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
-            HomeModeTile.State = summary;
-            HomeModeTile.Glyph = ModeGlyphs[shown];
-            HomeModeTile.IsOn = true;
+            ModeCard.Value = ModeNames[shown];
+            ModeCard.Glyph = ModeGlyphs[shown];
+            ModeCard.State = shown == "auto" ? _autoTarget + " FPS" + (_autoWatts.HasValue ? " · ahora " + _autoWatts.Value.ToString("0") + " W" : "")
+                : (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
+            ModeAuto.State = _autoTarget + " FPS";
+            ModeCard.ActionText = "Pasar a " + ModeNames[ModeOrder[(Array.IndexOf(ModeOrder, shown) + 1) % ModeOrder.Length]];
         }
 
         // ---------------------------------------------------------------------
@@ -2041,7 +1901,7 @@ namespace GoSPanel.Widget
             };
             if (await CallAsync("tdp.set", args) == null) return;
             _customSpl = (int)SplSlider.Value;
-            ModeCustom.Title = _customSpl + " W";
+            ModeCustom.State = _customSpl + " W";
             await RefreshPowerModeAsync();
             UpdateModeSummary();
         }
@@ -2113,8 +1973,12 @@ namespace GoSPanel.Widget
                 AvailableHz(_currentWidth, _currentHeight).OrderByDescending(h => h).Select(hz => new KeyValuePair<string, object>(hz + " Hz", hz)),
                 _currentHz);
 
-            HomeHzTile.State = _currentHz + " Hz";
-            HomeHzTile.IsOn = _currentHz >= AvailableHz(_currentWidth, _currentHeight).DefaultIfEmpty(_currentHz).Max();
+            RefreshCard.Value = _currentHz + " Hz";
+            RefreshCard.IsOn = _currentHz >= AvailableHz(_currentWidth, _currentHeight).DefaultIfEmpty(_currentHz).Max();
+            var hzOptions = AvailableHz(_currentWidth, _currentHeight).OrderBy(h => h).ToList();
+            RefreshCard.ActionText = hzOptions.Count > 1 ? "Pasar a " + hzOptions[(hzOptions.IndexOf(_currentHz) + 1) % hzOptions.Count] + " Hz" : null;
+            ResolutionCard.Value = _currentWidth + "×" + _currentHeight;
+            ResolutionCard.State = _currentWidth == resolutions.FirstOrDefault()?.Width ? "Nativa" : "Escalada";
         }
 
         private IEnumerable<int> AvailableHz(int width, int height) =>
@@ -2136,7 +2000,8 @@ namespace GoSPanel.Widget
 
         private async void OnHomeHzClick(object sender, RoutedEventArgs e)
         {
-            var options = AvailableHz(_currentWidth, _currentHeight).OrderByDescending(h => h).ToList();
+            // De menos a más (60 → 90 → 120 → 60…)
+            var options = AvailableHz(_currentWidth, _currentHeight).OrderBy(h => h).ToList();
             if (options.Count < 2) return;
             var next = options[(options.IndexOf(_currentHz) + 1) % options.Count];
             await SetDisplayAsync(_currentWidth, _currentHeight, next);
@@ -2158,24 +2023,50 @@ namespace GoSPanel.Widget
         // Brillo y volumen
         // =====================================================================
 
-        private void OnBrightnessChanged(object sender, RangeBaseValueChangedEventArgs e)
+        private bool _autoBrightness, _lightSensor, _muted;
+
+        /// <summary>Textos de las baldosas Brillo y Volumen (valor, silencio, automático).</summary>
+        private void ShowLevels()
         {
-            if (BrightnessValue == null) return;
-            BrightnessValue.Text = e.NewValue.ToString("0") + " %";
-            if (_loading) return;
+            BrightnessCard.Value = double.IsNaN(BrightnessCard.Level) ? "—" : BrightnessCard.Level.ToString("0") + " %";
+            BrightnessCard.State = BrightnessCard.Engaged ? "← → para cambiar" : _autoBrightness ? "Automático" : "A para ajustar";
+            VolumeCard.Value = double.IsNaN(VolumeCard.Level) ? "—" : _muted ? "Silencio" : VolumeCard.Level.ToString("0") + " %";
+            VolumeCard.State = VolumeCard.Engaged ? "← → para cambiar" : _muted ? VolumeCard.Level.ToString("0") + " % · silenciado" : "A para ajustar";
+            MuteTile.IsOn = _muted;
+            MuteTile.State = _muted ? "Activado" : "Desactivado";
+        }
+
+        private void OnBrightnessLevelChanged(object sender, double value)
+        {
             _lastQuickInput = DateTime.UtcNow;
-            var value = e.NewValue;
+            ShowLevels();
             _brightness.Run(() => CallAsync("brightness.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
         }
 
-        private void OnVolumeChanged(object sender, RangeBaseValueChangedEventArgs e)
+        private void OnVolumeLevelChanged(object sender, double value)
         {
-            if (VolumeValue == null) return;
-            VolumeValue.Text = e.NewValue.ToString("0") + " %";
-            if (_loading) return;
             _lastQuickInput = DateTime.UtcNow;
-            var value = e.NewValue;
+            if (value > 0) _muted = false;   // subir el volumen quita el silencio (lo hace el agente)
+            ShowLevels();
             _volume.Run(() => CallAsync("volume.set", new JsonObject { ["value"] = JsonValue.CreateNumberValue(value) }));
+        }
+
+        private async void OnMuteClick(object sender, RoutedEventArgs e)
+        {
+            var data = await CallAsync("volume.mute", new JsonObject { ["muted"] = JsonValue.CreateBooleanValue(!_muted) });
+            if (data == null) return;
+            _muted = data.GetNamedBoolean("muted", false);
+            ShowLevels();
+        }
+
+        private async void OnAutoBrightnessClick(object sender, RoutedEventArgs e)
+        {
+            var data = await CallAsync("display.autobrightness.set", new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!_autoBrightness) });
+            if (data == null) return;
+            _autoBrightness = data.GetNamedBoolean("enabled", false);
+            AutoBrightnessTile.IsOn = _autoBrightness;
+            AutoBrightnessTile.State = _autoBrightness ? "Activado" : "Desactivado";
+            ShowLevels();
         }
 
         // =====================================================================

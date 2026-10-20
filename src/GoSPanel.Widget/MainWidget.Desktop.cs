@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 namespace GoSPanel.Widget
 {
     /// <summary>
-    /// Equipo › Modo escritorio: el mando como ratón (lo hace el agente, DesktopMode.cs). Aquí solo se elige el modo
+    /// Baldosa Escritorio: el mando como ratón (lo hace el agente, DesktopMode.cs). Aquí solo se elige el modo
     /// (Apagado / Automático / Siempre) y las velocidades, y se muestra si está activo ahora.
     /// </summary>
     public sealed partial class MainWidget
@@ -33,8 +33,9 @@ namespace GoSPanel.Widget
             var active = data.GetNamedBoolean("active", false);
             var reason = StringOrNull(data, "reason");
             var index = Math.Max(0, Array.IndexOf(DesktopModes, _desktopMode));
-            DesktopTile.IsOn = active;
-            DesktopTile.State = DesktopModeNames[index] + (_desktopMode == "off" ? "" : active ? " · activo" : string.IsNullOrEmpty(reason) ? "" : " · " + reason.ToLowerInvariant());
+            DesktopCard.IsOn = _desktopMode != "off";
+            DesktopCard.Value = DesktopModeNames[index];
+            DesktopCard.State = _desktopMode == "off" ? "Mando como ratón" : active ? "Activo ahora" : string.IsNullOrEmpty(reason) ? "En espera" : reason;
 
             foreach (var button in DesktopModeButtons.Children.OfType<Button>())
             {
@@ -61,11 +62,10 @@ namespace GoSPanel.Widget
             if (data != null) ApplyDesktop(data);
         }
 
-        /// <summary>La fila (y su copia en Inicio) pasa al siguiente modo: Apagado → Automático → Siempre.</summary>
+        /// <summary>A en la baldosa: lo enciende (Automático) o lo apaga. «Siempre» se elige en sus opciones.</summary>
         private async void OnDesktopTileClick(object sender, RoutedEventArgs e)
         {
-            var next = DesktopModes[(Array.IndexOf(DesktopModes, _desktopMode) + 1) % DesktopModes.Length];
-            await SetDesktopModeAsync(next);
+            await SetDesktopModeAsync(_desktopMode == "off" ? "auto" : "off");
         }
 
         private async void OnDesktopModeClick(object sender, RoutedEventArgs e) => await SetDesktopModeAsync((string)((Button)sender).Tag);
