@@ -232,6 +232,8 @@ namespace GoSPanel.Widget.Controls
             LevelFill.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
             if (!on) return;
             LevelFill.Width = Math.Max(0, Frame.ActualWidth - 2) * _level / 100;
+            // El corte del relleno es recto (separa bien los dos colores); lleno del todo, sigue la esquina de la baldosa
+            LevelFill.CornerRadius = _level >= 99 ? new CornerRadius(11) : new CornerRadius(11, 0, 0, 11);
             var accent = ((SolidColorBrush)Brush("AccentBrush")).Color;
             LevelFill.Background = new SolidColorBrush(_engaged ? Color.FromArgb(0x66, accent.R, accent.G, accent.B) : Color.FromArgb(0x1C, 0xFF, 0xFF, 0xFF));
         }
