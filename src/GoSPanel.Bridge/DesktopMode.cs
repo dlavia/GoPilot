@@ -257,9 +257,32 @@ internal static class DesktopMode
 
     private static int ForegroundPid()
     {
-        GetWindowThreadProcessId(GetForegroundWindow(), out var pid);
+        var window = GetForegroundWindow();
+        GetWindowThreadProcessId(window, out var pid);
+        // Apps de la Tienda (la de Xbox entre ellas): la ventana es del marco ApplicationFrameHost y la app de verdad es
+        // la de su ventana hija. Sin esto la app de Xbox no contaba como «app que ya usa el mando».
+        try
+        {
+            using var process = Process.GetProcessById((int)pid);
+            if (process.ProcessName.Equals("ApplicationFrameHost", StringComparison.OrdinalIgnoreCase))
+            {
+                var inner = pid;
+                EnumChildWindows(window, (child, _) =>
+                {
+                    GetWindowThreadProcessId(child, out var childPid);
+                    if (childPid == pid) return true;
+                    inner = childPid;
+                    return false;
+                }, IntPtr.Zero);
+                pid = inner;
+            }
+        }
+        catch (Exception) { }
         return (int)pid;
     }
+
+    private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr param);
+    [DllImport("user32.dll")] private static extern bool EnumChildWindows(IntPtr parent, EnumWindowsProc callback, IntPtr param);
 
     // ---------------------------------------------------------------------
     // SendInput
