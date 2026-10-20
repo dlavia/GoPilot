@@ -1742,6 +1742,13 @@ namespace GoSPanel.Widget
             await SetModeAsync((string)((Tile)sender).Tag);
         }
 
+        /// <summary>A en la baldosa Modo: el siguiente (Silencio → Equilibrado → Rendimiento → Manual → Auto → …).</summary>
+        private async void OnModeCardClick(object sender, RoutedEventArgs e)
+        {
+            var index = Array.IndexOf(ModeOrder, _autoTdp ? "auto" : _mode);
+            await SetModeAsync(ModeOrder[(index + 1) % ModeOrder.Length]);
+        }
+
         private async Task SetModeAsync(string mode)
         {
             // Auto lo lleva el agente (el firmware queda en Manual); cualquier otro modo lo apaga
@@ -1801,6 +1808,7 @@ namespace GoSPanel.Widget
             ModeCard.State = shown == "auto" ? _autoTarget + " FPS" + (_autoWatts.HasValue ? " · ahora " + _autoWatts.Value.ToString("0") + " W" : "")
                 : (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
             ModeAuto.State = _autoTarget + " FPS";
+            ModeCard.ActionText = "Pasar a " + ModeNames[ModeOrder[(Array.IndexOf(ModeOrder, shown) + 1) % ModeOrder.Length]];
         }
 
         // ---------------------------------------------------------------------

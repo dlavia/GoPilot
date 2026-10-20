@@ -182,11 +182,12 @@ namespace GoSPanel.Widget.Controls
                 Place(TitleText, 1, 0, 4);
                 Place(StateText, 2, 0, 4);
                 foreach (var t in new[] { IconText, TitleText, StateText }) t.HorizontalAlignment = HorizontalAlignment.Center;
-                IconText.FontSize = 22;
-                IconText.Margin = new Thickness(0, 0, 0, 2);
-                TitleText.FontSize = 11.5;
+                IconText.FontSize = 20;
+                IconText.Margin = new Thickness(0, 0, 0, 1);
+                TitleText.FontSize = 11;
+                TitleText.TextAlignment = TextAlignment.Center;
                 Layout.VerticalAlignment = VerticalAlignment.Center;
-                Root.Padding = new Thickness(4, 9, 4, 8);
+                Root.Padding = new Thickness(2, 6, 2, 6);
             }
             else
             {

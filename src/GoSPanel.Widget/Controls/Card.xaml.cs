@@ -325,7 +325,8 @@ namespace GoSPanel.Widget.Controls
             ValueText.FontSize = toggleLook ? 14 : _key ? 16 : 21;
             ValueText.Margin = new Thickness(0, 0, 0, toggleLook ? 0 : 1);
             TitleText.Text = _title;
-            Dot.Visibility = (_quick == "toggle" || _quick == "cycle") && !_selection.HasValue ? Visibility.Visible : Visibility.Collapsed;
+            // El punto dice si está encendida; en Modo (pasa de uno a otro) no tiene sentido
+            Dot.Visibility = (_quick == "toggle" || _quick == "cycle" && !_key) && !_selection.HasValue ? Visibility.Visible : Visibility.Collapsed;
             ChevronText.Visibility = HasBody && !_selection.HasValue ? Visibility.Visible : Visibility.Collapsed;
             if (_selection.HasValue)
             {

@@ -120,7 +120,7 @@
                         </StackPanel>
                     </c:Card>
 
-                    <c:Card x:Name="ModeCard" Key="True" Pinned="True" Glyph="&#xE750;" Title="Modo" Value="—" State="">
+                    <c:Card x:Name="ModeCard" Key="True" Pinned="True" Quick="cycle" Glyph="&#xE750;" Title="Modo" Value="—" State="" Click="OnModeCardClick">
                         <StackPanel Spacing="8" Margin="0,4,0,0">
                             <Grid ColumnSpacing="5" RowSpacing="5">
                                 <Grid.ColumnDefinitions>
