@@ -4,6 +4,11 @@
 $ErrorActionPreference = 'Continue'
 Start-Transcript (Join-Path $env:TEMP 'gopilot-uninstall.log') -Force | Out-Null
 
+# 0. El agente (overlay, luces, botones…) y el widget: si siguen abiertos, el overlay se quedaba en pantalla y su
+#    carpeta del paquete no se podía borrar
+Get-Process GoSPanel.Bridge, GoSPanel.Widget -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Milliseconds 500
+
 # 1. Widget del usuario con sesión iniciada (los paquetes se quitan por usuario, desde su sesión)
 $user = (Get-CimInstance Win32_ComputerSystem).UserName
 if ($user -and [Security.Principal.WindowsIdentity]::GetCurrent().IsSystem) {
@@ -71,6 +76,7 @@ Start-Sleep -Seconds 1
 Remove-Item (Join-Path $env:ProgramFiles 'GoSPanel') -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $env:ProgramData 'GoSPanel') -Recurse -Force -ErrorAction SilentlyContinue
 # Restos de versiones que Windows no pudo borrar (un archivo abierto al quitarlas: la fuente de iconos, el agente…)
+Get-Process GoSPanel.Bridge, GoSPanel.Widget -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-ChildItem (Join-Path $env:ProgramFiles 'WindowsApps') -Filter 'GoSPanel_*' -ErrorAction SilentlyContinue |
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 Get-ChildItem Cert:\LocalMachine\TrustedPeople | Where-Object Subject -eq 'CN=GoSPanel Dev' | Remove-Item
