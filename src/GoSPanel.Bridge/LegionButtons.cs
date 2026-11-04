@@ -283,6 +283,9 @@ internal static class LegionButtons
             return;
         }
         if (FirmwareCombos.Contains(key)) return;
+        // Con GoPilot Home abierto, la pulsación corta de Legion L / Legion R abre siempre su menú (Juego / Rendimiento),
+        // tenga la acción que tenga (o ninguna); las largas y las combinaciones siguen su asignación.
+        if ((key == "L" || key == "R") && _enabled && HomeBridge.Notify(new JsonObject { ["evt"] = "legion", ["button"] = key })) return;
         var action = Binding(key);
         if (action == null) return;
         _ = Task.Run(async () =>
