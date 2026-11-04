@@ -117,6 +117,7 @@ internal static class Program
         LegionButtons.Start();
         DesktopMode.Start();
         AutoTdp.Start();
+        HomeBridge.Start();
         _ = Task.Run(StickLights.ResumeReactiveAsync);
         _ = Task.Run(ListenForSignalsAsync);
         if (relay) await ConnectToWidgetAsync();
@@ -211,7 +212,7 @@ internal static class Program
         }
     }
 
-    private static async Task<string> HandleAsync(string line)
+    internal static async Task<string> HandleAsync(string line)
     {
         try
         {

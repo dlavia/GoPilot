@@ -298,15 +298,27 @@ internal static class LegionButtons
 
     private const string GoPilotWidgetId = "GoSPanel_3ncfs0ed3kzx8_App_GoSPanel";
 
+    /// <summary>Botón físico para GoPilot Home: Legion L abre su menú del juego y Legion R el de GoPilot, tengan la acción que tengan.</summary>
+    private static string HomeButton(string action, string? key) =>
+        key?.StartsWith("L", StringComparison.Ordinal) == true ? "L" : key?.StartsWith("R", StringComparison.Ordinal) == true ? "R" : action == "xboxhome" ? "L" : "R";
+
     public static async Task RunAsync(string action, string? key = null)
     {
         switch (action)
         {
             case "gamebar": Launch("ms-gamebar://toggleForeground"); break;
-            case "gopilot": Launch("ms-gamebar://toggleForeground/activate/" + GoPilotWidgetId); break;
+            // Con GoPilot Home abierto (launcher a pantalla completa), Legion R abre su menú con GoPilot y Legion L su menú
+            // del juego (HomeBridge); sin él, lo de siempre.
+            case "gopilot":
+                if (!HomeBridge.Notify(new JsonObject { ["evt"] = "legion", ["button"] = HomeButton(action, key) }))
+                    Launch("ms-gamebar://toggleForeground/activate/" + GoPilotWidgetId);
+                break;
             // App Xbox (la pantalla principal en modo pantalla completa). Se abre por su AUMID y no con «msxbox://»:
             // un enlace sin destino hace que la app muestre «Actualizar aplicación».
-            case "xboxhome": Process.Start("explorer.exe", @"shell:AppsFolder\Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App"); break;
+            case "xboxhome":
+                if (!HomeBridge.Notify(new JsonObject { ["evt"] = "legion", ["button"] = HomeButton(action, key) }))
+                    Process.Start("explorer.exe", @"shell:AppsFolder\Microsoft.GamingApp_8wekyb3d8bbwe!Microsoft.Xbox.App");
+                break;
             case "taskview": Keys(VkLWin, VkTab); break;
             case "desktop": Keys(VkLWin, 0x44 /*D*/); break;
             case "keyboard": TouchKeyboard.Toggle(); break;

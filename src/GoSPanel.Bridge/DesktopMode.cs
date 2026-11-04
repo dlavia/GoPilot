@@ -29,7 +29,7 @@ internal static class DesktopMode
     // Apps que ya se manejan con el mando: el modo escritorio duplicaría cada pulsación.
     private static readonly HashSet<string> ControllerApps = new(StringComparer.OrdinalIgnoreCase)
     {
-        "XboxPcApp", "GameBar", "steam", "steamwebhelper", "Playnite.FullscreenApp", "GoSPanel.Widget",
+        "XboxPcApp", "GameBar", "steam", "steamwebhelper", "Playnite.FullscreenApp", "GoSPanel.Widget", "GoPilotHome",
     };
 
     private const int BtnA = 0x000100, BtnB = 0x000200, BtnX = 0x000400, BtnY = 0x000800, BtnLb = 0x001000, BtnRb = 0x004000;
