@@ -170,6 +170,7 @@ internal static class LegionButtons
                     _lastReport = DateTime.Now;
                     lock (InputLock) Array.Copy(buffer, LastInput, Math.Min(n, LastInput.Length));
                     tracker.Update(buffer[1] | buffer[2] << 8 | buffer[3] << 16);
+                    ControllerMute.Pad.Update(buffer);   // con el menú de GoPilot Home abierto, los botones van a él
                 }
             }
             catch (Exception)

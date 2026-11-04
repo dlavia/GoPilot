@@ -255,6 +255,7 @@ internal static class Program
                     "controller.advanced.get" => await StickLights.GetAdvancedAsync(),
                     "controller.advanced.set" => await StickLights.SetAdvancedAsync(args),
                     "controller.input" => LegionButtons.Input(),
+                    "controller.mute" => ControllerMute.Set(args["on"]!.GetValue<bool>()),
                     "legionwidget.get" => LegionWidget.Get(),
                     "legionwidget.set" => await LegionWidget.SetAsync(args["visible"]!.GetValue<bool>()),
                     "vrr.get" => WindowedVrr.Get(),
