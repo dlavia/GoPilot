@@ -278,7 +278,7 @@ const D = {
 const TILE_NAME = { fanMax: "Ventilador al máximo", lightsGo: "Luces (ajustes)", chill: "Chill · límite de FPS", hz: "Refresco", res: "Resolución", charge: "Carga al 80 %",
   autoProfiles: "Perfiles automáticos", autoSave: "Autoguardado", resume: "Reaplicar tras suspender", buttons: "Botones Legion", keyboard: "Teclado", vrr: "VRR", live: "Datos en vivo" };
 const TILES = ["mode", "boost", "fanMax", "fanCurve", "hz", "res", "vrr", "lossless", "afmf", "rsr", "chill", "sharp", "antilag", "vari", "lights", "gyro", "vib", "tvib", "sleep", "poll", "dpad",
-  "touchpad", "touch", "keyboard", "kill", "charge", "overlay", "theme", "anim", "sounds", "buttons", "legionSpace", "autoProfiles", "autoSave", "resume"];
+  "touchpad", "touch", "keyboard", "kill", "charge", "overlay", "anim", "sounds", "buttons", "legionSpace", "autoProfiles", "autoSave", "resume"];
 
 const L = (t, aside) => ({ label: t, aside });
 const H = (t, cls = "") => ({ html: `<div class="hint full ${cls}">${t}</div>` });
@@ -323,7 +323,7 @@ const SECTIONS = [
   ] },
   { name: "Sistema", icon: "gear-six", dot: () => S.banner, rows: () => [
     "charge",
-    L("GoPilot"), "theme", "anim", "sounds",
+    L("GoPilot"), "anim", "sounds",
     L("Perfiles"), "autoProfiles", "autoSave",
     { ic: "list-checks", t: "Ver perfiles", s: `${PROFILES.length - 1} juegos con perfil · ahora ${PROFILES[S.profile].n}`, type: "go", page: "profiles" },
     H("Cada juego nuevo recibe su perfil solo. Guardan modo y TDP, CPU Boost, resolución, Hz, Lossless, AMD, luces y giroscopio."),

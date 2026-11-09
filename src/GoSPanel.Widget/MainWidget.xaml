@@ -727,7 +727,6 @@
                     <c:Tile Row="value" x:Name="HomeKeyboardTile" Glyph="&#xE2D8;" Title="Teclado en pantalla" State="Abrir" Click="OnKeyboardClick" />
 
                     <TextBlock Text="GOPILOT" Style="{StaticResource GroupTitle}" />
-                    <c:Tile Row="value" x:Name="ThemeTile" Glyph="&#xE6F0;" Title="Tema" Choices="Sencillo|Contraste" />
                     <c:Tile Row="switch" x:Name="AnimationsTile" Glyph="&#xE6A2;" Title="Animaciones" State="—" Click="OnAnimationsClick" />
                     <c:Tile Row="switch" x:Name="SoundsTile" Glyph="&#xE450;" Title="Sonidos" State="—" Click="OnSoundsClick" />
 

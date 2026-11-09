@@ -56,7 +56,7 @@ namespace GoSPanel.Widget
 
         public MainWidget()
         {
-            Theme.Apply(Pref("theme", Theme.Simple));
+            Theme.Apply(Theme.Simple);   // un solo tema (el del menú de Legion L); ya no se elige
             // Sonidos propios (más altos): los de XAML quedan apagados para no oírlos dos veces.
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
             Sounds.Enabled = Pref("sounds", true);
@@ -152,7 +152,6 @@ namespace GoSPanel.Widget
             ResolutionTile.Picked += OnResolutionPicked;
             HzTile.Picked += OnHzPicked;
             GameOverlayTile.Picked += OnOverlayPicked;
-            ThemeTile.Picked += OnThemePicked;
             VibrationTile.Picked += OnVibrationPicked;
             TouchVibrationTile.Picked += OnTouchVibrationPicked;
             AutoSleepTile.Picked += OnAutoSleepPicked;
@@ -898,7 +897,6 @@ namespace GoSPanel.Widget
             TabPill.BorderBrush = new SolidColorBrush(Windows.UI.Colors.White);
             TabPill.BorderThickness = new Thickness(1.5);
             TabPill.CornerRadius = new CornerRadius(18);
-            ThemeTile.SelectedIndex = Theme.IsContrast ? 1 : 0;
             var sounds = Sounds.Enabled;
             SoundsTile.IsOn = sounds;
             SoundsTile.State = sounds ? "Activados" : "Desactivados";
@@ -953,14 +951,6 @@ namespace GoSPanel.Widget
             Sounds.Enabled = on;
             if (on) Sounds.Play("Invoke");
             ApplyThemeShapes();
-        }
-
-        private void OnThemePicked(object sender, int index)
-        {
-            var next = index == 1 ? Theme.Contrast : Theme.Simple;
-            if (next == Theme.Current) return;
-            SetPref("theme", next);
-            Theme.Apply(next);
         }
 
         private void ApplyLegionSpace(JsonObject data)

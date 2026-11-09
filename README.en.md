@@ -128,7 +128,7 @@ Lenovo's modes with their **real watts**, which change depending on whether the 
 
 ### System
 
-**Charge to 80 %** with battery health, on-screen keyboard, theme (Simple or Contrast), animations, sounds, profiles,
+**Charge to 80 %** with battery health, on-screen keyboard, animations, sounds, profiles,
 updates and, at the very bottom, **Legion Space**.
 
 ### Per-game profiles

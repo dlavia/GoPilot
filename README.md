@@ -126,7 +126,7 @@ Los modos de Lenovo con sus **vatios reales**, que cambian si la consola está e
 
 ### Sistema
 
-**Carga al 80 %** con la salud de la batería, teclado en pantalla, tema (Sencillo o Contraste), animaciones, sonidos,
+**Carga al 80 %** con la salud de la batería, teclado en pantalla, animaciones, sonidos,
 perfiles, actualizaciones y, abajo del todo, **Legion Space**.
 
 ### Perfiles por juego
