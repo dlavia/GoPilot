@@ -313,12 +313,16 @@
                     </Grid>
                     <c:Tile Row="switch" x:Name="PowerBoostTile" Glyph="&#xE3FC;" Title="CPU Boost" State="—" Click="OnBoostClick" />
                     <c:Tile Row="switch" x:Name="PowerFanTile" Glyph="&#xE9F2;" Title="Ventilador al máximo" State="—" Click="OnFanClick" />
-                    <c:Tile Row="switch" x:Name="FanCurveTile" Glyph="&#xE154;" Title="Curva del ventilador" State="—" Available="False" Click="OnFanCurveClick" />
-                    <!-- Curva: velocidad a 10…100 °C; solo actúa en modo Manual (visible con la curva activada) -->
-                    <StackPanel x:Name="FanCurvePanel" Spacing="4" Margin="6,0,6,4" Visibility="Collapsed">
-                        <c:Selector x:Name="FanPresetSelector" Label="Curva" SelectionChanged="OnFanPresetSelected" />
-                        <TextBlock x:Name="FanCurveNote" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,4" />
-                        <StackPanel x:Name="FanCurveSliders" Spacing="0" />
+                    <c:Tile Row="sub" x:Name="FanCurveTile" Glyph="&#xE154;" Title="Curva del ventilador" State="—" Available="False" Click="OnFanCurveOpenClick" />
+                    <!-- ===== Subpágina: curva del ventilador (velocidad a 10…100 °C; solo actúa en modo Manual) ===== -->
+                    <StackPanel x:Name="FanCurvePage" Spacing="8" Visibility="Collapsed">
+                        <c:Tile Row="switch" x:Name="FanCurveSwitchTile" Glyph="&#xE154;" Title="Curva propia" State="—" Click="OnFanCurveClick" />
+                        <StackPanel x:Name="FanCurvePanel" Spacing="8" Visibility="Collapsed">
+                            <c:Tile Row="value" x:Name="FanPresetTile" Glyph="&#xE434;" Title="Preajuste" Compact="True" />
+                            <TextBlock x:Name="FanCurveNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                            <TextBlock Text="VELOCIDAD SEGÚN LA TEMPERATURA" Style="{StaticResource GroupTitle}" Margin="6,4,6,0" />
+                            <StackPanel x:Name="FanCurveSliders" Spacing="8" />
+                        </StackPanel>
                     </StackPanel>
 
                     <TextBlock Text="JUEGO" Style="{StaticResource GroupTitle}" />
@@ -351,11 +355,16 @@
                         </Border>
                     </StackPanel>
                     <c:Tile Row="switch" x:Name="HomeLosslessTile" Glyph="&#xE1CA;" Title="Lossless Scaling" State="—" Available="False" Click="OnLosslessClick" />
-                    <!-- Overlay propio: No / En juegos / Siempre con ◀ ▶; debajo, qué muestra y dónde -->
-                    <c:Tile Row="value" x:Name="GameOverlayTile" Glyph="&#xE464;" Title="Overlay en juegos" Choices="No|En juegos|Siempre" />
-                    <StackPanel Spacing="8" x:Name="OverlaySettings" Margin="6,0,6,4" Visibility="Collapsed">
-                        <c:Selector x:Name="OverlayContentSelector" Label="Overlay · mostrar" SelectionChanged="OnOverlayContentSelected" />
-                        <c:Selector x:Name="OverlayPositionSelector" Label="Overlay · posición" SelectionChanged="OnOverlayPositionSelected" />
+                    <c:Tile Row="sub" x:Name="OverlayOpenTile" Glyph="&#xE464;" Title="Overlay en juegos" State="—" Click="OnOverlayOpenClick" />
+                    <!-- ===== Subpágina: overlay propio (No / En juegos / Siempre, qué muestra y dónde) ===== -->
+                    <StackPanel x:Name="OverlayPage" Spacing="8" Visibility="Collapsed">
+                        <c:Tile Row="value" x:Name="GameOverlayTile" Glyph="&#xE464;" Title="Overlay" Choices="No|En juegos|Siempre" />
+                        <StackPanel Spacing="8" x:Name="OverlaySettings" Visibility="Collapsed">
+                            <c:Tile Row="value" x:Name="OverlayContentTile" Glyph="&#xE154;" Title="Mostrar" Compact="True" />
+                            <c:Tile Row="value" x:Name="OverlayPositionTile" Glyph="&#xE626;" Title="Posición" Compact="True" />
+                        </StackPanel>
+                        <TextBlock Text="Lo dibuja GoPilot encima del juego, sin fijar widgets en Game Bar." FontSize="11.5" TextWrapping="Wrap"
+                                   Foreground="{StaticResource MutedBrush}" Margin="6,0" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
@@ -581,7 +590,7 @@
                             <TextBlock x:Name="LightsOffText" FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0"
                                        Text="Las luces están apagadas: enciéndelas con la fila «Luces» de Mando." />
                             <StackPanel x:Name="LightsSettings" Spacing="8">
-                                <c:Selector x:Name="EffectSelector" Label="Efecto" SelectionChanged="OnEffectSelected" Margin="6,0" />
+                                <c:Tile Row="value" x:Name="EffectTile" Glyph="&#xE6A2;" Title="Efecto" Compact="True" Choices="Fijo|Respiración|Croma|Arcoíris|Reactivo" />
                                 <Border x:Name="LightBrightnessRow" Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
                                     <Grid ColumnSpacing="10">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
@@ -649,25 +658,22 @@
                     </Grid>
                     <!-- Se usan juntos: GoPilot atiende los botones y Legion Space debe estar desactivado para que no responda también -->
                     <c:Tile Row="switch" x:Name="ButtonsTile" Glyph="&#xE26E;" Title="Botones Legion con GoPilot" State="—" Click="OnButtonsToggleClick" />
-                    <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="6,0,6,0">
+                    <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="6,0,6,0" Visibility="Collapsed">
                         <TextBlock x:Name="ButtonsWarning" Visibility="Collapsed" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"
                                    Text="Legion Space sigue activo y también responde a Legion L / R: desactívalo en Sistema › Legion Space." />
-                        <Grid x:Name="ButtonsList" ColumnSpacing="8" RowSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                        </Grid>
                     </StackPanel>
+                    <!-- Legion L / R y mantenidos: ◀ ▶ eligen la acción -->
+                    <StackPanel x:Name="ButtonsList" Spacing="8" />
                     <!-- Combinaciones Legion + botón (ocultas salvo que se activen) -->
                     <StackPanel x:Name="AdvancedButtonsCard" Spacing="8">
-                        <c:Tile Row="switch" x:Name="AdvancedButtonsTile" Glyph="&#xE1C4;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
-                        <Grid x:Name="AdvancedButtonsList" ColumnSpacing="8" RowSpacing="8" Margin="6,0,6,0" Visibility="Collapsed">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                        </Grid>
+                        <c:Tile Row="sub" x:Name="AdvancedButtonsOpenTile" Glyph="&#xE1C4;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsOpenClick" />
+                        <!-- ===== Subpágina: combinaciones Legion + botón ===== -->
+                        <StackPanel x:Name="AdvancedButtonsPage" Spacing="8" Visibility="Collapsed">
+                            <c:Tile Row="switch" x:Name="AdvancedButtonsTile" Glyph="&#xE1C4;" Title="Mostrar atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
+                            <StackPanel x:Name="AdvancedButtonsList" Spacing="8" Visibility="Collapsed" />
+                            <TextBlock Text="L+Y, L+X, L+A, L+B y L+LB los hace el firmware del mando y no se pueden cambiar." FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Modo escritorio (como la Steam Deck): el mando hace de ratón cuando no hay juego delante -->
@@ -765,7 +771,7 @@
 
                     <TextBlock Text="COMPORTAMIENTO" Style="{StaticResource GroupTitle}" />
                     <c:Tile Row="switch" x:Name="ResumeTile" Glyph="&#xE58E;" Title="Reaplicar ajustes tras suspender" State="—" Click="OnResumeClick" />
-                    <c:Selector x:Name="RefreshRateSelector" Label="Actualizar datos cada" SelectionChanged="OnRefreshRateSelected" Margin="6,0" />
+                    <c:Tile Row="value" x:Name="RefreshRateTile" Glyph="&#xE094;" Title="Actualizar datos cada" Choices="1 s|2 s|5 s" />
 
                     <StackPanel x:Name="UpdatesSection" Spacing="8">
                         <Grid Margin="6,12,6,0">

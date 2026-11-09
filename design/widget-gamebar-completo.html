@@ -294,7 +294,7 @@ const SECTIONS = [
     ...(S.mode == 4 ? ["autoTarget", "autoMin", "autoMax", "autoChill"] : []),
     S.mode < 3 ? H("Los vatios cambian si la consola está enchufada (Equilibrado 16 W, Rendimiento hasta 30 W). Legion L + Y cambia de modo.") : null,
     L("Procesador y ventilador"), "boost", "fanMax", "fanCurve",
-    L("Juego"), "chill", ...(S.chill ? ["chillMin", "chillMax"] : []), "lossless", "overlay", "kill",
+    L("Juego"), "chill", ...(S.chill ? ["chillMin", "chillMax"] : []), "lossless", "overlay",
   ] },
   { name: "Pantalla", icon: "monitor", rows: () => [
     "bright", "vol", "res", "hz", "vrr",

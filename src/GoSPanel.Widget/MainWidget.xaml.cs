@@ -164,6 +164,11 @@ namespace GoSPanel.Widget
             DpadTile.Picked += OnDpadPicked;
             DesktopTile.Picked += OnDesktopPicked;
             GyroModeTile.Picked += OnGyroModePicked;
+            FanPresetTile.Picked += OnFanPresetPicked;
+            OverlayContentTile.Picked += OnOverlayContentPicked;
+            OverlayPositionTile.Picked += OnOverlayPositionPicked;
+            EffectTile.Picked += OnEffectPicked;
+            RefreshRateTile.Picked += OnRefreshRatePicked;
         }
 
         // =====================================================================
@@ -761,25 +766,28 @@ namespace GoSPanel.Widget
             var temps = data.GetNamedArray("temps").Select(v => (int)v.GetNumber()).ToArray();
 
             FanCurveTile.Available = true;
-            FanCurveTile.IsOn = _fanCurveOn;
-            FanCurveTile.State = !_fanCurveOn ? "Desactivada" : active ? "Activa" : "En modo Manual";
+            FanCurveTile.State = !_fanCurveOn ? "De fábrica" : active ? "Propia · activa" : "Propia · en Manual";
+            FanCurveSwitchTile.IsOn = _fanCurveOn;
+            FanCurveSwitchTile.State = _fanCurveOn ? "Activado" : "Desactivado";
             FanCurvePanel.Visibility = _fanCurveOn ? Visibility.Visible : Visibility.Collapsed;
             FanCurveNote.Text = active
                 ? "Se aplica ahora (modo Manual). No baja de la curva de fábrica."
                 : "Solo se aplica en modo Manual: elige Manual en «Modo de funcionamiento» para usarla.";
             var preset = FanPresets.FirstOrDefault(p => p.Value.SequenceEqual(_fanSpeeds)).Key ?? "custom";
-            FanPresetSelector.SetOptions(FanPresetOptions, preset);
+            FanPresetTile.SetChoices(FanPresetOptions.Select(o => o.Key));
+            FanPresetTile.SelectedIndex = Array.FindIndex(FanPresetOptions, o => (string)o.Value == preset);
 
             if (_fanSliders.Count == 0)
             {
                 for (var i = 0; i < 10; i++)
                 {
-                    var row = new Grid { ColumnSpacing = 8 };
-                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(38) });
+                    // Fila del diseño nuevo: tarjeta con la temperatura, la barra y el valor (◀ ▶ ajustan)
+                    var row = new Grid { ColumnSpacing = 10 };
+                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(44) });
                     row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });
-                    var label = new TextBlock { Text = temps[i] + " °C", FontSize = 11.5, Foreground = Brush("MutedBrush"), VerticalAlignment = VerticalAlignment.Center };
-                    var slider = new Slider { Minimum = 0, Maximum = 100, StepFrequency = 1, SmallChange = 5, LargeChange = 10, Tag = i, IsFocusEngagementEnabled = true };
+                    row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
+                    var label = new TextBlock { Text = temps[i] + " °C", FontSize = 13.5, FontWeight = Windows.UI.Text.FontWeights.SemiBold, Foreground = Brush("RowTextBrush"), VerticalAlignment = VerticalAlignment.Center };
+                    var slider = new Slider { Minimum = 0, Maximum = 100, StepFrequency = 1, SmallChange = 5, LargeChange = 10, Tag = i, VerticalAlignment = VerticalAlignment.Center };
                     Windows.UI.Xaml.Automation.AutomationProperties.SetName(slider, "Ventilador a " + temps[i] + " grados");
                     var value = new TextBlock { Style = (Style)Application.Current.Resources["ValueText"], FontSize = 12 };
                     Grid.SetColumn(slider, 1);
@@ -787,11 +795,16 @@ namespace GoSPanel.Widget
                     row.Children.Add(label);
                     row.Children.Add(slider);
                     row.Children.Add(value);
+                    var card = new Border
+                    {
+                        Tag = "row", Background = Brush("Panel2Brush"), CornerRadius = new CornerRadius(14),
+                        Padding = new Thickness(13, 2, 13, 2), MinHeight = 46, Child = row,
+                    };
                     slider.ValueChanged += OnFanSliderChanged;
-                    slider.PreviewKeyDown += OnSliderPreviewKeyDown;
                     _fanSliders.Add(slider);
                     _fanValues.Add(value);
-                    FanCurveSliders.Children.Add(row);
+                    FanCurveSliders.Children.Add(card);
+                    PrepareSlider(slider);   // después de meterla en su tarjeta (el foco pinta la tarjeta)
                 }
             }
             _loading = true;
@@ -808,6 +821,14 @@ namespace GoSPanel.Widget
         {
             var data = await CallAsync("fancurve.set", new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!_fanCurveOn) });
             if (data != null) ApplyFanCurve(data);
+        }
+
+        private void OnFanCurveOpenClick(object sender, RoutedEventArgs e) =>
+            OpenSub("Curva del ventilador", "Rendimiento", FanCurveTile.FocusTarget, null, FanCurvePage);
+
+        private void OnFanPresetPicked(object sender, int index)
+        {
+            if (index >= 0 && index < FanPresetOptions.Length) OnFanPresetSelected(sender, FanPresetOptions[index].Value);
         }
 
         private async void OnFanPresetSelected(object sender, object value)
@@ -999,12 +1020,14 @@ namespace GoSPanel.Widget
             ButtonsHint.Text = data.GetNamedBoolean("controller", false) ? "" : "Mando no encontrado";
             ButtonsWarning.Visibility = _buttonsEnabled && data.GetNamedBoolean("legionSpace", false) ? Visibility.Visible : Visibility.Collapsed;
             ButtonsBody.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
+            ButtonsList.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
 
             // Reconstruir solo si cambian las asignaciones (para no perder el foco del mando).
             var bindings = data.GetNamedObject("bindings");
             var advanced = Pref("advancedButtons", false);
             AdvancedButtonsTile.IsOn = advanced;
             AdvancedButtonsTile.State = advanced ? "Legion L / R + otro botón" : "Ocultos";
+            AdvancedButtonsOpenTile.State = advanced ? "Legion L / R + otro botón" : "Ocultos";
             AdvancedButtonsCard.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
             AdvancedButtonsList.Visibility = advanced ? Visibility.Visible : Visibility.Collapsed;
             var signature = bindings.Stringify() + advanced;
@@ -1019,22 +1042,38 @@ namespace GoSPanel.Widget
             FillButtons(AdvancedButtonsList, advanced ? AdvancedButtonKeys : new string[0], options, bindings);
         }
 
-        private void FillButtons(Grid list, string[] keys, List<KeyValuePair<string, object>> options, JsonObject bindings)
+        private List<KeyValuePair<string, object>> _buttonActions = new List<KeyValuePair<string, object>>();
+
+        /// <summary>Una fila por atajo: ◀ ▶ eligen la acción (se aplica al dejar de pulsar).</summary>
+        private void FillButtons(StackPanel list, string[] keys, List<KeyValuePair<string, object>> options, JsonObject bindings)
         {
+            _buttonActions = options;
             list.Children.Clear();
-            list.RowDefinitions.Clear();
-            for (var i = 0; i < keys.Length; i++)
+            foreach (var key in keys)
             {
-                var key = keys[i];
-                if (i % 2 == 0) list.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                var selector = new Controls.Selector { Label = ButtonLabel(key), Tag = key };
-                selector.SetOptions(options, bindings.ContainsKey(key) ? bindings.GetNamedString(key) : "none");
-                selector.SelectionChanged += OnButtonBindingSelected;
-                Grid.SetRow(selector, i / 2);
-                Grid.SetColumn(selector, i % 2);
-                list.Children.Add(selector);
+                var current = bindings.ContainsKey(key) ? bindings.GetNamedString(key) : "none";
+                var tile = new Tile
+                {
+                    Row = "value",
+                    Glyph = key[0] == 'L' ? "\uE36A" : "\uE382",
+                    Title = ButtonLabel(key),
+                    Compact = true,
+                    Tag = key,
+                };
+                tile.SetChoices(options.Select(o => o.Key));
+                tile.SelectedIndex = options.FindIndex(o => (string)o.Value == current);
+                tile.Picked += OnButtonBindingPicked;
+                list.Children.Add(tile);
             }
         }
+
+        private void OnButtonBindingPicked(object sender, int index)
+        {
+            if (index >= 0 && index < _buttonActions.Count) OnButtonBindingSelected(sender, _buttonActions[index].Value);
+        }
+
+        private void OnAdvancedButtonsOpenClick(object sender, RoutedEventArgs e) =>
+            OpenSub("Atajos avanzados", "Mando", AdvancedButtonsOpenTile.FocusTarget, null, AdvancedButtonsPage);
 
         private async void OnAdvancedButtonsClick(object sender, RoutedEventArgs e)
         {
@@ -1045,7 +1084,7 @@ namespace GoSPanel.Widget
 
         private async void OnButtonBindingSelected(object sender, object value)
         {
-            var key = (string)((Controls.Selector)sender).Tag;
+            var key = (string)((FrameworkElement)sender).Tag;
             var data = await CallAsync("buttons.set", new JsonObject
             {
                 ["binding"] = JsonValue.CreateStringValue(key),
@@ -1089,8 +1128,13 @@ namespace GoSPanel.Widget
             HomeOverlayTile.IsOn = _gameOverlay;
             HomeOverlayTile.State = _gameOverlay ? "Activado" : "Desactivado";
             GameOverlayTile.SelectedIndex = !_gameOverlay ? 0 : _overlayAlways ? 2 : 1;
-            OverlayContentSelector.SetOptions(OverlayContents, data.GetNamedString("content", "full"));
-            OverlayPositionSelector.SetOptions(OverlayPositions, data.GetNamedString("position", "tl"));
+            OverlayOpenTile.State = !_gameOverlay ? "No" : _overlayAlways ? "Siempre" : "En juegos";
+            var content = data.GetNamedString("content", "full");
+            var position = data.GetNamedString("position", "tl");
+            OverlayContentTile.SetChoices(OverlayContents.Select(o => o.Key));
+            OverlayContentTile.SelectedIndex = Array.FindIndex(OverlayContents, o => (string)o.Value == content);
+            OverlayPositionTile.SetChoices(OverlayPositions.Select(o => o.Key));
+            OverlayPositionTile.SelectedIndex = Array.FindIndex(OverlayPositions, o => (string)o.Value == position);
         }
 
         private async void OnGameOverlayClick(object sender, RoutedEventArgs e)
@@ -1121,6 +1165,19 @@ namespace GoSPanel.Widget
                 : new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(true), ["always"] = JsonValue.CreateBooleanValue(index == 2) };
             var data = await CallAsync("overlay.set", args);
             if (data != null) ApplyGameOverlay(data);
+        }
+
+        private void OnOverlayOpenClick(object sender, RoutedEventArgs e) =>
+            OpenSub("Overlay en juegos", "Rendimiento", OverlayOpenTile.FocusTarget, null, OverlayPage);
+
+        private void OnOverlayContentPicked(object sender, int index)
+        {
+            if (index >= 0 && index < OverlayContents.Length) OnOverlayContentSelected(sender, OverlayContents[index].Value);
+        }
+
+        private void OnOverlayPositionPicked(object sender, int index)
+        {
+            if (index >= 0 && index < OverlayPositions.Length) OnOverlayPositionSelected(sender, OverlayPositions[index].Value);
         }
 
         private async void OnOverlayContentSelected(object sender, object value)
@@ -1242,7 +1299,7 @@ namespace GoSPanel.Widget
             _applyingLights = true;
             try
             {
-                EffectSelector.SetOptions(EffectOptions, effect);
+                EffectTile.SelectedIndex = Array.FindIndex(EffectOptions, o => (string)o.Value == effect);
                 LightBrightnessSlider.Value = state.GetNamedNumber("brightness", 80);
                 LightSpeedSlider.Value = state.GetNamedNumber("speed", 50);
                 ReactiveLowSlider.Value = state.ContainsKey("reactiveLow") ? state.GetNamedNumber("reactiveLow") : 20;
@@ -1281,6 +1338,11 @@ namespace GoSPanel.Widget
         {
             var on = _lights != null && _lights.GetNamedBoolean("enabled", false);
             await SetLightsAsync(new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!on) });
+        }
+
+        private void OnEffectPicked(object sender, int index)
+        {
+            if (index >= 0 && index < EffectOptions.Length) OnEffectSelected(sender, EffectOptions[index].Value);
         }
 
         private async void OnEffectSelected(object sender, object value)
@@ -1396,7 +1458,7 @@ namespace GoSPanel.Widget
             AnimationsTile.IsOn = animations && _systemAnimations;
             AnimationsTile.State = !_systemAnimations ? "Off en Windows" : animations ? "Activadas" : "Desactivadas";
             AnimationsTile.Available = _systemAnimations;
-            RefreshRateSelector.SetOptions(RefreshRates, seconds);
+            RefreshRateTile.SelectedIndex = Array.FindIndex(RefreshRates, o => (int)o.Value == seconds);
             UpdateAbout();
         }
 
@@ -1411,6 +1473,11 @@ namespace GoSPanel.Widget
         {
             SetPref("animations", !Pref("animations", true));
             ApplyInterfacePrefs();
+        }
+
+        private void OnRefreshRatePicked(object sender, int index)
+        {
+            if (index >= 0 && index < RefreshRates.Length) OnRefreshRateSelected(sender, RefreshRates[index].Value);
         }
 
         private void OnRefreshRateSelected(object sender, object value)
