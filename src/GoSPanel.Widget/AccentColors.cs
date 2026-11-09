@@ -18,8 +18,8 @@ namespace GoSPanel.Widget
 
         private static readonly string[] SolidKeys =
         {
+            // Las barras de los deslizadores son blancas (diseño del menú de Legion L): no siguen el acento.
             "AccentBrush", "SystemControlHighlightAccentBrush",
-            "SliderTrackValueFill", "SliderTrackValueFillPointerOver", "SliderTrackValueFillPressed",
         };
 
         /// <summary>Aplica el acento ahora y lo mantiene actualizado en la ventana de este hilo.</summary>

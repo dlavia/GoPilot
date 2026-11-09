@@ -34,6 +34,8 @@ namespace GoSPanel.Widget
             var reason = StringOrNull(data, "reason");
             var index = Math.Max(0, Array.IndexOf(DesktopModes, _desktopMode));
             DesktopTile.IsOn = active;
+            DesktopTile.SelectedIndex = index;
+            DesktopTile.Sub = _desktopMode == "off" ? "El mando como ratón sin juego delante" : active ? "Activo ahora" : string.IsNullOrEmpty(reason) ? "En espera" : reason;
             DesktopTile.State = DesktopModeNames[index] + (_desktopMode == "off" ? "" : active ? " · activo" : string.IsNullOrEmpty(reason) ? "" : " · " + reason.ToLowerInvariant());
 
             foreach (var button in DesktopModeButtons.Children.OfType<Button>())
@@ -69,6 +71,12 @@ namespace GoSPanel.Widget
         }
 
         private async void OnDesktopModeClick(object sender, RoutedEventArgs e) => await SetDesktopModeAsync((string)((Button)sender).Tag);
+
+        /// <summary>Apagado / Auto / Siempre con ◀ ▶.</summary>
+        private async void OnDesktopPicked(object sender, int index)
+        {
+            if (index >= 0 && index < DesktopModes.Length) await SetDesktopModeAsync(DesktopModes[index]);
+        }
 
         private void OnDesktopSliderChanged(object sender, RangeBaseValueChangedEventArgs e)
         {

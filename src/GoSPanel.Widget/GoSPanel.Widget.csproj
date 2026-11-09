@@ -56,7 +56,7 @@
     <Compile Include="MainWidget.Controller.cs">
       <DependentUpon>MainWidget.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainWidget.Home.cs">
+    <Compile Include="MainWidget.Sub.cs">
       <DependentUpon>MainWidget.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWidget.Updates.cs">

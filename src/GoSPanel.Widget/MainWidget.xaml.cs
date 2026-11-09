@@ -96,7 +96,6 @@ namespace GoSPanel.Widget
             Loaded += async (s, e) =>
             {
                 ApplyThemeShapes();
-                InitHomeTiles();
                 InitUpdates();
                 TabsBar.SizeChanged += (_, __) => MovePill(false);
                 MovePill(false);
@@ -123,6 +122,13 @@ namespace GoSPanel.Widget
             PreviewKeyDown += (s, e) =>
             {
                 var k = e.Key;
+                // B (o Esc) en una subpágina: volver a su pestaña
+                if (SubOpen && (k == VirtualKey.GamepadB || k == VirtualKey.Escape))
+                {
+                    CloseSub(true);
+                    e.Handled = true;
+                    return;
+                }
                 if (HandleFooterNavigation(k))
                 {
                     e.Handled = true;
@@ -134,17 +140,30 @@ namespace GoSPanel.Widget
                 e.Handled = true;
             };
 
-            // Sliders: hay que «entrar» con A para moverlos (así no se mueven sin querer al bajar con el stick);
-            // una vez dentro, el D-pad avanza de SmallChange en SmallChange (10 % brillo, 5 % volumen, 1 W TDP).
+            // Deslizadores (diseño del menú de Legion L): ◀ ▶ los mueven directamente de SmallChange en SmallChange
+            // (10 % brillo, 5 % volumen, 1 W TDP) y ▲ ▼ pasan a la fila de arriba o de abajo; no hace falta «entrar» con A.
+            // El foco se ve en toda la fila (su tarjeta se aclara y lleva un aro blanco), no solo en la barra.
             BuildSwatches();
             BuildAutoTargets();
             foreach (var slider in new[] { BrightnessSlider, VolumeSlider, SplSlider, SpptSlider, FpptSlider, LightBrightnessSlider, LightSpeedSlider, ChillMinSlider, ChillMaxSlider,
                                            LsCenterSlider, RsCenterSlider, LsEdgeSlider, RsEdgeSlider, LtLowSlider, RtLowSlider, LtHighSlider, RtHighSlider, GyroSensitivitySlider,
-                                           DesktopPointerSlider, DesktopScrollSlider, AutoMinSlider, AutoMaxSlider })
-            {
-                slider.IsFocusEngagementEnabled = true;
-                slider.PreviewKeyDown += OnSliderPreviewKeyDown;
-            }
+                                           DesktopPointerSlider, DesktopScrollSlider, AutoMinSlider, AutoMaxSlider, ReactiveLowSlider, ReactiveHighSlider })
+                PrepareSlider(slider);
+
+            // Filas con opciones: se cambian con ◀ ▶ (o tocándolas); A no hace nada en ellas.
+            HomeModeTile.Picked += OnModePicked;
+            PowerModeTile.Picked += OnModePicked;
+            ResolutionTile.Picked += OnResolutionPicked;
+            HzTile.Picked += OnHzPicked;
+            GameOverlayTile.Picked += OnOverlayPicked;
+            ThemeTile.Picked += OnThemePicked;
+            VibrationTile.Picked += OnVibrationPicked;
+            TouchVibrationTile.Picked += OnTouchVibrationPicked;
+            AutoSleepTile.Picked += OnAutoSleepPicked;
+            PollRateTile.Picked += OnPollRatePicked;
+            DpadTile.Picked += OnDpadPicked;
+            DesktopTile.Picked += OnDesktopPicked;
+            GyroModeTile.Picked += OnGyroModePicked;
         }
 
         // =====================================================================
@@ -192,10 +211,10 @@ namespace GoSPanel.Widget
             var inFooter = focused == GameBanner || focused == SaveProfileButton;
             if (up && inFooter)
             {
-                var target = _lastContentFocus ?? FocusManager.FindLastFocusableElement(_panels[_tab]) as Control;
+                var target = _lastContentFocus ?? FocusManager.FindLastFocusableElement(CurrentPanel) as Control;
                 return target != null && target.Focus(FocusState.Keyboard);
             }
-            if (down && !inFooter && focused == FocusManager.FindLastFocusableElement(_panels[_tab]))
+            if (down && !inFooter && focused == FocusManager.FindLastFocusableElement(CurrentPanel))
                 return GameBanner.Focus(FocusState.Keyboard);
             return false;
         }
@@ -203,19 +222,59 @@ namespace GoSPanel.Widget
         private bool IsInCurrentPanel(DependencyObject element)
         {
             for (; element != null; element = VisualTreeHelper.GetParent(element))
-                if (element == _panels[_tab]) return true;
+                if (element == CurrentPanel) return true;
             return false;
         }
 
         private DateTime _lastTabKey;
 
+        private void PrepareSlider(Slider slider)
+        {
+            slider.IsFocusEngagementEnabled = false;
+            slider.PreviewKeyDown += OnSliderPreviewKeyDown;
+            var row = RowOf(slider);
+            if (row == null) return;
+            slider.UseSystemFocusVisuals = false;
+            slider.GotFocus += (s, e) => PaintSliderRow(row, true);
+            slider.LostFocus += (s, e) => PaintSliderRow(row, false);
+        }
+
+        /// <summary>La tarjeta de fila (Border con Tag="row") que contiene el deslizador.</summary>
+        private static Border RowOf(FrameworkElement element)
+        {
+            for (var e = element?.Parent as FrameworkElement; e != null; e = e.Parent as FrameworkElement)
+                if (e is Border b && (b.Tag as string) == "row") return b;
+            return null;
+        }
+
+        private static void PaintSliderRow(Border row, bool focused)
+        {
+            row.Background = Brush(focused ? "RowFocusBrush" : "Panel2Brush");
+            row.BorderBrush = new SolidColorBrush(focused ? Windows.UI.Colors.White : Windows.UI.Colors.Transparent);
+            row.BorderThickness = new Thickness(focused ? 2 : 0);
+            // Que el borde no mueva el contenido
+            var p = row.Padding;
+            var baseLeft = focused ? 11 : 13;
+            row.Padding = new Thickness(baseLeft, Math.Max(0, p.Top + (focused ? -2 : 2)), baseLeft, Math.Max(0, p.Bottom + (focused ? -2 : 2)));
+        }
+
         private void OnSliderPreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
             var slider = (Slider)sender;
-            if (!slider.IsFocusEngaged) return;
+            var k = e.Key;
+            if (k == VirtualKey.GamepadDPadUp || k == VirtualKey.GamepadLeftThumbstickUp || k == VirtualKey.Up
+                || k == VirtualKey.GamepadDPadDown || k == VirtualKey.GamepadLeftThumbstickDown || k == VirtualKey.Down)
+            {
+                // ▲ ▼ cambian de fila (el Slider, si no, los usaría para cambiar el valor)
+                var up = k == VirtualKey.GamepadDPadUp || k == VirtualKey.GamepadLeftThumbstickUp || k == VirtualKey.Up;
+                if (HandleFooterNavigation(k)) { e.Handled = true; return; }
+                FocusManager.TryMoveFocus(up ? FocusNavigationDirection.Up : FocusNavigationDirection.Down);
+                e.Handled = true;
+                return;
+            }
             int direction;
-            if (e.Key == VirtualKey.GamepadDPadLeft || e.Key == VirtualKey.GamepadLeftThumbstickLeft || e.Key == VirtualKey.Left) direction = -1;
-            else if (e.Key == VirtualKey.GamepadDPadRight || e.Key == VirtualKey.GamepadLeftThumbstickRight || e.Key == VirtualKey.Right) direction = 1;
+            if (k == VirtualKey.GamepadDPadLeft || k == VirtualKey.GamepadLeftThumbstickLeft || k == VirtualKey.Left) direction = -1;
+            else if (k == VirtualKey.GamepadDPadRight || k == VirtualKey.GamepadLeftThumbstickRight || k == VirtualKey.Right) direction = 1;
             else return;
 
             var step = slider.SmallChange > 0 ? slider.SmallChange : 1;
@@ -281,12 +340,14 @@ namespace GoSPanel.Widget
 
         private void ShowTab(int index)
         {
+            if (SubOpen) CloseSub(false);
             if (index == _tab) return;
             var from = _panels[_tab];
             var to = _panels[index];
             var direction = index > _tab ? 1 : -1;
             _tab = index;
             UpdateTabVisuals();
+            TabsBar.UpdateLayout();
             MovePill(_animate);
 
             // Si había una transición en curso, se termina al instante.
@@ -340,10 +401,10 @@ namespace GoSPanel.Widget
             {
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
-                // Sencillo: icono de la pestaña activa en color de acento y subrayado blanco.
-                ((TextBlock)content.Children[0]).Foreground = !selected ? Brush("MutedBrush")
-                    : Theme.IsContrast ? new SolidColorBrush(Theme.OnAccent) : Brush("AccentBrush");
-                ((TextBlock)content.Children[1]).Foreground = Brush(selected ? "TextBrush" : "MutedBrush");
+                // Menú de Legion L: solo iconos; la elegida, en blanco y con su nombre (el contorno lo pone TabPill).
+                ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "TextBrush" : "MutedBrush");
+                ((TextBlock)content.Children[1]).Foreground = Brush("TextBrush");
+                content.Children[1].Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -352,6 +413,7 @@ namespace GoSPanel.Widget
             var tab = _tabs[_tab];
             if (tab.ActualWidth <= 0) return;
             TabPill.Width = tab.ActualWidth;
+            TabPill.Height = tab.ActualHeight;
             var x = tab.TransformToVisual(TabHome).TransformPoint(new Windows.Foundation.Point(0, 0)).X;
             if (!animate)
             {
@@ -621,14 +683,11 @@ namespace GoSPanel.Widget
             _pollRate = data.TryGetValue("pollRate", out v) && v.ValueType == JsonValueType.Number ? (int)v.GetNumber() : -1;
             _dpad = data.TryGetValue("dpad", out v) && v.ValueType == JsonValueType.String ? v.GetString() : null;
 
-            VibrationTile.State = _vibration >= 0 ? VibrationNames[_vibration] : "—";
-            VibrationTile.IsOn = _vibration > 0;
-            TouchVibrationTile.State = _touchVibration >= 0 ? VibrationNames[_touchVibration] : "—";
-            TouchVibrationTile.IsOn = _touchVibration > 0;
-            AutoSleepTile.State = _autoSleep < 0 ? "—" : _autoSleep == 0 ? "Nunca" : _autoSleep + " min";
-            AutoSleepTile.IsOn = _autoSleep > 0;
-            PollRateTile.State = _pollRate > 0 ? _pollRate + " Hz" : "—";
-            DpadTile.State = _dpad == null ? "—" : _dpad + " direcciones";
+            VibrationTile.SelectedIndex = _vibration;
+            TouchVibrationTile.SelectedIndex = _touchVibration;
+            AutoSleepTile.SelectedIndex = Array.IndexOf(AutoSleepSteps, _autoSleep);
+            PollRateTile.SelectedIndex = Array.IndexOf(PollRateSteps, _pollRate);
+            DpadTile.SelectedIndex = _dpad == "8" ? 0 : _dpad == "4" ? 1 : -1;
         }
 
         private async Task SetControllerAsync(string key, IJsonValue value)
@@ -653,6 +712,18 @@ namespace GoSPanel.Widget
             await SetControllerAsync("pollRate", JsonValue.CreateNumberValue(Next(PollRateSteps, _pollRate)));
         private async void OnDpadClick(object sender, RoutedEventArgs e) =>
             await SetControllerAsync("dpad", JsonValue.CreateStringValue(_dpad == "8" ? "4" : "8"));
+
+        // Con ◀ ▶ (diseño nuevo): el índice es el de las opciones de cada fila
+        private async void OnVibrationPicked(object sender, int index) =>
+            await SetControllerAsync("vibration", JsonValue.CreateNumberValue(index));
+        private async void OnTouchVibrationPicked(object sender, int index) =>
+            await SetControllerAsync("touchpadVibration", JsonValue.CreateNumberValue(index));
+        private async void OnAutoSleepPicked(object sender, int index) =>
+            await SetControllerAsync("autoSleep", JsonValue.CreateNumberValue(AutoSleepSteps[index]));
+        private async void OnPollRatePicked(object sender, int index) =>
+            await SetControllerAsync("pollRate", JsonValue.CreateNumberValue(PollRateSteps[index]));
+        private async void OnDpadPicked(object sender, int index) =>
+            await SetControllerAsync("dpad", JsonValue.CreateStringValue(index == 1 ? "4" : "8"));
 
         // =====================================================================
         // Curva del ventilador (solo actúa en modo Manual)
@@ -798,27 +869,14 @@ namespace GoSPanel.Widget
         /// <summary>Lo que cambia de forma entre temas: barra de pestañas, resalte de la activa y etiqueta del perfil.</summary>
         private void ApplyThemeShapes()
         {
-            if (Theme.IsContrast)
-            {
-                TabsBar.Background = Brush("PanelBrush");
-                TabsBar.BorderThickness = new Thickness(0);
-                TabsBar.CornerRadius = new CornerRadius(10);
-                TabPill.Background = Brush("AccentBrush");
-                TabPill.BorderThickness = new Thickness(0);
-                TabPill.CornerRadius = new CornerRadius(8);
-            }
-            else
-            {
-                TabsBar.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                TabsBar.BorderBrush = Brush("LineBrush");
-                TabsBar.BorderThickness = new Thickness(0, 0, 0, 1);
-                TabsBar.CornerRadius = new CornerRadius(0);
-                TabPill.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
-                TabPill.BorderBrush = Brush("TextBrush");
-                TabPill.BorderThickness = new Thickness(0, 0, 0, 2);
-                TabPill.CornerRadius = new CornerRadius(0);
-            }
-            ThemeTile.State = Theme.IsContrast ? "Contraste" : "Sencillo";
+            // Pestañas iguales en los dos temas: contorno blanco redondeado alrededor de la elegida.
+            TabsBar.Background = new SolidColorBrush(Windows.UI.Colors.Transparent);
+            TabsBar.BorderThickness = new Thickness(0);
+            TabPill.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
+            TabPill.BorderBrush = new SolidColorBrush(Windows.UI.Colors.White);
+            TabPill.BorderThickness = new Thickness(1.5);
+            TabPill.CornerRadius = new CornerRadius(18);
+            ThemeTile.SelectedIndex = Theme.IsContrast ? 1 : 0;
             var sounds = Sounds.Enabled;
             SoundsTile.IsOn = sounds;
             SoundsTile.State = sounds ? "Activados" : "Desactivados";
@@ -875,9 +933,10 @@ namespace GoSPanel.Widget
             ApplyThemeShapes();
         }
 
-        private void OnThemeClick(object sender, RoutedEventArgs e)
+        private void OnThemePicked(object sender, int index)
         {
-            var next = Theme.IsContrast ? Theme.Simple : Theme.Contrast;
+            var next = index == 1 ? Theme.Contrast : Theme.Simple;
+            if (next == Theme.Current) return;
             SetPref("theme", next);
             Theme.Apply(next);
         }
@@ -1029,6 +1088,7 @@ namespace GoSPanel.Widget
             OverlaySettings.Visibility = _gameOverlay ? Visibility.Visible : Visibility.Collapsed;
             HomeOverlayTile.IsOn = _gameOverlay;
             HomeOverlayTile.State = _gameOverlay ? "Activado" : "Desactivado";
+            GameOverlayTile.SelectedIndex = !_gameOverlay ? 0 : _overlayAlways ? 2 : 1;
             OverlayContentSelector.SetOptions(OverlayContents, data.GetNamedString("content", "full"));
             OverlayPositionSelector.SetOptions(OverlayPositions, data.GetNamedString("position", "tl"));
         }
@@ -1049,6 +1109,16 @@ namespace GoSPanel.Widget
                 : !_overlayAlways
                     ? new JsonObject { ["always"] = JsonValue.CreateBooleanValue(true) }
                     : new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(false) };
+            var data = await CallAsync("overlay.set", args);
+            if (data != null) ApplyGameOverlay(data);
+        }
+
+        // No / En juegos / Siempre con ◀ ▶
+        private async void OnOverlayPicked(object sender, int index)
+        {
+            var args = index == 0
+                ? new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(false) }
+                : new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(true), ["always"] = JsonValue.CreateBooleanValue(index == 2) };
             var data = await CallAsync("overlay.set", args);
             if (data != null) ApplyGameOverlay(data);
         }
@@ -1318,7 +1388,7 @@ namespace GoSPanel.Widget
             var seconds = Pref("refreshSeconds", 2);
 
             // El pie siempre está (lleva el perfil); lo que se oculta son los datos de la derecha.
-            FooterStats.Visibility = showMonitor ? Visibility.Visible : Visibility.Collapsed;
+            FooterStats.Visibility = Visibility.Collapsed;   // diseño nuevo: el pie lleva el perfil y las ayudas del mando
             _timer.Interval = TimeSpan.FromSeconds(seconds);
 
             ShowMonitorTile.IsOn = showMonitor;
@@ -1375,6 +1445,7 @@ namespace GoSPanel.Widget
 
             HomeKillTile.Available = active;
             if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
+            HomeGameTitle.Text = active && !string.IsNullOrEmpty(_gameName) ? _gameName : "Sin juego";
 
             await RefreshProfilesAsync(active);
             await RefreshLosslessAsync(active);
@@ -1432,6 +1503,7 @@ namespace GoSPanel.Widget
             GameIcon.Text = onGlobal ? "" : "";
             GameIcon.Foreground = Brush(onGlobal ? "MutedBrush" : "AccentBrush");
             ConnectionText.Text = "PERFIL";
+            HomeGameSub.Text = (_gameName != null ? "Jugando · perfil " : "Perfil ") + GameTitle.Text;
             _profileOnGlobal = onGlobal;
             ApplyProfileChip();
 
@@ -1881,6 +1953,11 @@ namespace GoSPanel.Widget
             await SetModeAsync((string)((Tile)sender).Tag);
         }
 
+        private async void OnModePicked(object sender, int index)
+        {
+            if (index >= 0 && index < ModeOrder.Length) await SetModeAsync(ModeOrder[index]);
+        }
+
         private async void OnHomeModeClick(object sender, RoutedEventArgs e)
         {
             var index = Array.IndexOf(ModeOrder, _autoTdp ? "auto" : _mode);
@@ -1911,6 +1988,8 @@ namespace GoSPanel.Widget
             ModePerformance.IsOn = shown == "performance";
             ModeCustom.IsOn = shown == "custom";
             ModeAuto.IsOn = shown == "auto";
+            HomeModeTile.SelectedIndex = PowerModeTile.SelectedIndex = Array.IndexOf(ModeOrder, shown);
+            ModeHint.Visibility = shown == "custom" || shown == "auto" ? Visibility.Collapsed : Visibility.Visible;
 
             var isCustom = shown == "custom";
             if (TdpPanel.Visibility == Visibility.Visible != isCustom)
@@ -1943,9 +2022,7 @@ namespace GoSPanel.Widget
             }
             var summary = shown == "auto" ? "Auto · " + _autoTarget + " FPS"
                 : ModeNames[shown] + " · " + (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
-            HomeModeTile.State = summary;
-            HomeModeTile.Glyph = ModeGlyphs[shown];
-            HomeModeTile.IsOn = true;
+            HomeModeTile.Sub = PowerModeTile.Sub = summary;
         }
 
         // ---------------------------------------------------------------------
@@ -2068,9 +2145,7 @@ namespace GoSPanel.Widget
 
         private void OnTdpAdvancedClick(object sender, RoutedEventArgs e)
         {
-            var open = TdpAdvancedBody.Visibility != Visibility.Visible;
-            TdpAdvancedBody.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
-            TdpAdvancedTile.State = open ? "" : "sPPT y fPPT";
+            OpenSub("Avanzado", "Rendimiento", (Control)TdpAdvancedTile.FocusTarget, null, TdpAdvancedBody);
         }
 
         private void OnTdpAutoClick(object sender, RoutedEventArgs e)
@@ -2104,14 +2179,14 @@ namespace GoSPanel.Widget
                 .Select(o => new DisplayMode((int)o.GetNamedNumber("width"), (int)o.GetNamedNumber("height"), (int)o.GetNamedNumber("hz")))
                 .ToList();
 
-            var resolutions = _modes.Select(m => new DisplayMode(m.Width, m.Height, 0)).Distinct()
-                .OrderByDescending(m => m.Width * m.Height).ToList();
-            ResolutionSelector.SetOptions(
-                resolutions.Select(r => new KeyValuePair<string, object>(r.Width + " × " + r.Height, r)),
-                new DisplayMode(_currentWidth, _currentHeight, 0));
-            RefreshSelector.SetOptions(
-                AvailableHz(_currentWidth, _currentHeight).OrderByDescending(h => h).Select(hz => new KeyValuePair<string, object>(hz + " Hz", hz)),
-                _currentHz);
+            // De menor a mayor: ◀ baja y ▶ sube (resolución y refresco)
+            _resolutions = _modes.Select(m => new DisplayMode(m.Width, m.Height, 0)).Distinct()
+                .OrderBy(m => m.Width * m.Height).ToList();
+            ResolutionTile.SetChoices(_resolutions.Select(r => r.Width + " × " + r.Height));
+            ResolutionTile.SelectedIndex = _resolutions.IndexOf(new DisplayMode(_currentWidth, _currentHeight, 0));
+            _hzOptions = AvailableHz(_currentWidth, _currentHeight).OrderBy(h => h).ToList();
+            HzTile.SetChoices(_hzOptions.Select(hz => hz + " Hz"));
+            HzTile.SelectedIndex = _hzOptions.IndexOf(_currentHz);
 
             HomeHzTile.State = _currentHz + " Hz";
             HomeHzTile.IsOn = _currentHz >= AvailableHz(_currentWidth, _currentHeight).DefaultIfEmpty(_currentHz).Max();
@@ -2132,6 +2207,25 @@ namespace GoSPanel.Widget
         private async void OnRefreshSelected(object sender, object value)
         {
             await SetDisplayAsync(_currentWidth, _currentHeight, (int)value);
+        }
+
+        private List<DisplayMode> _resolutions = new List<DisplayMode>();
+        private List<int> _hzOptions = new List<int>();
+
+        private async void OnResolutionPicked(object sender, int index)
+        {
+            if (index < 0 || index >= _resolutions.Count) return;
+            var resolution = _resolutions[index];
+            // Se conserva el refresco si la nueva resolución lo admite; si no, el más alto disponible.
+            var available = AvailableHz(resolution.Width, resolution.Height).ToList();
+            var hz = available.Contains(_currentHz) ? _currentHz : available.DefaultIfEmpty(_currentHz).Max();
+            await SetDisplayAsync(resolution.Width, resolution.Height, hz);
+        }
+
+        private async void OnHzPicked(object sender, int index)
+        {
+            if (index < 0 || index >= _hzOptions.Count) return;
+            await SetDisplayAsync(_currentWidth, _currentHeight, _hzOptions[index]);
         }
 
         private async void OnHomeHzClick(object sender, RoutedEventArgs e)

@@ -6,9 +6,14 @@
     Background="Transparent"
     XYFocusKeyboardNavigation="Enabled">
 
-    <!-- Fondo transparente: se ve el de Game Bar. El contenido se amplía con una escala fija (ver OnScaleHostSizeChanged). -->
+    <!-- Diseño del menú de Legion L (maqueta design/widget-gamebar-completo.html): fondo negro, pestañas de iconos
+         (la elegida con nombre y contorno blanco), filas en tarjetas y foco blanco.
+         Pestañas: Inicio · Rendimiento · Pantalla · Mando · Sistema (los nombres internos de los paneles no cambian:
+         HomePanel, PowerPanel, DisplayPanel, DevicePanel, ProfilesPanel).
+         Lo que se abre aparte (Avanzado de potencia, sticks, gatillos, giroscopio, luces) va a una subpágina (SubPanel):
+         A entra, B vuelve. El contenido se amplía con una escala fija (ver OnScaleHostSizeChanged). -->
     <Grid x:Name="ScaleHost" Background="{StaticResource PageBrush}" SizeChanged="OnScaleHostSizeChanged">
-    <Grid x:Name="LayoutRoot" Padding="10,8,10,10" RowSpacing="10" HorizontalAlignment="Left" VerticalAlignment="Top">
+    <Grid x:Name="LayoutRoot" Padding="14,10,14,10" RowSpacing="6" HorizontalAlignment="Left" VerticalAlignment="Top">
         <Grid.RenderTransform>
             <ScaleTransform x:Name="RootScale" />
         </Grid.RenderTransform>
@@ -18,89 +23,103 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ===== Una sola fila: pestañas (LT / RT; Game Bar se reserva LB / RB para cambiar de widget). El perfil
-             está en el pie. Game Bar ya pone el título «GoPilot» encima
-             y no se puede quitar: así se ahorra la fila que ocupaba el perfil. ===== -->
-        <Grid x:Name="TabsBar" Grid.Row="0" Background="{StaticResource PanelBrush}" CornerRadius="10" Padding="4" ColumnSpacing="3">
+        <!-- ===== Pestañas (LT / RT; Game Bar se reserva LB / RB para cambiar de widget). Solo iconos; la elegida
+             lleva además su nombre y un contorno blanco (TabPill), que se desliza de una a otra. ===== -->
+        <Grid x:Name="TabsBar" Grid.Row="0" ColumnSpacing="2" Padding="0,2,0,2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Margin="2,0" Padding="4,1" VerticalAlignment="Center">
-                <TextBlock Text="LT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
+            <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Margin="0,0,4,0" Padding="5,1" VerticalAlignment="Center">
+                <TextBlock Text="LT" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
             </Border>
-            <Border x:Name="TabPill" Grid.Column="1" CornerRadius="7" Background="{StaticResource Panel3Brush}"
-                    BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" HorizontalAlignment="Left">
+            <Border x:Name="TabPill" Grid.Column="1" Grid.ColumnSpan="5" CornerRadius="18" Background="#1FFFFFFF"
+                    BorderBrush="White" BorderThickness="1.5" HorizontalAlignment="Left" IsHitTestVisible="False">
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="TabPillTransform" />
                 </Border.RenderTransform>
             </Border>
             <Button x:Name="TabHome" AutomationProperties.Name="Inicio" Grid.Column="1" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="0" Click="OnTabClick">
-                <StackPanel Padding="0,6,0,6" Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="19" Text="&#xE464;" HorizontalAlignment="Center" />
-                    <TextBlock Text="Inicio" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Visibility="Collapsed" />
+                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2C2;" />
+                    <TextBlock Text="Inicio" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabPower" AutomationProperties.Name="Potencia" Grid.Column="2" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="1" Click="OnTabClick">
-                <StackPanel Padding="0,6,0,6" Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="19" Text="&#xE628;" HorizontalAlignment="Center" />
-                    <TextBlock Text="Potencia" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Visibility="Collapsed" />
+            <Button x:Name="TabPower" AutomationProperties.Name="Rendimiento" Grid.Column="2" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="1" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2DE;" />
+                    <TextBlock Text="Rendimiento" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
             <Button x:Name="TabDisplay" AutomationProperties.Name="Pantalla" Grid.Column="3" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="2" Click="OnTabClick">
-                <StackPanel Padding="0,6,0,6" Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="19" Text="&#xE32E;" HorizontalAlignment="Center" />
-                    <TextBlock Text="Pantalla" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Visibility="Collapsed" />
+                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE32E;" />
+                    <TextBlock Text="Pantalla" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabDevice" AutomationProperties.Name="Equipo" Grid.Column="4" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="3" Click="OnTabClick">
-                <StackPanel Padding="0,6,0,6" Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="19" Text="&#xE26E;" HorizontalAlignment="Center" />
-                    <TextBlock Text="Equipo" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Visibility="Collapsed" />
+            <Button x:Name="TabDevice" AutomationProperties.Name="Mando" Grid.Column="4" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="3" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE26E;" />
+                    <TextBlock Text="Mando" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabProfiles" AutomationProperties.Name="Ajustes" Grid.Column="5" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="4" Click="OnTabClick">
-                <StackPanel Padding="0,6,0,6" Spacing="2" HorizontalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="19" Text="&#xE272;" HorizontalAlignment="Center" />
-                    <TextBlock Text="Ajustes" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Visibility="Collapsed" />
+            <Button x:Name="TabProfiles" AutomationProperties.Name="Sistema" Grid.Column="5" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="4" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+                    <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE272;" />
+                    <TextBlock Text="Sistema" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <!-- Punto de «versión nueva» sobre el icono de Ajustes -->
-            <Ellipse x:Name="UpdateDot" Grid.Column="5" Width="7" Height="7" Fill="{StaticResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Top"
-                     Margin="20,5,0,0" IsHitTestVisible="False" Visibility="Collapsed" />
-            <Border Grid.Column="6" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Margin="2,0" Padding="4,1" VerticalAlignment="Center">
-                <TextBlock Text="RT" FontSize="10" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
+            <!-- Punto de «versión nueva» sobre el icono de Sistema -->
+            <Ellipse x:Name="UpdateDot" Grid.Column="5" Width="7" Height="7" Fill="{StaticResource WarnBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,5,7,0" IsHitTestVisible="False" Visibility="Collapsed" />
+            <Border Grid.Column="7" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Padding="5,1" VerticalAlignment="Center">
+                <TextBlock Text="RT" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
             </Border>
         </Grid>
 
         <!-- ===== Paneles (se deslizan al cambiar de pestaña) ===== -->
         <Grid x:Name="PanelHost" Grid.Row="1" SizeChanged="OnPanelHostSizeChanged">
 
-            <!-- INICIO -->
-            <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="10">
-                    <!-- Aviso de versión nueva: A lleva a Ajustes › Actualizaciones; X o ✕ lo ocultan para esa versión -->
+            <!-- ================= INICIO ================= -->
+            <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Hidden">
+                <StackPanel Spacing="8" Padding="4,6,4,12">
+                    <!-- Juego en primer plano y perfil aplicado -->
+                    <Grid ColumnSpacing="12" Margin="2,0,2,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="44" Height="58" CornerRadius="8" Background="{StaticResource Panel2Brush}">
+                            <TextBlock x:Name="HomeGameIcon" Style="{StaticResource IconText}" FontSize="22" Text="&#xE26E;" HorizontalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock x:Name="HomeGameTitle" Text="Sin juego" FontSize="20" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="HomeGameSub" Text="Perfil Global" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Aviso de versión nueva: A lleva a Sistema › Actualizaciones; X o ✕ lo ocultan para esa versión -->
                     <Grid x:Name="UpdateNotice" Visibility="Collapsed" ColumnSpacing="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="UpdateNoticeButton" Style="{StaticResource FlatButton}" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentBrush}"
-                                Padding="10,7" Click="OnUpdateNoticeClick" AutomationProperties.Name="Versión nueva de GoPilot">
+                        <Button x:Name="UpdateNoticeButton" Style="{StaticResource RowButton}" Background="#2EFFB547"
+                                Padding="13,8" Click="OnUpdateNoticeClick" AutomationProperties.Name="Versión nueva de GoPilot">
                             <Grid ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE20C;" Foreground="{StaticResource AccentBrush}" />
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE030;" Foreground="{StaticResource WarnBrush}" />
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock x:Name="UpdateNoticeTitle" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="UpdateNoticeTitle" FontSize="13.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="A para ver las novedades · X para ocultar" FontSize="11" Foreground="{StaticResource MutedBrush}" />
                                 </StackPanel>
                             </Grid>
@@ -110,843 +129,719 @@
                             <TextBlock Style="{StaticResource IconText}" FontSize="13" Text="&#xE4F6;" />
                         </Button>
                     </Grid>
-                    <!-- Brillo y volumen pegados a las baldosas (los Slider ya traen aire propio) -->
-                    <Border x:Name="QuickSlidersSection" Style="{StaticResource SectionStyle}" Padding="12,2,12,0" Margin="0,-10,0,-8">
-                        <StackPanel>
+
+                    <!-- Brillo y volumen: ◀ ▶ los ajustan directamente (sin «entrar» con A) -->
+                    <StackPanel x:Name="QuickSlidersSection" Spacing="8">
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
                             <Grid ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="18" />
+                                    <ColumnDefinition Width="22" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="42" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource IconText}" Text="&#xE472;" />
-                                <Slider x:Name="BrightnessSlider" Grid.Column="1" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="10" LargeChange="20"
-                                        ValueChanged="OnBrightnessChanged" AutomationProperties.Name="Brillo" />
-                                <TextBlock x:Name="BrightnessValue" Grid.Column="2" Style="{StaticResource ValueText}" Text="—" />
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE472;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Brillo" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="BrightnessSlider" Grid.Column="2" MinWidth="90" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="10" LargeChange="20"
+                                        VerticalAlignment="Center" ValueChanged="OnBrightnessChanged" AutomationProperties.Name="Brillo" />
+                                <TextBlock x:Name="BrightnessValue" Grid.Column="3" Style="{StaticResource ValueText}" Text="—" />
                             </Grid>
+                        </Border>
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
                             <Grid ColumnSpacing="10">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="18" />
+                                    <ColumnDefinition Width="22" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="40" />
+                                    <ColumnDefinition Width="42" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Style="{StaticResource IconText}" Text="&#xE44A;" />
-                                <Slider x:Name="VolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="5" LargeChange="20"
-                                        ValueChanged="OnVolumeChanged" AutomationProperties.Name="Volumen" />
-                                <TextBlock x:Name="VolumeValue" Grid.Column="2" Style="{StaticResource ValueText}" Text="—" />
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE44A;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Volumen" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="VolumeSlider" Grid.Column="2" MinWidth="90" Minimum="0" Maximum="100" StepFrequency="5" SmallChange="5" LargeChange="20"
+                                        VerticalAlignment="Center" ValueChanged="OnVolumeChanged" AutomationProperties.Name="Volumen" />
+                                <TextBlock x:Name="VolumeValue" Grid.Column="3" Style="{StaticResource ValueText}" Text="—" />
                             </Grid>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+                    </StackPanel>
 
-                    <TextBlock x:Name="EditHomeHint" Visibility="Collapsed" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="2,0"
-                               Text="A: marcar una baldosa y después otra para cambiarlas de sitio · mantener A: quitarla · abajo, + para añadir" />
-                    <Border Style="{StaticResource SectionStyle}" Padding="12,6,12,12">
-                        <Grid x:Name="HomeGrid" ColumnSpacing="6" RowSpacing="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="72" />
-                                <RowDefinition Height="72" />
-                                <RowDefinition Height="72" />
-                                <RowDefinition Height="72" />
-                                <RowDefinition Height="72" />
-                            </Grid.RowDefinitions>
-                            <c:Tile x:Name="HomeModeTile" Vertical="True" Glyph="&#xE2DE;" Title="Modo" State="—" Click="OnHomeModeClick" />
-                            <c:Tile x:Name="HomeHzTile" Grid.Column="1" Vertical="True" Glyph="&#xE32E;" Title="Refresco" State="—" Click="OnHomeHzClick" />
-                            <c:Tile x:Name="HomeBoostTile" Grid.Column="2" Vertical="True" Glyph="&#xE3FE;" Title="CPU Boost" State="—" Click="OnBoostClick" />
-                            <c:Tile x:Name="HomeLosslessTile" Grid.Row="1" Vertical="True" Glyph="&#xE0A2;" Title="Lossless" State="—" Available="False" Click="OnLosslessClick" />
-                            <c:Tile x:Name="HomeAfmfTile" Grid.Row="1" Grid.Column="1" Vertical="True" Glyph="&#xE792;" Title="AFMF" State="—" Available="False" Tag="afmf" Click="OnAmdClick" />
-                            <c:Tile x:Name="HomeRsrTile" Grid.Row="1" Grid.Column="2" Vertical="True" Glyph="&#xE6B6;" Title="RSR" State="—" Available="False" Tag="rsr" Click="OnAmdClick" />
-                            <c:Tile x:Name="HomeChillTile" Grid.Row="2" Vertical="True" Glyph="&#xE5AA;" Title="Chill" State="—" Available="False" Tag="chill" Click="OnAmdClick" />
-                            <c:Tile x:Name="HomeFanTile" Grid.Row="2" Grid.Column="1" Vertical="True" Glyph="&#xE9F2;" Title="Ventilador" State="—" Click="OnFanClick" />
-                            <c:Tile x:Name="HomeOverlayTile" Grid.Row="2" Grid.Column="2" Vertical="True" Glyph="&#xE150;" Title="Overlay" State="—" Click="OnGameOverlayClick" />
-                            <c:Tile x:Name="HomeLightsTile" Grid.Row="3" Vertical="True" Glyph="&#xE2DC;" Title="Luces" State="—" Available="False" Click="OnLightsClick" />
-                            <c:Tile x:Name="HomeTouchpadTile" Grid.Row="3" Grid.Column="1" Vertical="True" Glyph="&#xE29A;" Title="Touchpad" State="—" Click="OnTouchpadClick" />
-                            <c:Tile x:Name="HomeTouchscreenTile" Grid.Row="3" Grid.Column="2" Vertical="True" Glyph="&#xEC90;" Title="Táctil" State="—" Available="False" Click="OnTouchscreenClick" />
-                            <c:Tile x:Name="HomeKeyboardTile" Grid.Row="4" Vertical="True" Glyph="&#xE2D8;" Title="Teclado" State="Abrir" Click="OnKeyboardClick" />
-                            <c:Tile x:Name="HomeKillTile" Grid.Row="4" Grid.Column="1" Vertical="True" Glyph="&#xE4FA;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
-                            <c:Tile x:Name="HomeSharpTile" Grid.Row="4" Grid.Column="2" Vertical="True" Glyph="&#xE1EC;" Title="Nitidez" State="—" Available="False" Tag="sharpening" Click="OnAmdClick" />
-                        </Grid>
-                    </Border>
+                    <!-- Modo: ◀ ▶ (A no cambia nada) -->
+                    <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto" />
+                    <!-- Cerrar juego: pulsar dos veces -->
+                    <c:Tile Row="value" x:Name="HomeKillTile" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
-                    <!-- Editar Inicio: ✕ quita, + añade, A sobre una baldosa y luego sobre otra las intercambia -->
-                    <Button x:Name="EditHomeButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel2Brush}"
-                            BorderBrush="{StaticResource LineBrush}" Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                            Click="OnEditHomeClick">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Style="{StaticResource IconText}" FontSize="15" Text="&#xE3B4;" />
-                            <TextBlock Text="Editar baldosas" FontSize="12.5" FontWeight="SemiBold" />
-                        </StackPanel>
-                    </Button>
-                    <StackPanel x:Name="EditHomePanel" Spacing="8" Visibility="Collapsed">
-                        <TextBlock Text="DISPONIBLES" Style="{StaticResource SectionTitle}" Margin="2,0,0,0" />
-                        <Grid x:Name="AvailableGrid" ColumnSpacing="6" RowSpacing="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                        </Grid>
-                        <TextBlock x:Name="AvailableEmpty" Text="Todas las baldosas están en Inicio." FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Button x:Name="ResetHomeButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel2Brush}" BorderBrush="{StaticResource LineBrush}" Height="36"
-                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnResetHomeClick">
-                                <TextBlock Text="Restablecer" FontSize="12.5" FontWeight="SemiBold" />
-                            </Button>
-                            <Button x:Name="DoneHomeButton" Grid.Column="1" Style="{StaticResource ApplyButton}" Click="OnEditHomeDoneClick">
-                                <TextBlock Text="Listo" FontSize="13" FontWeight="SemiBold" />
-                            </Button>
-                        </Grid>
+                    <!-- Baldosas del diseño anterior que el código aún actualiza: no se ven. TODO: quitarlas del código. -->
+                    <StackPanel x:Name="LegacyHomeTiles" Visibility="Collapsed">
+                        <c:Tile x:Name="HomeHzTile" />
+                        <c:Tile x:Name="HomeBoostTile" />
+                        <c:Tile x:Name="HomeAfmfTile" Tag="afmf" />
+                        <c:Tile x:Name="HomeRsrTile" Tag="rsr" />
+                        <c:Tile x:Name="HomeChillTile" Tag="chill" />
+                        <c:Tile x:Name="HomeFanTile" />
+                        <c:Tile x:Name="HomeOverlayTile" />
+                        <c:Tile x:Name="HomeLightsTile" />
+                        <c:Tile x:Name="HomeTouchpadTile" />
+                        <c:Tile x:Name="HomeTouchscreenTile" />
+                        <c:Tile x:Name="HomeSharpTile" Tag="sharpening" />
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- POTENCIA -->
-            <ScrollViewer x:Name="PowerPanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <StackPanel Spacing="10">
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <TextBlock Text="MODO DE FUNCIONAMIENTO" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
-                            <Grid ColumnSpacing="5" Height="78">
+            <!-- ================= RENDIMIENTO ================= -->
+            <ScrollViewer x:Name="PowerPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
+                <StackPanel Spacing="8" Padding="4,6,4,12">
+                    <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto" />
+                    <!-- Vatios de cada modo (los lee el código del firmware); no se ven -->
+                    <StackPanel Visibility="Collapsed">
+                        <c:Tile x:Name="ModeQuiet" Tag="quiet" />
+                        <c:Tile x:Name="ModeBalanced" Tag="balanced" />
+                        <c:Tile x:Name="ModePerformance" Tag="performance" />
+                        <c:Tile x:Name="ModeCustom" Tag="custom" />
+                        <c:Tile x:Name="ModeAuto" Tag="auto" />
+                    </StackPanel>
+                    <TextBlock x:Name="ModeHint" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0,6,2"
+                               Text="Los vatios cambian si la consola está enchufada. Legion L + Y también cambia de modo." />
+
+                    <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
+                    <StackPanel x:Name="AutoPanel" Spacing="8" Visibility="Collapsed">
+                        <Border Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,10,13,12">
+                            <StackPanel Spacing="8">
+                                <Grid>
+                                    <TextBlock VerticalAlignment="Bottom" Margin="0,0,0,3"><Run Text="FPS objetivo" FontSize="13.5" FontWeight="SemiBold" /><Run Text="  reales (AFMF los duplica)" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
+                                    <TextBlock x:Name="AutoTargetValue" Text="60" FontSize="20" FontWeight="Bold" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid x:Name="AutoTargetButtons" ColumnSpacing="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE05C;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Mínimo" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="AutoMinSlider" Grid.Column="2" MinWidth="90" Minimum="5" Maximum="30" StepFrequency="1" SmallChange="1" VerticalAlignment="Center"
+                                        ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Mínimo de AutoTDP" />
+                                <TextBlock x:Name="AutoMinValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                            </Grid>
+                        </Border>
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE066;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Máximo" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="AutoMaxSlider" Grid.Column="2" MinWidth="90" Minimum="5" Maximum="30" StepFrequency="1" SmallChange="1" VerticalAlignment="Center"
+                                        ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Máximo de AutoTDP" />
+                                <TextBlock x:Name="AutoMaxValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="AutoLiveText" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                        <c:Tile Row="switch" x:Name="AutoChillTile" Glyph="&#xE58C;" Title="Limitar FPS con Radeon Chill" State="—" Click="OnAutoChillClick" />
+                    </StackPanel>
+
+                    <!-- Manual, como la Steam Deck: un límite de potencia (SPL); ráfagas (sPPT) y picos (fPPT) se calculan
+                         solos por encima. Se aplica medio segundo después de dejar de moverlo. Avanzado: subpágina. -->
+                    <StackPanel x:Name="TdpPanel" Spacing="8" Visibility="Collapsed">
+                        <StackPanel.RenderTransform>
+                            <TranslateTransform x:Name="TdpPanelTransform" />
+                        </StackPanel.RenderTransform>
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2DE;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="Límite" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="SplSlider" Grid.Column="2" MinWidth="90" Minimum="5" Maximum="30" StepFrequency="1" SmallChange="1" VerticalAlignment="Center"
+                                        ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="Límite de potencia" />
+                                <TextBlock Grid.Column="3" VerticalAlignment="Center" MinWidth="42" TextAlignment="Right">
+                                    <Run x:Name="SplValue" Text="—" FontSize="14" FontWeight="Bold" /><Run Text=" W" FontSize="12" Foreground="{StaticResource MutedBrush}" />
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+                        <Grid Margin="6,-2,6,0">
+                            <TextBlock x:Name="SplMinText" Text="5 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock x:Name="SplMaxText" Text="30 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
+                        </Grid>
+                        <TextBlock x:Name="TdpAutoText" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                        <TextBlock x:Name="TdpNowText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                        <c:Tile Row="sub" x:Name="TdpAdvancedTile" Glyph="&#xE434;" Title="Avanzado" State="sPPT y fPPT" Click="OnTdpAdvancedClick" />
+                        <!-- Subpágina «Avanzado» (se mueve a SubHost al abrirla) -->
+                        <StackPanel x:Name="TdpAdvancedBody" Spacing="8" Visibility="Collapsed">
+                            <c:Tile Row="switch" x:Name="TdpAutoTile" Glyph="&#xE6A2;" Title="Ráfagas y picos automáticos" State="—" Click="OnTdpAutoClick" />
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,6,13,6" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="sPPT" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" />
+                                        <TextBlock Text="ráfagas · hasta 1 min" FontSize="11" Foreground="{StaticResource MutedBrush}" />
+                                    </StackPanel>
+                                    <Slider x:Name="SpptSlider" Grid.Column="1" MinWidth="90" Minimum="5" Maximum="32" StepFrequency="1" SmallChange="1" VerticalAlignment="Center"
+                                            ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="sPPT" />
+                                    <TextBlock x:Name="SpptValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,6,13,6" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="fPPT" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" />
+                                        <TextBlock Text="picos · fracciones de segundo" FontSize="11" Foreground="{StaticResource MutedBrush}" />
+                                    </StackPanel>
+                                    <Slider x:Name="FpptSlider" Grid.Column="1" MinWidth="90" Minimum="5" Maximum="41" StepFrequency="1" SmallChange="1" VerticalAlignment="Center"
+                                            ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="fPPT" />
+                                    <TextBlock x:Name="FpptValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <TextBlock x:Name="TdpNote" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}" Visibility="Collapsed" Margin="6,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="PROCESADOR Y VENTILADOR" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock x:Name="FanHintText" Text="Curva automática" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <c:Tile Row="switch" x:Name="PowerBoostTile" Glyph="&#xE3FC;" Title="CPU Boost" State="—" Click="OnBoostClick" />
+                    <c:Tile Row="switch" x:Name="PowerFanTile" Glyph="&#xE9F2;" Title="Ventilador al máximo" State="—" Click="OnFanClick" />
+                    <c:Tile Row="switch" x:Name="FanCurveTile" Glyph="&#xE154;" Title="Curva del ventilador" State="—" Available="False" Click="OnFanCurveClick" />
+                    <!-- Curva: velocidad a 10…100 °C; solo actúa en modo Manual (visible con la curva activada) -->
+                    <StackPanel x:Name="FanCurvePanel" Spacing="4" Margin="6,0,6,4" Visibility="Collapsed">
+                        <c:Selector x:Name="FanPresetSelector" Label="Curva" SelectionChanged="OnFanPresetSelected" />
+                        <TextBlock x:Name="FanCurveNote" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,4" />
+                        <StackPanel x:Name="FanCurveSliders" Spacing="0" />
+                    </StackPanel>
+
+                    <TextBlock Text="JUEGO" Style="{StaticResource GroupTitle}" />
+                    <c:Tile Row="switch" x:Name="AmdChillTile" Glyph="&#xE58C;" Title="Límite de FPS (Chill)" State="—" Available="False" Tag="chill" Click="OnAmdClick" />
+                    <!-- Radeon Chill: FPS mínimos (en reposo) y máximos (en acción); visible con Chill activado -->
+                    <StackPanel x:Name="ChillPanel" Spacing="8" Visibility="Collapsed">
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="56" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE05C;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="FPS mínimos" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="ChillMinSlider" Grid.Column="2" MinWidth="90" StepFrequency="5" SmallChange="5" VerticalAlignment="Center"
+                                        ValueChanged="OnChillSliderChanged" AutomationProperties.Name="FPS mínimos de Chill" />
+                                <TextBlock x:Name="ChillMinValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                            </Grid>
+                        </Border>
+                        <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="56" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE066;" HorizontalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="FPS máximos" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                <Slider x:Name="ChillMaxSlider" Grid.Column="2" MinWidth="90" StepFrequency="5" SmallChange="5" VerticalAlignment="Center"
+                                        ValueChanged="OnChillSliderChanged" AutomationProperties.Name="FPS máximos de Chill" />
+                                <TextBlock x:Name="ChillMaxValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                    <c:Tile Row="switch" x:Name="HomeLosslessTile" Glyph="&#xE1CA;" Title="Lossless Scaling" State="—" Available="False" Click="OnLosslessClick" />
+                    <!-- Overlay propio: No / En juegos / Siempre con ◀ ▶; debajo, qué muestra y dónde -->
+                    <c:Tile Row="value" x:Name="GameOverlayTile" Glyph="&#xE464;" Title="Overlay en juegos" Choices="No|En juegos|Siempre" />
+                    <StackPanel Spacing="8" x:Name="OverlaySettings" Margin="6,0,6,4" Visibility="Collapsed">
+                        <c:Selector x:Name="OverlayContentSelector" Label="Overlay · mostrar" SelectionChanged="OnOverlayContentSelected" />
+                        <c:Selector x:Name="OverlayPositionSelector" Label="Overlay · posición" SelectionChanged="OnOverlayPositionSelected" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= PANTALLA ================= -->
+            <ScrollViewer x:Name="DisplayPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
+                <StackPanel Spacing="8" Padding="4,6,4,12">
+                    <c:Tile Row="value" x:Name="ResolutionTile" Glyph="&#xE0A2;" Title="Resolución" Compact="True" />
+                    <c:Tile Row="value" x:Name="HzTile" Glyph="&#xE094;" Title="Refresco" />
+                    <!-- VRR: FreeSync de AMD; al encenderlo el agente activa también el ajuste de Windows para juegos en ventana -->
+                    <c:Tile Row="switch" x:Name="AmdFreeSyncTile" Glyph="&#xEA9A;" Title="VRR (FreeSync)" State="—" Available="False" Tag="freesync" Click="OnAmdClick" />
+
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="AMD RADEON" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock Text="sin abrir Adrenalin" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <c:Tile Row="switch" x:Name="AmdAfmfTile" Glyph="&#xE792;" Title="AFMF" State="—" Available="False" Tag="afmf" Click="OnAmdClick" />
+                    <c:Tile Row="switch" x:Name="AmdRsrTile" Glyph="&#xE626;" Title="RSR" State="—" Available="False" Tag="rsr" Click="OnAmdClick" />
+                    <c:Tile Row="switch" x:Name="AmdSharpTile" Glyph="&#xE210;" Title="Nitidez" State="—" Available="False" Tag="sharpening" Click="OnAmdClick" />
+                    <c:Tile Row="switch" x:Name="AmdAntiLagTile" Glyph="&#xE492;" Title="Anti-Lag" State="—" Available="False" Tag="antilag" Click="OnAmdClick" />
+                    <c:Tile Row="switch" x:Name="AmdVariBrightTile" Glyph="&#xE474;" Title="Vari-Bright" State="—" Available="False" Tag="varibright" Click="OnAmdClick" />
+                    <TextBlock Text="El límite de FPS (Radeon Chill) está en Rendimiento › Juego." FontSize="11.5" TextWrapping="Wrap"
+                               Foreground="{StaticResource MutedBrush}" Margin="6,4,6,0" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= MANDO ================= -->
+            <ScrollViewer x:Name="DevicePanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
+                <StackPanel Spacing="8" Padding="4,6,4,12">
+                    <c:Tile Row="switch" x:Name="DeviceLightsTile" Glyph="&#xE2DC;" Title="Luces" State="—" Available="False" Click="OnLightsClick" />
+                    <c:Tile Row="value" x:Name="VibrationTile" Glyph="&#xE4D8;" Title="Vibración del mando" Choices="No|Suave|Media|Fuerte" Available="False" />
+                    <c:Tile Row="value" x:Name="TouchVibrationTile" Glyph="&#xE4D8;" Title="Vibración touchpad" Choices="No|Suave|Media|Fuerte" Available="False" />
+                    <c:Tile Row="switch" x:Name="DeviceTouchpadTile" Glyph="&#xE29A;" Title="Touchpad" State="—" Click="OnTouchpadClick" />
+                    <c:Tile Row="switch" x:Name="TouchscreenTile" Glyph="&#xEC90;" Title="Pantalla táctil" State="—" Available="False" Click="OnTouchscreenClick" />
+                    <c:Tile Row="switch" x:Name="GyroTile" Glyph="&#xE1C8;" Title="Giroscopio" State="—" Available="False" Click="OnGyroClick" />
+
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="AJUSTES DEL MANDO" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock Text="guardados en el propio mando" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <c:Tile Row="value" x:Name="AutoSleepTile" Glyph="&#xE330;" Title="Apagado automático" Compact="True" Choices="Nunca|5 min|10 min|15 min|30 min|60 min" Available="False" />
+                    <c:Tile Row="value" x:Name="PollRateTile" Glyph="&#xE000;" Title="Frecuencia de sondeo" Compact="True" Choices="125 Hz|250 Hz|500 Hz|1000 Hz" Available="False" />
+                    <c:Tile Row="value" x:Name="DpadTile" Glyph="&#xE0A4;" Title="Cruceta" Choices="8 dir.|4 dir." Available="False" />
+
+                    <!-- Ajustes avanzados: cada fila abre su subpágina (A entra, B vuelve) -->
+                    <StackPanel x:Name="AdvancedSection" Spacing="8" Visibility="Collapsed">
+                        <TextBlock Text="AJUSTES AVANZADOS" Style="{StaticResource GroupTitle}" />
+                        <c:Tile Row="sub" x:Name="AdvLightsTile" Glyph="&#xE6C8;" Title="Luces de los sticks" State="—" Tag="lights" Click="OnAdvancedTabClick" />
+                        <c:Tile Row="sub" x:Name="AdvSticksTile" Glyph="&#xEA5E;" Title="Sticks" State="Zonas muertas" Tag="sticks" Click="OnAdvancedTabClick" />
+                        <c:Tile Row="sub" x:Name="AdvTriggersTile" Glyph="&#xE29A;" Title="Gatillos" State="Recorrido" Tag="triggers" Click="OnAdvancedTabClick" />
+                        <c:Tile Row="sub" x:Name="AdvGyroTile" Glyph="&#xE1C8;" Title="Giroscopio" State="—" Tag="gyro" Click="OnAdvancedTabClick" />
+
+                        <!-- ===== Subpágina: Sticks ===== -->
+                        <StackPanel x:Name="SticksPanel" Spacing="8" Visibility="Collapsed">
+                            <Grid x:Name="SticksTest" ColumnSpacing="14" Visibility="Collapsed">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Width="110" Height="110" HorizontalAlignment="Center">
+                                    <Ellipse Stroke="{StaticResource LineBrush}" StrokeThickness="2" Fill="{StaticResource Panel2Brush}" />
+                                    <Ellipse x:Name="LeftStickDot" Width="18" Height="18" Fill="White">
+                                        <Ellipse.RenderTransform><TranslateTransform x:Name="LeftStickMove" /></Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Grid>
+                                <Grid Grid.Column="1" Width="110" Height="110" HorizontalAlignment="Center">
+                                    <Ellipse Stroke="{StaticResource LineBrush}" StrokeThickness="2" Fill="{StaticResource Panel2Brush}" />
+                                    <Ellipse x:Name="RightStickDot" Width="18" Height="18" Fill="White">
+                                        <Ellipse.RenderTransform><TranslateTransform x:Name="RightStickMove" /></Ellipse.RenderTransform>
+                                    </Ellipse>
+                                </Grid>
+                            </Grid>
+                            <TextBlock Text="ZONAS MUERTAS" Style="{StaticResource GroupTitle}" Margin="6,4,6,0" />
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Izquierdo · centro" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="LsCenterSlider" Grid.Column="1" MinWidth="80" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · centro" />
+                                    <TextBlock x:Name="LsCenterValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Derecho · centro" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="RsCenterSlider" Grid.Column="1" MinWidth="80" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · centro" />
+                                    <TextBlock x:Name="RsCenterValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Izquierdo · borde" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="LsEdgeSlider" Grid.Column="1" MinWidth="80" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · borde" />
+                                    <TextBlock x:Name="LsEdgeValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Derecho · borde" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="RsEdgeSlider" Grid.Column="1" MinWidth="80" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · borde" />
+                                    <TextBlock x:Name="RsEdgeValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Grid ColumnSpacing="6" Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Button x:Name="CalSticksButton" Grid.Column="0" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnCalibrateClick">
+                                    <TextBlock Text="Calibrar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="TestSticksButton" Grid.Column="1" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnTestClick">
+                                    <TextBlock Text="Probar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="DefSticksButton" Grid.Column="2" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnDefaultsClick">
+                                    <TextBlock Text="Por defecto" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ===== Subpágina: Gatillos ===== -->
+                        <StackPanel x:Name="TriggersPanel" Spacing="8" Visibility="Collapsed">
+                            <StackPanel x:Name="TriggersTest" Spacing="8" Margin="6,0" Visibility="Collapsed">
+                                <StackPanel Spacing="3">
+                                    <Grid>
+                                        <TextBlock Text="Gatillo izquierdo" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock x:Name="LeftTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
+                                    </Grid>
+                                    <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
+                                        <Border x:Name="LeftTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="White" />
+                                    </Grid>
+                                </StackPanel>
+                                <StackPanel Spacing="3">
+                                    <Grid>
+                                        <TextBlock Text="Gatillo derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                        <TextBlock x:Name="RightTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
+                                    </Grid>
+                                    <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
+                                        <Border x:Name="RightTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="White" />
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="RECORRIDO" Style="{StaticResource GroupTitle}" Margin="6,4,6,0" />
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Izquierdo · inicio" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="LtLowSlider" Grid.Column="1" MinWidth="80" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · inicio" />
+                                    <TextBlock x:Name="LtLowValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Derecho · inicio" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="RtLowSlider" Grid.Column="1" MinWidth="80" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · inicio" />
+                                    <TextBlock x:Name="RtLowValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Izquierdo · fin" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="LtHighSlider" Grid.Column="1" MinWidth="80" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · fin" />
+                                    <TextBlock x:Name="LtHighValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Derecho · fin" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="RtHighSlider" Grid.Column="1" MinWidth="80" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" VerticalAlignment="Center" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · fin" />
+                                    <TextBlock x:Name="RtHighValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Grid ColumnSpacing="6" Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Button x:Name="CalTriggersButton" Grid.Column="0" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnCalibrateClick">
+                                    <TextBlock Text="Calibrar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="TestTriggersButton" Grid.Column="1" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnTestClick">
+                                    <TextBlock Text="Probar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="DefTriggersButton" Grid.Column="2" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnDefaultsClick">
+                                    <TextBlock Text="Por defecto" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ===== Subpágina: Giroscopio ===== -->
+                        <StackPanel x:Name="GyroPanel" Spacing="8" Visibility="Collapsed">
+                            <c:Tile Row="value" x:Name="GyroModeTile" Glyph="&#xE1C8;" Title="Usar el giroscopio como" Compact="True" Choices="Desactivado|Ratón|Stick izquierdo|Stick derecho" />
+                            <Border x:Name="GyroSensitivityRow" Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="40" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Sensibilidad" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                    <Slider x:Name="GyroSensitivitySlider" Grid.Column="1" MinWidth="90" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" VerticalAlignment="Center"
+                                            ValueChanged="OnGyroSensitivityChanged" AutomationProperties.Name="Sensibilidad del giroscopio" />
+                                    <TextBlock x:Name="GyroSensitivityValue" Grid.Column="2" Style="{StaticResource ValueText}" />
+                                </Grid>
+                            </Border>
+                            <Grid x:Name="GyroTest" Height="110" CornerRadius="14" Background="{StaticResource Panel2Brush}" Visibility="Collapsed">
+                                <TextBlock Text="Mueve la consola" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="12,8" />
+                                <Ellipse x:Name="GyroDot" Width="18" Height="18" Fill="White">
+                                    <Ellipse.RenderTransform><TranslateTransform x:Name="GyroMove" /></Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Grid>
+                            <Grid ColumnSpacing="6" Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <Button x:Name="CalGyroButton" Grid.Column="0" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnCalibrateClick">
+                                    <TextBlock Text="Calibrar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="TestGyroButton" Grid.Column="1" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnTestClick">
+                                    <TextBlock Text="Probar" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <Button x:Name="DefGyroButton" Grid.Column="2" Style="{StaticResource RowButton}" Height="40" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnDefaultsClick">
+                                    <TextBlock Text="Por defecto" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- ===== Subpágina: Luces de los sticks (color, efecto, brillo y velocidad) ===== -->
+                        <StackPanel x:Name="LightsPanel" Spacing="8" Visibility="Collapsed">
+                            <TextBlock x:Name="LightsOffText" FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0"
+                                       Text="Las luces están apagadas: enciéndelas con la fila «Luces» de Mando." />
+                            <StackPanel x:Name="LightsSettings" Spacing="8">
+                                <c:Selector x:Name="EffectSelector" Label="Efecto" SelectionChanged="OnEffectSelected" Margin="6,0" />
+                                <Border x:Name="LightBrightnessRow" Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE472;" HorizontalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="Brillo" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                        <Slider x:Name="LightBrightnessSlider" Grid.Column="2" MinWidth="90" Minimum="10" Maximum="100" StepFrequency="10" SmallChange="10" VerticalAlignment="Center"
+                                                ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo de las luces" />
+                                        <TextBlock x:Name="LightBrightnessValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                                    </Grid>
+                                </Border>
+                                <!-- Reactivo: brillo en reposo y en los golpes del sonido -->
+                                <StackPanel x:Name="ReactiveRows" Spacing="8" Visibility="Collapsed">
+                                    <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                        <Grid ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                            <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE474;" HorizontalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Reposo" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                            <Slider x:Name="ReactiveLowSlider" Grid.Column="2" MinWidth="90" Minimum="0" Maximum="60" StepFrequency="5" SmallChange="5" VerticalAlignment="Center"
+                                                    ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo en reposo" />
+                                            <TextBlock x:Name="ReactiveLowValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                        <Grid ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                            <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE472;" HorizontalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="Pico" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                            <Slider x:Name="ReactiveHighSlider" Grid.Column="2" MinWidth="90" Minimum="30" Maximum="100" StepFrequency="5" SmallChange="5" VerticalAlignment="Center"
+                                                    ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo en los golpes" />
+                                            <TextBlock x:Name="ReactiveHighValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                                <Border x:Name="LightSpeedRow" Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="46" /></Grid.ColumnDefinitions>
+                                        <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE492;" HorizontalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="Velocidad" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                                        <Slider x:Name="LightSpeedSlider" Grid.Column="2" MinWidth="90" Minimum="0" Maximum="100" StepFrequency="10" SmallChange="10" VerticalAlignment="Center"
+                                                ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Velocidad del efecto" />
+                                        <TextBlock x:Name="LightSpeedValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Spacing="4" Margin="6,2,6,0">
+                                    <TextBlock Text="Color" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                                    <VariableSizedWrapGrid x:Name="ColorSwatches" Orientation="Horizontal" MaximumRowsOrColumns="10"
+                                                           ItemWidth="30" ItemHeight="30" HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Instrucciones mientras se calibra (va a la subpágina junto con sticks, gatillos o giroscopio) -->
+                        <StackPanel x:Name="CalibrationPanel" Spacing="8" Margin="6,6,6,0" Visibility="Collapsed">
+                            <TextBlock x:Name="CalibrationText" FontSize="12.5" TextWrapping="Wrap" />
+                            <Button x:Name="CalibrationDoneButton" Style="{StaticResource RowButton}" Background="White" Height="40"
+                                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnCalibrationDoneClick">
+                                <TextBlock Text="Terminar" FontSize="13" FontWeight="SemiBold" Foreground="#FF111111" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="BOTONES LEGION" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock x:Name="ButtonsHint" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <!-- Se usan juntos: GoPilot atiende los botones y Legion Space debe estar desactivado para que no responda también -->
+                    <c:Tile Row="switch" x:Name="ButtonsTile" Glyph="&#xE26E;" Title="Botones Legion con GoPilot" State="—" Click="OnButtonsToggleClick" />
+                    <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="6,0,6,0">
+                        <TextBlock x:Name="ButtonsWarning" Visibility="Collapsed" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"
+                                   Text="Legion Space sigue activo y también responde a Legion L / R: desactívalo en Sistema › Legion Space." />
+                        <Grid x:Name="ButtonsList" ColumnSpacing="8" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </StackPanel>
+                    <!-- Combinaciones Legion + botón (ocultas salvo que se activen) -->
+                    <StackPanel x:Name="AdvancedButtonsCard" Spacing="8">
+                        <c:Tile Row="switch" x:Name="AdvancedButtonsTile" Glyph="&#xE1C4;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
+                        <Grid x:Name="AdvancedButtonsList" ColumnSpacing="8" RowSpacing="8" Margin="6,0,6,0" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Modo escritorio (como la Steam Deck): el mando hace de ratón cuando no hay juego delante -->
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="MODO ESCRITORIO" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock Text="mando como ratón" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <c:Tile Row="value" x:Name="DesktopTile" Glyph="&#xE33A;" Title="Modo escritorio" Choices="Apagado|Auto|Siempre" />
+                    <!-- Botones del diseño anterior (el código aún los pinta): no se ven -->
+                    <Grid x:Name="DesktopModeButtons" Visibility="Collapsed">
+                        <Button Style="{StaticResource FlatButton}" Tag="off"><TextBlock Text="Apagado" /></Button>
+                        <Button Style="{StaticResource FlatButton}" Tag="auto"><TextBlock Text="Automático" /></Button>
+                        <Button Style="{StaticResource FlatButton}" Tag="always"><TextBlock Text="Siempre" /></Button>
+                    </Grid>
+                    <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="36" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE33A;" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="Ratón" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                            <Slider x:Name="DesktopPointerSlider" Grid.Column="2" MinWidth="90" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" VerticalAlignment="Center"
+                                    ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del ratón" />
+                            <TextBlock x:Name="DesktopPointerValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                        </Grid>
+                    </Border>
+                    <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="36" /></Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE0A4;" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="Desplazar" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource RowTextBrush}" VerticalAlignment="Center" />
+                            <Slider x:Name="DesktopScrollSlider" Grid.Column="2" MinWidth="90" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" VerticalAlignment="Center"
+                                    ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del desplazamiento" />
+                            <TextBlock x:Name="DesktopScrollValue" Grid.Column="3" Style="{StaticResource ValueText}" />
+                        </Grid>
+                    </Border>
+                    <Border Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,10" Opacity="0.85">
+                        <Grid ColumnSpacing="12" RowSpacing="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Stick derecho" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Column="1" Text="Mover el ratón" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Grid.Row="1" Text="RT · LT" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Clic izquierdo · clic derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Grid.Row="2" Text="Stick izquierdo" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Desplazar (rueda)" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Grid.Row="3" Text="A · B" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Intro · Esc" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Grid.Row="4" Text="X · Y" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Teclado en pantalla · vista de tareas" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                            <TextBlock Grid.Row="5" Text="LB · RB" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="Pestaña anterior · siguiente" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
+                        </Grid>
+                    </Border>
+                    <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="6,0"
+                               Text="Automático: se activa sin juego delante y se apaga al abrir uno. Para escribir con el mando, en el teclado en pantalla elige una vez ⚙ › Distribución de teclado › Controlador para juegos." />
+
+                    <TextBlock Text="RESTABLECER" Style="{StaticResource GroupTitle}" />
+                    <Button x:Name="FactoryResetButton" Style="{StaticResource RowButton}" MinHeight="46" Padding="13,0"
+                            HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Click="OnFactoryResetClick">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Style="{StaticResource IconText}" FontSize="18" Width="22" Text="&#xE038;" Foreground="#FFFF8A80" />
+                            <TextBlock x:Name="FactoryResetText" Text="Restablecer el mando de fábrica" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFF8A80" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================= SISTEMA ================= -->
+            <ScrollViewer x:Name="ProfilesPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
+                <StackPanel Spacing="8" Padding="4,6,4,12">
+                    <c:Tile Row="switch" x:Name="ChargeTile" Glyph="&#xE0BA;" Title="Cargar solo hasta el 80 %" State="—" Click="OnChargeClick" />
+                    <TextBlock x:Name="BatteryHealthText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="6,0" />
+                    <c:Tile Row="value" x:Name="HomeKeyboardTile" Glyph="&#xE2D8;" Title="Teclado en pantalla" State="Abrir" Click="OnKeyboardClick" />
+
+                    <TextBlock Text="GOPILOT" Style="{StaticResource GroupTitle}" />
+                    <c:Tile Row="value" x:Name="ThemeTile" Glyph="&#xE6F0;" Title="Tema" Choices="Sencillo|Contraste" />
+                    <c:Tile Row="switch" x:Name="AnimationsTile" Glyph="&#xE6A2;" Title="Animaciones" State="—" Click="OnAnimationsClick" />
+                    <c:Tile Row="switch" x:Name="SoundsTile" Glyph="&#xE450;" Title="Sonidos" State="—" Click="OnSoundsClick" />
+                    <!-- Datos del pie: ya no hay datos en el pie (diseño nuevo); se mantiene oculto para el código -->
+                    <c:Tile x:Name="ShowMonitorTile" Visibility="Collapsed" />
+
+                    <Grid Margin="6,12,6,0">
+                        <TextBlock Text="PERFILES" Style="{StaticResource GroupTitle}" Margin="0" />
+                        <TextBlock x:Name="ProfileCountText" Style="{StaticResource SectionHint}" />
+                    </Grid>
+                    <c:Tile Row="switch" x:Name="AutoProfilesTile" Glyph="&#xE756;" Title="Aplicar perfiles automáticamente" State="—" Click="OnAutoProfilesClick" />
+                    <c:Tile Row="switch" x:Name="AutoSaveTile" Glyph="&#xE248;" Title="Guardar cambios automáticamente" State="—" Click="OnAutoSaveClick" />
+                    <StackPanel x:Name="ProfilesList" Spacing="6" />
+                    <TextBlock x:Name="ProfilesEmptyText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="6,0"
+                               Text="Abre un juego, ajusta modo, TDP, pantalla y Lossless a tu gusto: la próxima vez se aplicará solo y, al cerrar el juego, volverás a Global." />
+
+                    <TextBlock Text="COMPORTAMIENTO" Style="{StaticResource GroupTitle}" />
+                    <c:Tile Row="switch" x:Name="ResumeTile" Glyph="&#xE58E;" Title="Reaplicar ajustes tras suspender" State="—" Click="OnResumeClick" />
+                    <c:Selector x:Name="RefreshRateSelector" Label="Actualizar datos cada" SelectionChanged="OnRefreshRateSelected" Margin="6,0" />
+
+                    <StackPanel x:Name="UpdatesSection" Spacing="8">
+                        <Grid Margin="6,12,6,0">
+                            <TextBlock Text="ACTUALIZACIONES" Style="{StaticResource GroupTitle}" Margin="0" />
+                            <TextBlock x:Name="UpdateHint" Style="{StaticResource SectionHint}" />
+                        </Grid>
+                        <c:Tile Row="value" x:Name="UpdateTile" Glyph="&#xE030;" Title="GoPilot" State="—" Click="OnUpdateTileClick" />
+                        <!-- Si hay una versión nueva: novedades y botones -->
+                        <StackPanel x:Name="UpdateBody" Spacing="8" Visibility="Collapsed">
+                            <Border x:Name="UpdateNotesBox" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,10" Opacity="0.85">
+                                <TextBlock x:Name="UpdateNotes" FontSize="12" TextWrapping="Wrap" />
+                            </Border>
+                            <ProgressBar x:Name="UpdateProgress" Maximum="100" Height="4" Foreground="White" Visibility="Collapsed" />
+                            <TextBlock x:Name="UpdateMessage" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Visibility="Collapsed" Margin="6,0" />
+                            <Grid x:Name="UpdateButtons" ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <c:Tile x:Name="ModeQuiet" Vertical="True" Glyph="&#xE2DA;" Title="10 W" State="" AutomationProperties.Name="Silencio" Tag="quiet" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModeBalanced" Grid.Column="1" Vertical="True" Glyph="&#xE750;" Title="16 W" State="" AutomationProperties.Name="Equilibrado" Tag="balanced" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModePerformance" Grid.Column="2" Vertical="True" Glyph="&#xE2DE;" Title="30 W" State="" AutomationProperties.Name="Rendimiento" Tag="performance" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModeCustom" Grid.Column="3" Vertical="True" Glyph="&#xE434;" Title="—" State="" AutomationProperties.Name="Manual" Tag="custom" Click="OnModeTileClick" />
-                                <c:Tile x:Name="ModeAuto" Grid.Column="4" Vertical="True" Glyph="&#xE6B6;" Title="Auto" State="" AutomationProperties.Name="AutoTDP" Tag="auto" Click="OnModeTileClick" />
-                            </Grid>
-
-                            <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
-                            <StackPanel x:Name="AutoPanel" Spacing="6" Margin="0,10,0,0" Visibility="Collapsed">
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Padding="12,10,12,12">
-                                    <StackPanel Spacing="8">
-                                        <Grid>
-                                            <TextBlock VerticalAlignment="Bottom" Margin="0,0,0,3"><Run Text="FPS objetivo" FontSize="13" FontWeight="SemiBold" /><Run Text="  reales (AFMF los duplica)" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                            <TextBlock x:Name="AutoTargetValue" Text="60" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
-                                        </Grid>
-                                        <Grid x:Name="AutoTargetButtons" ColumnSpacing="5">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                        </Grid>
-                                        <Grid>
-                                            <TextBlock Text="Mínimo" FontSize="12" />
-                                            <TextBlock x:Name="AutoMinValue" Style="{StaticResource ValueText}" />
-                                        </Grid>
-                                        <Slider x:Name="AutoMinSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Mínimo de AutoTDP" />
-                                        <Grid>
-                                            <TextBlock Text="Máximo" FontSize="12" />
-                                            <TextBlock x:Name="AutoMaxValue" Style="{StaticResource ValueText}" />
-                                        </Grid>
-                                        <Slider x:Name="AutoMaxSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnAutoRangeChanged" AutomationProperties.Name="Máximo de AutoTDP" />
-                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="9,7">
-                                            <TextBlock x:Name="AutoLiveText" FontSize="11.5" TextWrapping="Wrap" />
-                                        </Border>
-                                        <c:Tile Row="switch" x:Name="AutoChillTile" Glyph="&#xE5AA;" Title="Limitar FPS con Radeon Chill" State="—" Click="OnAutoChillClick" />
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                            <!-- Manual, como la Steam Deck: un límite de potencia (SPL); ráfagas (sPPT) y picos (fPPT) se calculan
-                                 solos por encima. Se aplica al soltar el deslizador (sin botón «Aplicar»). Avanzado: tocarlos a mano. -->
-                            <StackPanel x:Name="TdpPanel" Spacing="6" Margin="0,10,0,0" Visibility="Collapsed">
-                                <StackPanel.RenderTransform>
-                                    <TranslateTransform x:Name="TdpPanelTransform" />
-                                </StackPanel.RenderTransform>
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Padding="12,10,12,12">
-                                    <StackPanel Spacing="4">
-                                        <Grid>
-                                            <TextBlock Text="Límite de potencia" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,0,0,3" />
-                                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                                                <Run x:Name="SplValue" Text="—" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" /><Run Text=" W" FontSize="12" Foreground="{StaticResource MutedBrush}" />
-                                            </TextBlock>
-                                        </Grid>
-                                        <Slider x:Name="SplSlider" Minimum="5" Maximum="30" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="Límite de potencia" />
-                                        <Grid Margin="0,-6,0,0">
-                                            <TextBlock x:Name="SplMinText" Text="5 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" />
-                                            <TextBlock x:Name="SplMaxText" Text="30 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
-                                        </Grid>
-                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="9,7" Margin="0,4,0,0">
-                                            <TextBlock x:Name="TdpAutoText" FontSize="11.5" TextWrapping="Wrap" />
-                                        </Border>
-                                        <TextBlock x:Name="TdpNowText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,0" />
-                                    </StackPanel>
-                                </Border>
-                                <!-- Tarjeta: la fila «Avanzado» y sus deslizadores comparten fondo -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="sub" x:Name="TdpAdvancedTile" Glyph="&#xE434;" Title="Avanzado" State="sPPT y fPPT" Click="OnTdpAdvancedClick" />
-                                        <StackPanel x:Name="TdpAdvancedBody" Spacing="4" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <c:Tile Row="switch" x:Name="TdpAutoTile" Glyph="&#xE2DE;" Title="Ráfagas y picos automáticos" State="—" Click="OnTdpAutoClick" />
-                                            <Grid Margin="0,6,0,0">
-                                                <TextBlock FontSize="12.5"><Run Text="sPPT" /><Run Text="  ráfagas · hasta 1 min" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                                <TextBlock x:Name="SpptValue" Style="{StaticResource ValueText}" />
-                                            </Grid>
-                                            <Slider x:Name="SpptSlider" Minimum="5" Maximum="32" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="sPPT" />
-                                            <Grid>
-                                                <TextBlock FontSize="12.5"><Run Text="fPPT" /><Run Text="  picos · fracciones de segundo" FontSize="11" Foreground="{StaticResource MutedBrush}" /></TextBlock>
-                                                <TextBlock x:Name="FpptValue" Style="{StaticResource ValueText}" />
-                                            </Grid>
-                                            <Slider x:Name="FpptSlider" Minimum="5" Maximum="41" StepFrequency="1" ValueChanged="OnTdpSliderChanged" AutomationProperties.Name="fPPT" />
-                                            <TextBlock x:Name="TdpNote" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}" Visibility="Collapsed" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,10">
-                                <TextBlock Text="PROCESADOR" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="Z1 Extreme · 8 núcleos" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <c:Tile Row="switch" x:Name="PowerBoostTile" Glyph="&#xE3FE;" Title="CPU Boost" State="—" Click="OnBoostClick" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,10">
-                                <TextBlock Text="VENTILADOR" Style="{StaticResource SectionTitle}" />
-                                <TextBlock x:Name="FanHintText" Text="Curva automática" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <StackPanel Spacing="3">
-                                <c:Tile Row="switch" x:Name="PowerFanTile" Glyph="&#xE9F2;" Title="Ventilador al máximo" State="—" Click="OnFanClick" />
-                                <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="sub" x:Name="FanCurveTile" Glyph="&#xE156;" Title="Curva del ventilador" State="—" Available="False" Click="OnFanCurveClick" />
-                                        <!-- Curva: velocidad a 10…100 °C; solo actúa en modo Manual -->
-                                        <StackPanel x:Name="FanCurvePanel" Spacing="4" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <c:Selector x:Name="FanPresetSelector" Label="Curva" SelectionChanged="OnFanPresetSelected" />
-                                            <TextBlock x:Name="FanCurveNote" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,2,0,4" />
-                                            <StackPanel x:Name="FanCurveSliders" Spacing="0" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- PANTALLA -->
-            <ScrollViewer x:Name="DisplayPanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <StackPanel Spacing="10">
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <TextBlock Text="PANTALLA" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
-                            <StackPanel Spacing="8">
-                                <c:Selector x:Name="ResolutionSelector" Label="Resolución" SelectionChanged="OnResolutionSelected" />
-                                <c:Selector x:Name="RefreshSelector" Label="Refresco" SelectionChanged="OnRefreshSelected" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,10">
-                                <TextBlock Text="AMD RADEON" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="vía ADLX" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <StackPanel Spacing="3">
-                                <c:Tile Row="switch" x:Name="AmdAfmfTile" Glyph="&#xE792;" Title="AFMF" State="—" Available="False" Tag="afmf" Click="OnAmdClick" />
-                                <c:Tile Row="switch" x:Name="AmdRsrTile" Glyph="&#xE6B6;" Title="RSR" State="—" Available="False" Tag="rsr" Click="OnAmdClick" />
-                                <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="switch" x:Name="AmdChillTile" Glyph="&#xE5AA;" Title="Chill" State="—" Available="False" Tag="chill" Click="OnAmdClick" />
-                                        <!-- Radeon Chill: FPS mínimos (en reposo) y máximos (en acción); visible con Chill activado -->
-                                        <StackPanel x:Name="ChillPanel" Spacing="2" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <Grid>
-                                                <TextBlock Text="Chill · FPS mínimos" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock x:Name="ChillMinValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                            </Grid>
-                                            <Slider x:Name="ChillMinSlider" StepFrequency="5" SmallChange="5" ValueChanged="OnChillSliderChanged" AutomationProperties.Name="FPS mínimos de Chill" />
-                                            <Grid>
-                                                <TextBlock Text="Chill · FPS máximos" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock x:Name="ChillMaxValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                            </Grid>
-                                            <Slider x:Name="ChillMaxSlider" StepFrequency="5" SmallChange="5" ValueChanged="OnChillSliderChanged" AutomationProperties.Name="FPS máximos de Chill" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                                <c:Tile Row="switch" x:Name="AmdSharpTile" Glyph="&#xE1EC;" Title="Nitidez" State="—" Available="False" Tag="sharpening" Click="OnAmdClick" />
-                                <c:Tile Row="switch" x:Name="AmdAntiLagTile" Glyph="&#xE492;" Title="Anti-Lag" State="—" Available="False" Tag="antilag" Click="OnAmdClick" />
-                                <c:Tile Row="switch" x:Name="AmdVariBrightTile" Glyph="&#xE5B6;" Title="Vari-Bright" State="—" Available="False" Tag="varibright" Click="OnAmdClick" />
-                                <!-- VRR: FreeSync de AMD; al encenderlo el agente activa también el ajuste de Windows para juegos en ventana -->
-                                <c:Tile Row="switch" x:Name="AmdFreeSyncTile" Glyph="&#xE094;" Title="VRR" State="—" Available="False" Tag="freesync" Click="OnAmdClick" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- EQUIPO -->
-            <ScrollViewer x:Name="DevicePanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <StackPanel Spacing="10">
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel>
-                            <TextBlock Text="MANDO Y TÁCTIL" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
-                            <StackPanel Spacing="3">
-                                <c:Tile Row="switch" x:Name="DeviceLightsTile" Glyph="&#xE2DC;" Title="Luces" State="—" Available="False" Click="OnLightsClick" />
-                                <c:Tile Row="switch" x:Name="DeviceTouchpadTile" Glyph="&#xE29A;" Title="Touchpad" State="—" Click="OnTouchpadClick" />
-                                <c:Tile Row="switch" x:Name="GyroTile" Glyph="&#xE1D8;" Title="Giroscopio" State="—" Available="False" Click="OnGyroClick" />
-                                <c:Tile Row="switch" x:Name="TouchscreenTile" Glyph="&#xEC90;" Title="Pantalla táctil" State="—" Available="False" Click="OnTouchscreenClick" />
-                                <!-- Ajustes guardados en el propio mando: cada toque pasa al siguiente valor -->
-                                <c:Tile Row="value" x:Name="VibrationTile" Glyph="&#xE4D8;" Title="Vibración del mando" State="—" Available="False" Click="OnVibrationClick" />
-                                <c:Tile Row="value" x:Name="TouchVibrationTile" Glyph="&#xE4D8;" Title="Vibración del touchpad" State="—" Available="False" Click="OnTouchVibrationClick" />
-                                <c:Tile Row="value" x:Name="AutoSleepTile" Glyph="&#xE492;" Title="Apagado automático" State="—" Available="False" Click="OnAutoSleepClick" />
-                                <c:Tile Row="value" x:Name="PollRateTile" Glyph="&#xEA9A;" Title="Frecuencia de sondeo" State="—" Available="False" Click="OnPollRateClick" />
-                                <c:Tile Row="value" x:Name="DpadTile" Glyph="&#xE0A4;" Title="Cruceta" State="—" Available="False" Click="OnDpadClick" />
-                            </StackPanel>
-                            <Button x:Name="FactoryResetButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel2Brush}" BorderBrush="{StaticResource LineBrush}"
-                                    Height="36" Margin="0,8,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnFactoryResetClick">
-                                <TextBlock x:Name="FactoryResetText" Text="Restablecer el mando de fábrica" FontSize="12.5" FontWeight="SemiBold" />
-                            </Button>
-                        </StackPanel>
-                    </Border>
-                    <!-- Modo escritorio (como la Steam Deck): el mando hace de ratón cuando no hay juego delante -->
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <Grid>
-                                <TextBlock Text="MODO ESCRITORIO" Style="{StaticResource SectionTitle}" />
-                                <TextBlock Text="mando como ratón" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                <StackPanel>
-                                    <c:Tile Row="value" x:Name="DesktopTile" Glyph="&#xE1DC;" Title="Modo escritorio" State="—" Click="OnDesktopTileClick" />
-                                    <StackPanel Spacing="8" Margin="12,4,12,12">
-                                        <Grid x:Name="DesktopModeButtons" ColumnSpacing="5">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button Style="{StaticResource FlatButton}" Height="32" Tag="off" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                                                <TextBlock Text="Apagado" FontSize="12" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button Grid.Column="1" Style="{StaticResource FlatButton}" Height="32" Tag="auto" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                                                <TextBlock Text="Automático" FontSize="12" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button Grid.Column="2" Style="{StaticResource FlatButton}" Height="32" Tag="always" Click="OnDesktopModeClick" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                                                <TextBlock Text="Siempre" FontSize="12" FontWeight="SemiBold" />
-                                            </Button>
-                                        </Grid>
-                                        <Border Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="10,8">
-                                            <Grid ColumnSpacing="10" RowSpacing="4">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
-                                                </Grid.RowDefinitions>
-                                                <TextBlock Text="Stick derecho" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Column="1" Text="Mover el ratón" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock Grid.Row="1" Text="RT · LT" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="Clic izquierdo · clic derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock Grid.Row="2" Text="Stick izquierdo" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Desplazar (rueda)" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock Grid.Row="3" Text="A · B" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="Intro · Esc" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock Grid.Row="4" Text="X · Y" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="Teclado en pantalla · vista de tareas" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock Grid.Row="5" Text="LB · RB" FontSize="11.5" FontWeight="SemiBold" />
-                                                <TextBlock Grid.Row="5" Grid.Column="1" Text="Pestaña anterior · siguiente" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                            </Grid>
-                                        </Border>
-                                        <Grid>
-                                            <TextBlock Text="Velocidad del ratón" FontSize="12" />
-                                            <TextBlock x:Name="DesktopPointerValue" Style="{StaticResource ValueText}" />
-                                        </Grid>
-                                        <Slider x:Name="DesktopPointerSlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del ratón" />
-                                        <Grid>
-                                            <TextBlock Text="Velocidad del desplazamiento" FontSize="12" />
-                                            <TextBlock x:Name="DesktopScrollValue" Style="{StaticResource ValueText}" />
-                                        </Grid>
-                                        <Slider x:Name="DesktopScrollSlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnDesktopSliderChanged" AutomationProperties.Name="Velocidad del desplazamiento" />
-                                        <TextBlock FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
-                                                   Text="Automático: se activa sin juego delante y se apaga al abrir uno. Para escribir con el mando, en el teclado en pantalla elige una vez ⚙ › Distribución de teclado › Controlador para juegos; con él abierto, el mando es del teclado. Para activarlo con un botón, asígnalo en Ajustes › Botones Legion." />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                    <!-- Ajustes avanzados: Sticks / Gatillos / Giroscopio se despliegan debajo (uno a la vez) -->
-                    <Border x:Name="AdvancedSection" Style="{StaticResource SectionStyle}" Visibility="Collapsed">
-                        <StackPanel Spacing="0"> <!-- sin Spacing: los desplegables ocultos también lo sumaban (hueco grande); cada hijo lleva su margen -->
-                            <TextBlock Text="AJUSTES AVANZADOS" Style="{StaticResource SectionTitle}" />
-                            <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Margin="0,10,0,0">
-                                <StackPanel>
-                                    <c:Tile Row="sub" x:Name="AdvSticksTile" Glyph="&#xEA5E;" Title="Sticks" State="Zonas muertas" Tag="sticks" Click="OnAdvancedTabClick" />
-                                    <!-- Sticks -->
-                                    <StackPanel x:Name="SticksPanel" Spacing="10" Margin="12,4,12,12" Visibility="Collapsed">
-                                        <Grid ColumnSpacing="14" RowSpacing="4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Izquierdo · centro" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="LsCenterValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="LsCenterSlider" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · centro" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Derecho · centro" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="RsCenterValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="RsCenterSlider" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · centro" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Izquierdo · borde" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="LsEdgeValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="LsEdgeSlider" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · borde" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Derecho · borde" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="RsEdgeValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="RsEdgeSlider" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · borde" />
-                                            </StackPanel>
-                                        </Grid>
-                                        <Grid x:Name="SticksTest" ColumnSpacing="14" Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                                <Grid Width="110" Height="110" HorizontalAlignment="Center">
-                                                    <Ellipse Stroke="{StaticResource LineBrush}" StrokeThickness="2" Fill="{StaticResource Panel2Brush}" />
-                                                    <Ellipse x:Name="LeftStickDot" Width="18" Height="18" Fill="{StaticResource AccentBrush}">
-                                                        <Ellipse.RenderTransform><TranslateTransform x:Name="LeftStickMove" /></Ellipse.RenderTransform>
-                                                    </Ellipse>
-                                                </Grid>
-                                                <Grid Grid.Column="1" Width="110" Height="110" HorizontalAlignment="Center">
-                                                    <Ellipse Stroke="{StaticResource LineBrush}" StrokeThickness="2" Fill="{StaticResource Panel2Brush}" />
-                                                    <Ellipse x:Name="RightStickDot" Width="18" Height="18" Fill="{StaticResource AccentBrush}">
-                                                        <Ellipse.RenderTransform><TranslateTransform x:Name="RightStickMove" /></Ellipse.RenderTransform>
-                                                    </Ellipse>
-                                                </Grid>
-                                        </Grid>
-                                        <Grid ColumnSpacing="6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button x:Name="CalSticksButton" Grid.Column="0" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnCalibrateClick">
-                                                <TextBlock Text="Calibrar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="TestSticksButton" Grid.Column="1" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnTestClick">
-                                                <TextBlock Text="Probar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="DefSticksButton" Grid.Column="2" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="sticks" Click="OnDefaultsClick">
-                                                <TextBlock Text="Por defecto" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                        </Grid>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                            <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Margin="0,3,0,0">
-                                <StackPanel>
-                                    <c:Tile Row="sub" x:Name="AdvTriggersTile" Glyph="&#xE1D6;" Title="Gatillos" State="Zonas muertas" Tag="triggers" Click="OnAdvancedTabClick" />
-                                    <!-- Gatillos -->
-                                    <StackPanel x:Name="TriggersPanel" Spacing="10" Margin="12,4,12,12" Visibility="Collapsed">
-                                        <Grid ColumnSpacing="14" RowSpacing="4">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Izquierdo · inicio" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="LtLowValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="LtLowSlider" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · inicio" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="0" Grid.Column="1" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Derecho · inicio" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="RtLowValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="RtLowSlider" Minimum="0" Maximum="40" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · inicio" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Izquierdo · fin" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="LtHighValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="LtHighSlider" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Izquierdo · fin" />
-                                            </StackPanel>
-                                            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="0">
-                                                <Grid>
-                                                    <TextBlock Text="Derecho · fin" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="RtHighValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="RtHighSlider" Minimum="60" Maximum="100" StepFrequency="1" SmallChange="1" ValueChanged="OnDeadzoneChanged" AutomationProperties.Name="Derecho · fin" />
-                                            </StackPanel>
-                                        </Grid>
-                                        <StackPanel x:Name="TriggersTest" Spacing="8" Visibility="Collapsed">
-                                            <StackPanel Spacing="3">
-                                                <Grid>
-                                                    <TextBlock Text="Gatillo izquierdo" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="LeftTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
-                                                    <Border x:Name="LeftTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="{StaticResource AccentBrush}" />
-                                                </Grid>
-                                            </StackPanel>
-                                            <StackPanel Spacing="3">
-                                                <Grid>
-                                                    <TextBlock Text="Gatillo derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                    <TextBlock x:Name="RightTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
-                                                    <Border x:Name="RightTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="{StaticResource AccentBrush}" />
-                                                </Grid>
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <Grid ColumnSpacing="6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button x:Name="CalTriggersButton" Grid.Column="0" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnCalibrateClick">
-                                                <TextBlock Text="Calibrar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="TestTriggersButton" Grid.Column="1" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnTestClick">
-                                                <TextBlock Text="Probar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="DefTriggersButton" Grid.Column="2" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="triggers" Click="OnDefaultsClick">
-                                                <TextBlock Text="Por defecto" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                        </Grid>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                            <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Margin="0,3,0,0">
-                                <StackPanel>
-                                    <c:Tile Row="sub" x:Name="AdvGyroTile" Glyph="&#xE47C;" Title="Giroscopio" State="—" Tag="gyro" Click="OnAdvancedTabClick" />
-                                    <!-- Giroscopio -->
-                                    <StackPanel x:Name="GyroPanel" Spacing="10" Margin="12,4,12,12" Visibility="Collapsed">
-                                        <c:Tile Row="value" x:Name="GyroModeTile" Glyph="&#xE47C;" Title="Usar el giroscopio como" State="—" Click="OnGyroModeClick" />
-                                        <StackPanel x:Name="GyroSensitivityRow" Spacing="0">
-                                            <Grid>
-                                                <TextBlock Text="Sensibilidad" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                                <TextBlock x:Name="GyroSensitivityValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                            </Grid>
-                                            <Slider x:Name="GyroSensitivitySlider" Minimum="1" Maximum="100" StepFrequency="1" SmallChange="5" ValueChanged="OnGyroSensitivityChanged" AutomationProperties.Name="Sensibilidad del giroscopio" />
-                                        </StackPanel>
-                                        <Grid x:Name="GyroTest" Height="110" CornerRadius="10" Background="{StaticResource Panel2Brush}" Visibility="Collapsed">
-                                            <TextBlock Text="Mueve la consola" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="10,6" />
-                                            <Ellipse x:Name="GyroDot" Width="18" Height="18" Fill="{StaticResource AccentBrush}">
-                                                <Ellipse.RenderTransform><TranslateTransform x:Name="GyroMove" /></Ellipse.RenderTransform>
-                                            </Ellipse>
-                                        </Grid>
-                                        <Grid ColumnSpacing="6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Button x:Name="CalGyroButton" Grid.Column="0" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnCalibrateClick">
-                                                <TextBlock Text="Calibrar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="TestGyroButton" Grid.Column="1" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnTestClick">
-                                                <TextBlock Text="Probar" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                            <Button x:Name="DefGyroButton" Grid.Column="2" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" BorderBrush="{StaticResource LineBrush}"
-                                                    Height="36" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Tag="gyro" Click="OnDefaultsClick">
-                                                <TextBlock Text="Por defecto" FontSize="12.5" FontWeight="SemiBold" />
-                                            </Button>
-                                        </Grid>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-                            <!-- Luces de los sticks: color, efecto, brillo y velocidad -->
-                            <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                            <Border Background="{StaticResource Panel2Brush}" CornerRadius="8" Margin="0,3,0,0">
-                                <StackPanel>
-                                    <c:Tile Row="sub" x:Name="AdvLightsTile" Glyph="&#xE2DC;" Title="Luces de los sticks" State="—" Tag="lights" Click="OnAdvancedTabClick" />
-                                    <!-- Luces -->
-                                    <StackPanel x:Name="LightsPanel" Spacing="10" Margin="12,4,12,12" Visibility="Collapsed">
-                                        <TextBlock x:Name="LightsOffText" FontSize="12.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"
-                                                   Text="Las luces están apagadas: enciéndelas con la baldosa «Luces» de Mando y táctil." />
-                                        <StackPanel x:Name="LightsSettings" Spacing="8">
-                                        <StackPanel x:Name="LightBrightnessRow" Spacing="2">
-                                            <Grid>
-                                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                                    <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE474;" />
-                                                    <TextBlock Text="Brillo" FontSize="11.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <TextBlock x:Name="LightBrightnessValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                            </Grid>
-                                            <Slider x:Name="LightBrightnessSlider" Minimum="10" Maximum="100" StepFrequency="10" SmallChange="10"
-                                                    ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo de las luces" />
-                                        </StackPanel>
-                                        <!-- Reactivo: brillo en reposo y en los golpes del sonido -->
-                                        <StackPanel x:Name="ReactiveRows" Spacing="8" Visibility="Collapsed">
-                                            <StackPanel Spacing="2">
-                                                <Grid>
-                                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE474;" />
-                                                        <TextBlock Text="Reposo" FontSize="11.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
-                                                    </StackPanel>
-                                                    <TextBlock x:Name="ReactiveLowValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="ReactiveLowSlider" Minimum="0" Maximum="60" StepFrequency="5" SmallChange="5"
-                                                        ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo en reposo" />
-                                            </StackPanel>
-                                            <StackPanel Spacing="2">
-                                                <Grid>
-                                                    <StackPanel Orientation="Horizontal" Spacing="5">
-                                                        <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE2DE;" />
-                                                        <TextBlock Text="Pico con el sonido" FontSize="11.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
-                                                    </StackPanel>
-                                                    <TextBlock x:Name="ReactiveHighValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                                </Grid>
-                                                <Slider x:Name="ReactiveHighSlider" Minimum="30" Maximum="100" StepFrequency="5" SmallChange="5"
-                                                        ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Brillo en los golpes" />
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <!-- Una sola columna: efecto, velocidad y colores (todos en una fila) -->
-                                        <c:Selector x:Name="EffectSelector" Label="Efecto" SelectionChanged="OnEffectSelected" />
-                                        <StackPanel x:Name="LightSpeedRow" Spacing="2">
-                                            <Grid>
-                                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                                    <TextBlock Style="{StaticResource IconText}" FontSize="14" Text="&#xE492;" />
-                                                    <TextBlock Text="Velocidad" FontSize="11.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
-                                                </StackPanel>
-                                                <TextBlock x:Name="LightSpeedValue" Style="{StaticResource ValueText}" FontSize="12" />
-                                            </Grid>
-                                            <Slider x:Name="LightSpeedSlider" Minimum="0" Maximum="100" StepFrequency="10" SmallChange="10"
-                                                    ValueChanged="OnLightSliderChanged" AutomationProperties.Name="Velocidad del efecto" />
-                                        </StackPanel>
-                                        <StackPanel Spacing="4">
-                                            <TextBlock Text="Color" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
-                                            <VariableSizedWrapGrid x:Name="ColorSwatches" Orientation="Horizontal" MaximumRowsOrColumns="10"
-                                                                   ItemWidth="30" ItemHeight="30" HorizontalAlignment="Center" />
-                                        </StackPanel>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Border>
-
-
-
-
-
-                            <!-- Instrucciones mientras se calibra -->
-                            <StackPanel x:Name="CalibrationPanel" Spacing="8" Margin="0,10,0,0" Visibility="Collapsed">
-                                <TextBlock x:Name="CalibrationText" FontSize="12.5" TextWrapping="Wrap" />
-                                <Button x:Name="CalibrationDoneButton" Style="{StaticResource ApplyButton}" Click="OnCalibrationDoneClick">
-                                    <TextBlock Text="Terminar" FontSize="13" FontWeight="SemiBold" />
+                                <Button x:Name="UpdateNowButton" Style="{StaticResource RowButton}" Background="White" Foreground="#FF111111" Height="40" FontSize="13" FontWeight="SemiBold"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Content="Actualizar" Click="OnUpdateNowClick" />
+                                <Button x:Name="UpdateLaterButton" Grid.Column="1" Style="{StaticResource RowButton}" Height="40"
+                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnUpdateLaterClick">
+                                    <TextBlock Text="Más tarde" FontSize="13" FontWeight="SemiBold" />
                                 </Button>
-                            </StackPanel>
+                            </Grid>
                         </StackPanel>
-                    </Border>
+                        <c:Tile Row="switch" x:Name="AutoUpdateTile" Glyph="&#xE094;" Title="Buscar automáticamente" State="—" Click="OnAutoUpdateClick" />
+                        <c:Tile Row="value" x:Name="UninstallTile" Glyph="&#xE4A6;" Title="Desinstalar GoPilot" State="" Click="OnUninstallClick" />
+                        <TextBlock x:Name="AboutText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" Margin="6,0" />
+                        <TextBlock x:Name="MessageText" TextWrapping="Wrap" FontSize="11.5" IsTextSelectionEnabled="True" Margin="6,0"
+                                   Foreground="{StaticResource MutedBrush}" MaxLines="12" />
+                    </StackPanel>
 
+                    <!-- Abajo del todo, lejos del resto, para no activarlo sin querer -->
+                    <TextBlock Text="LEGION SPACE" Style="{StaticResource GroupTitle}" Margin="6,20,6,0" />
+                    <c:Tile Row="switch" x:Name="LegionSpaceTile" Glyph="&#xE3DE;" Title="Legion Space" State="—" Available="False" Click="OnLegionSpaceClick" />
+                    <TextBlock Text="Si lo activas, Legion Space vuelve a responder a Legion L / R junto a GoPilot." FontSize="11.5" TextWrapping="Wrap"
+                               Foreground="{StaticResource MutedBrush}" Margin="6,0" />
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- AJUSTES: ajustes (monitor, overlay, animaciones, carga), perfiles, comportamiento y acerca de -->
-            <ScrollViewer x:Name="ProfilesPanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <StackPanel Spacing="10">
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="AJUSTES" Style="{StaticResource SectionTitle}" />
-                            <StackPanel Spacing="3">
-                                <c:Tile Row="value" x:Name="ShowMonitorTile" Glyph="&#xE628;" Title="Datos del pie" State="—" Click="OnShowMonitorClick" />
-                                <!-- Tarjeta: la fila y sus ajustes comparten fondo (se ve que van juntos) -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="value" x:Name="GameOverlayTile" Glyph="&#xE58C;" Title="Overlay en juegos" State="—" Click="OnOverlayCycleClick" />
-                                        <StackPanel Spacing="8" x:Name="OverlaySettings" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <c:Selector x:Name="OverlayContentSelector" Label="Overlay · mostrar" SelectionChanged="OnOverlayContentSelected" />
-                                            <c:Selector x:Name="OverlayPositionSelector" Label="Overlay · posición" SelectionChanged="OnOverlayPositionSelected" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                                <c:Tile Row="switch" x:Name="AnimationsTile" Glyph="&#xE6A2;" Title="Animaciones" State="—" Click="OnAnimationsClick" />
-                                <c:Tile Row="switch" x:Name="ChargeTile" Glyph="&#xE808;" Title="Cargar solo hasta el 80 %" State="—" Click="OnChargeClick" />
-                                <c:Tile Row="value" x:Name="ThemeTile" Glyph="&#xE6F0;" Title="Tema" State="—" Click="OnThemeClick" />
-                                <c:Tile Row="switch" x:Name="SoundsTile" Glyph="&#xE44A;" Title="Sonidos" State="—" Click="OnSoundsClick" />
-                            </StackPanel>
-                            <TextBlock x:Name="BatteryHealthText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
+            <!-- ================= SUBPÁGINA (Avanzado, sticks, gatillos, giroscopio, luces) =================
+                 Su contenido se mueve aquí desde su pestaña al abrirla y vuelve a su sitio al cerrarla (B). -->
+            <ScrollViewer x:Name="SubPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
+                <StackPanel Spacing="8" Padding="4,2,4,12">
+                    <Button x:Name="SubBackButton" Style="{StaticResource FlatButton}" IsTabStop="False" HorizontalAlignment="Left" Padding="2,4,10,6" Click="OnSubBackClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Style="{StaticResource IconText}" FontSize="16" Text="&#xE138;" />
+                            <TextBlock x:Name="SubTitleText" FontSize="19" FontWeight="Bold" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SubFromText" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <Grid>
-                                <TextBlock Text="BOTONES LEGION" Style="{StaticResource SectionTitle}" />
-                                <TextBlock x:Name="ButtonsHint" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <!-- Se usan juntos: GoPilot atiende los botones y Legion Space debe estar desactivado para que no responda también -->
-                            <StackPanel Spacing="3">
-                                <!-- Tarjeta: el interruptor y las asignaciones de Legion L / R comparten fondo -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="switch" x:Name="ButtonsTile" Glyph="&#xE26E;" Title="Botones Legion con GoPilot" State="—" Click="OnButtonsToggleClick" />
-                                        <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="12,4,12,12">
-                                            <TextBlock x:Name="ButtonsWarning" Visibility="Collapsed" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"
-                                                       Text="Legion Space sigue activo y también responde a Legion L / R: desactívalo para que solo actúe GoPilot." />
-                                            <Grid x:Name="ButtonsList" ColumnSpacing="8" RowSpacing="8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                            </Grid>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                                <!-- Tarjeta: combinaciones Legion + botón (ocultas salvo que se abra) -->
-                                <Border x:Name="AdvancedButtonsCard" Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="sub" x:Name="AdvancedButtonsTile" Glyph="&#xE272;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
-                                        <Grid x:Name="AdvancedButtonsList" ColumnSpacing="8" RowSpacing="8" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-                                <c:Tile Row="switch" x:Name="LegionSpaceTile" Glyph="&#xE6A2;" Title="Legion Space" State="—" Available="False" Click="OnLegionSpaceClick" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <Grid>
-                                <TextBlock Text="PERFILES" Style="{StaticResource SectionTitle}" />
-                                <TextBlock x:Name="ProfileCountText" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <c:Tile Row="switch" x:Name="AutoProfilesTile" Glyph="&#xE036;" Title="Aplicar perfiles automáticamente" State="—" Click="OnAutoProfilesClick" />
-                            <c:Tile Row="switch" x:Name="AutoSaveTile" Glyph="&#xE248;" Title="Guardar cambios automáticamente" State="—" Click="OnAutoSaveClick" />
-                            <StackPanel x:Name="ProfilesList" Spacing="6" />
-                            <TextBlock x:Name="ProfilesEmptyText" FontSize="12" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"
-                                       Text="Abre un juego, ajusta modo, TDP, pantalla y Lossless a tu gusto y pulsa el disquete del banner. La próxima vez se aplicará solo y, al cerrar el juego, volverás a Global." />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="COMPORTAMIENTO" Style="{StaticResource SectionTitle}" />
-                            <c:Tile Row="switch" x:Name="ResumeTile" Glyph="&#xE036;" Title="Reaplicar ajustes tras suspender" State="—" Click="OnResumeClick" />
-                            <c:Selector x:Name="RefreshRateSelector" Label="Actualizar datos cada" SelectionChanged="OnRefreshRateSelected" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="UpdatesSection" Style="{StaticResource SectionStyle}">
-                        <StackPanel Spacing="8">
-                            <Grid>
-                                <TextBlock Text="ACTUALIZACIONES" Style="{StaticResource SectionTitle}" />
-                                <TextBlock x:Name="UpdateHint" Style="{StaticResource SectionHint}" />
-                            </Grid>
-                            <StackPanel Spacing="3">
-                                <!-- Tarjeta: la fila de la versión y, si hay una nueva, sus novedades y botones -->
-                                <Border Background="{StaticResource Panel2Brush}" CornerRadius="8">
-                                    <StackPanel>
-                                        <c:Tile Row="value" x:Name="UpdateTile" Glyph="&#xE184;" Title="GoPilot" State="—" Click="OnUpdateTileClick" />
-                                        <StackPanel x:Name="UpdateBody" Spacing="8" Margin="12,4,12,12" Visibility="Collapsed">
-                                            <Border x:Name="UpdateNotesBox" Background="{StaticResource Panel3Brush}" CornerRadius="6" Padding="10,8">
-                                                <TextBlock x:Name="UpdateNotes" FontSize="11.5" TextWrapping="Wrap" />
-                                            </Border>
-                                            <ProgressBar x:Name="UpdateProgress" Maximum="100" Height="4" Foreground="{StaticResource AccentBrush}" Visibility="Collapsed" />
-                                            <TextBlock x:Name="UpdateMessage" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Visibility="Collapsed" />
-                                            <Grid x:Name="UpdateButtons" ColumnSpacing="6">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <Button x:Name="UpdateNowButton" Style="{StaticResource ApplyButton}" Height="34" Content="Actualizar" Click="OnUpdateNowClick" />
-                                                <Button x:Name="UpdateLaterButton" Grid.Column="1" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Height="34"
-                                                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnUpdateLaterClick">
-                                                    <TextBlock Text="Más tarde" FontSize="13" FontWeight="SemiBold" />
-                                                </Button>
-                                            </Grid>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                                <c:Tile Row="switch" x:Name="AutoUpdateTile" Glyph="&#xE094;" Title="Buscar automáticamente" State="—" Click="OnAutoUpdateClick" />
-                                <c:Tile Row="value" x:Name="UninstallTile" Glyph="&#xE4A6;" Title="Desinstalar GoPilot" State="" Click="OnUninstallClick" />
-                            </StackPanel>
-                            <TextBlock x:Name="AboutText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" />
-                            <TextBlock x:Name="MessageText" TextWrapping="Wrap" FontSize="11.5" IsTextSelectionEnabled="True"
-                                       Foreground="{StaticResource MutedBrush}" MaxLines="12" />
-                        </StackPanel>
-                    </Border>
+                    </Button>
+                    <StackPanel x:Name="SubHost" Spacing="8" />
                 </StackPanel>
             </ScrollViewer>
         </Grid>
 
 
-        <!-- ===== Pie («dock»): franja propia de borde a borde, más oscura, para que no se confunda con el contenido.
-             A la izquierda el perfil aplicado (la lista se abre hacia arriba); a la derecha FPS, temperatura, consumo
-             real de la APU y ventilador. Las pestañas de arriba ya no cambian de sitio con el nombre del perfil. ===== -->
-        <Grid x:Name="MonitorBar" Grid.Row="2" Background="{StaticResource DockBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0"
-              Margin="-10,0,-10,-10" Padding="10,7,10,9" ColumnSpacing="8">
+        <!-- ===== Pie: perfil aplicado a la izquierda (A abre la lista) y ayudas del mando a la derecha ===== -->
+        <Grid x:Name="MonitorBar" Grid.Row="2" ColumnSpacing="8" Margin="0,4,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
                 <StackPanel x:Name="GameBannerHost" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <Button x:Name="GameBanner" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Height="32" MaxWidth="170"
-                            Padding="8,0" Click="OnBannerClick" AutomationProperties.Name="Perfil activo">
+                    <Button x:Name="GameBanner" Style="{StaticResource RowButton}" Height="34" MaxWidth="170"
+                            Padding="10,0,12,0" Click="OnBannerClick" AutomationProperties.Name="Perfil activo">
                         <FlyoutBase.AttachedFlyout>
                             <Flyout x:Name="ProfilesFlyout" Placement="TopEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SelectorFlyoutStyle}">
                                 <StackPanel x:Name="ProfilesFlyoutPanel" Spacing="2" />
                             </Flyout>
                         </FlyoutBase.AttachedFlyout>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock x:Name="GameIcon" Style="{StaticResource IconText}" FontSize="14" Text="&#xE560;" VerticalAlignment="Center" />
-                            <TextBlock x:Name="GameTitle" Text="Global" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                            <TextBlock Style="{StaticResource IconText}" FontSize="10" Text="&#xE13C;" VerticalAlignment="Center" Margin="2,0,0,0" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <TextBlock x:Name="GameIcon" Style="{StaticResource IconText}" FontSize="15" Text="&#xE288;" VerticalAlignment="Center" />
+                            <TextBlock x:Name="GameTitle" Text="Global" FontSize="12.5" FontWeight="Bold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                             <!-- Sin uso visible: se mantienen para el aviso «Sin servicio» y temas -->
                             <TextBlock x:Name="GameSub" Visibility="Collapsed" />
                             <Border x:Name="ProfileChip" Visibility="Collapsed">
@@ -955,26 +850,43 @@
                         </StackPanel>
                     </Button>
                     <!-- Solo con el autoguardado desactivado: guardar a mano en el perfil activo -->
-                    <Button x:Name="SaveProfileButton" Style="{StaticResource FlatButton}" Background="{StaticResource Panel3Brush}" Visibility="Collapsed"
-                            Width="30" Height="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnSaveProfileClick"
+                    <Button x:Name="SaveProfileButton" Style="{StaticResource RowButton}" Visibility="Collapsed"
+                            Width="34" Height="34" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Click="OnSaveProfileClick"
                             AutomationProperties.Name="Guardar perfil" ToolTipService.ToolTip="Guardar los ajustes actuales en el perfil activo">
                         <TextBlock x:Name="SaveProfileIcon" Style="{StaticResource IconText}" FontSize="15" Text="&#xE248;" HorizontalAlignment="Center" />
                     </Button>
                 </StackPanel>
-            <StackPanel x:Name="FooterStats" Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <StackPanel x:Name="FpsItem" Orientation="Horizontal" Spacing="2">
-                    <TextBlock x:Name="FpsValue" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource OkBrush}" VerticalAlignment="Center" />
-                    <TextBlock Text="FPS" FontSize="10.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+            <!-- Ayudas del mando (cambian dentro de una subpágina) -->
+            <Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Height="34" CornerRadius="17" Padding="4,0" Background="{StaticResource Panel2Brush}">
+                <StackPanel x:Name="HintsPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="5" Margin="5,0">
+                        <Border BorderBrush="White" BorderThickness="1.5" CornerRadius="9" Height="18" MinWidth="18" Padding="4,0">
+                            <TextBlock Text="A" FontSize="9.5" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Elegir" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel x:Name="HintTabs" Orientation="Horizontal" Spacing="5" Margin="5,0">
+                        <Border BorderBrush="White" BorderThickness="1.5" CornerRadius="9" Height="18" MinWidth="18" Padding="4,0">
+                            <TextBlock Text="LT RT" FontSize="9.5" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Secciones" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel x:Name="HintBack" Orientation="Horizontal" Spacing="5" Margin="5,0" Visibility="Collapsed">
+                        <Border BorderBrush="White" BorderThickness="1.5" CornerRadius="9" Height="18" MinWidth="18" Padding="4,0">
+                            <TextBlock Text="B" FontSize="9.5" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="Volver" FontSize="11.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
-                <TextBlock x:Name="TempValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <StackPanel Orientation="Horizontal" Spacing="2">
-                    <TextBlock x:Name="PowerValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <TextBlock Text="W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" />
+            </Border>
+            <!-- Datos del pie del diseño anterior (el código aún los rellena): no se ven -->
+            <StackPanel x:Name="FooterStats" Grid.Column="1" Visibility="Collapsed">
+                <StackPanel x:Name="FpsItem">
+                    <TextBlock x:Name="FpsValue" Text="—" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                    <TextBlock Style="{StaticResource IconText}" FontSize="13" Text="&#xE9F2;" />
-                    <TextBlock x:Name="FanValue" Text="—" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                </StackPanel>
+                <TextBlock x:Name="TempValue" Text="—" />
+                <TextBlock x:Name="PowerValue" Text="—" />
+                <TextBlock x:Name="FanValue" Text="—" />
             </StackPanel>
         </Grid>
 

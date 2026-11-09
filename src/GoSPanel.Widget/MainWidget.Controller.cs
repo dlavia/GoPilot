@@ -51,6 +51,7 @@ namespace GoSPanel.Widget
             var modeName = _gyroMode >= 0 && _gyroMode < GyroModeNames.Length ? GyroModeNames[_gyroMode] : "—";
             GyroModeTile.State = modeName;
             GyroModeTile.IsOn = _gyroMode > 0;
+            GyroModeTile.SelectedIndex = _gyroMode;
             AdvGyroTile.State = modeName;
             GyroSensitivityRow.Visibility = _gyroMode > 0 ? Visibility.Visible : Visibility.Collapsed;
             if (data.TryGetValue("gyroSensitivity", out v) && v.ValueType == JsonValueType.Number)
@@ -71,21 +72,26 @@ namespace GoSPanel.Widget
         // Desplegables
         // ---------------------------------------------------------------------
 
+        // Cada fila (Luces, Sticks, Gatillos, Giroscopio) abre su subpágina; B vuelve.
         private void OnAdvancedTabClick(object sender, RoutedEventArgs e)
         {
-            var kind = (string)((Tile)sender).Tag;
-            _advancedOpen = _advancedOpen == kind ? null : kind;   // tocar la abierta la cierra
+            var tile = (Tile)sender;
+            var kind = (string)tile.Tag;
             StopTest();
             CalibrationPanel.Visibility = Visibility.Collapsed;
             _calibrating = null;
-            SticksPanel.Visibility = _advancedOpen == "sticks" ? Visibility.Visible : Visibility.Collapsed;
-            TriggersPanel.Visibility = _advancedOpen == "triggers" ? Visibility.Visible : Visibility.Collapsed;
-            GyroPanel.Visibility = _advancedOpen == "gyro" ? Visibility.Visible : Visibility.Collapsed;
-            LightsPanel.Visibility = _advancedOpen == "lights" ? Visibility.Visible : Visibility.Collapsed;
-            AdvLightsTile.IsOn = _advancedOpen == "lights";
-            AdvSticksTile.IsOn = _advancedOpen == "sticks";
-            AdvTriggersTile.IsOn = _advancedOpen == "triggers";
-            AdvGyroTile.IsOn = _advancedOpen == "gyro" || _gyroMode > 0;
+            _advancedOpen = kind;
+            FrameworkElement panel = kind == "sticks" ? SticksPanel : kind == "triggers" ? TriggersPanel : kind == "gyro" ? GyroPanel : (FrameworkElement)LightsPanel;
+            var title = kind == "sticks" ? "Sticks" : kind == "triggers" ? "Gatillos" : kind == "gyro" ? "Giroscopio" : "Luces de los sticks";
+            Action closed = () =>
+            {
+                StopTest();
+                _advancedOpen = null;
+                _calibrating = null;
+                CalibrationPanel.Visibility = Visibility.Collapsed;
+            };
+            if (kind == "lights") OpenSub(title, "Mando", tile.FocusTarget, closed, panel);
+            else OpenSub(title, "Mando", tile.FocusTarget, closed, panel, CalibrationPanel);
         }
 
         // ---------------------------------------------------------------------
@@ -139,6 +145,13 @@ namespace GoSPanel.Widget
         private async void OnGyroModeClick(object sender, RoutedEventArgs e)
         {
             await SetAdvancedAsync(new JsonObject { ["gyroMode"] = JsonValue.CreateNumberValue((_gyroMode + 1) % GyroModeNames.Length) });
+            var lights = await CallAsync("lights.get", null, false);   // el sensor se enciende solo al elegir un modo
+            if (lights != null) ApplyLights(lights);
+        }
+
+        private async void OnGyroModePicked(object sender, int index)
+        {
+            await SetAdvancedAsync(new JsonObject { ["gyroMode"] = JsonValue.CreateNumberValue(index) });
             var lights = await CallAsync("lights.get", null, false);   // el sensor se enciende solo al elegir un modo
             if (lights != null) ApplyLights(lights);
         }

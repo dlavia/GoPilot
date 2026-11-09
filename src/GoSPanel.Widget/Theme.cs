@@ -28,12 +28,13 @@ namespace GoSPanel.Widget
         public static void Apply(string name)
         {
             Current = name == Contrast ? Contrast : Simple;
-            // Los dos temas dejan ver el fondo de Game Bar: los colores son translúcidos sobre él.
-            Set("PageBrush", 0x00, 0x00, 0x00, 0x00);
+            // Fondo negro (como el menú de Legion L) en los dos temas; Contraste lleva filas más claras.
+            Set("PageBrush", 0xFF, 0x00, 0x00, 0x00);
             if (IsContrast)
             {
-                Set("PanelBrush", 0x33, 0x00, 0x00, 0x00);
-                Set("Panel2Brush", 0x66, 0x00, 0x00, 0x00);
+                Set("PanelBrush", 0x00, 0x00, 0x00, 0x00);
+                Set("Panel2Brush", 0xFF, 0x2A, 0x2B, 0x33);
+                Set("RowFocusBrush", 0xFF, 0x4A, 0x4B, 0x58);
                 Set("Panel3Brush", 0x2E, 0xFF, 0xFF, 0xFF);
                 Set("DockBrush", 0x8C, 0x00, 0x00, 0x00);
                 Set("LineBrush", 0x00, 0x00, 0x00, 0x00);
@@ -45,12 +46,13 @@ namespace GoSPanel.Widget
             else
             {
                 Set("PanelBrush", 0x00, 0x00, 0x00, 0x00);
-                Set("Panel2Brush", 0x4D, 0x00, 0x00, 0x00);
+                Set("Panel2Brush", 0xC7, 0x1C, 0x1D, 0x24);
+                Set("RowFocusBrush", 0xE6, 0x3C, 0x3D, 0x48);
                 Set("Panel3Brush", 0x1F, 0xFF, 0xFF, 0xFF);
                 Set("DockBrush", 0x73, 0x00, 0x00, 0x00);
                 Set("LineBrush", 0x26, 0xFF, 0xFF, 0xFF);
                 Set("TrackBrush", 0x33, 0xFF, 0xFF, 0xFF);
-                Set("TextBrush", 0xFF, 0xF3, 0xF3, 0xF5);
+                Set("TextBrush", 0xFF, 0xF5, 0xF5, 0xF7);
                 Set("MutedBrush", 0xFF, 0x9B, 0x9B, 0xA5);
                 Set("IconBrush", 0xFF, 0xC9, 0xC9, 0xD1);
             }

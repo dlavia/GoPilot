@@ -222,8 +222,6 @@ namespace GoSPanel.Widget
             if (UpdateNotice.Visibility == target) return;
             var hadFocus = FocusManager.GetFocusedElement() == UpdateNoticeButton;
             UpdateNotice.Visibility = target;
-            // El StackPanel cuenta el hueco del aviso aunque esté oculto: el margen negativo lo compensa.
-            QuickSlidersSection.Margin = new Thickness(0, visible ? 0 : -10, 0, -8);
             LinkHomeTop();
             if (hadFocus) BrightnessSlider.Focus(FocusState.Keyboard);
         }
