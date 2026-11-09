@@ -28,6 +28,7 @@
         <Grid x:Name="TabsBar" Grid.Row="0" ColumnSpacing="2" Padding="0,2,0,2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -36,49 +37,50 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+            <!-- Pestañas centradas entre LT y RT (columnas * a los lados) -->
             <Border BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Margin="0,0,4,0" Padding="5,1" VerticalAlignment="Center">
                 <TextBlock Text="LT" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
             </Border>
-            <Border x:Name="TabPill" Grid.Column="1" Grid.ColumnSpan="5" CornerRadius="18" Background="#1FFFFFFF"
+            <Border x:Name="TabPill" Grid.Column="2" Grid.ColumnSpan="5" CornerRadius="18" Background="#1FFFFFFF"
                     BorderBrush="White" BorderThickness="1.5" HorizontalAlignment="Left" IsHitTestVisible="False">
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="TabPillTransform" />
                 </Border.RenderTransform>
             </Border>
-            <Button x:Name="TabHome" AutomationProperties.Name="Inicio" Grid.Column="1" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="0" Click="OnTabClick">
-                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+            <Button x:Name="TabHome" AutomationProperties.Name="Inicio" Grid.Column="2" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="0" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2C2;" />
-                    <TextBlock Text="Inicio" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" />
+                    <TextBlock Text="Inicio" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="7,0,0,0" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabPower" AutomationProperties.Name="Rendimiento" Grid.Column="2" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="1" Click="OnTabClick">
-                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+            <Button x:Name="TabPower" AutomationProperties.Name="Rendimiento" Grid.Column="3" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="1" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2DE;" />
-                    <TextBlock Text="Rendimiento" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
+                    <TextBlock Text="Rendimiento" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="7,0,0,0" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabDisplay" AutomationProperties.Name="Pantalla" Grid.Column="3" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="2" Click="OnTabClick">
-                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+            <Button x:Name="TabDisplay" AutomationProperties.Name="Pantalla" Grid.Column="4" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="2" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE32E;" />
-                    <TextBlock Text="Pantalla" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
+                    <TextBlock Text="Pantalla" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="7,0,0,0" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabDevice" AutomationProperties.Name="Mando" Grid.Column="4" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="3" Click="OnTabClick">
-                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+            <Button x:Name="TabDevice" AutomationProperties.Name="Mando" Grid.Column="5" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="3" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE26E;" />
-                    <TextBlock Text="Mando" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
+                    <TextBlock Text="Mando" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="7,0,0,0" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
-            <Button x:Name="TabProfiles" AutomationProperties.Name="Sistema" Grid.Column="5" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="4" Click="OnTabClick">
-                <StackPanel Orientation="Horizontal" Spacing="7" Padding="11,0,11,0" Height="36">
+            <Button x:Name="TabProfiles" AutomationProperties.Name="Sistema" Grid.Column="6" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="4" Click="OnTabClick">
+                <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE272;" />
-                    <TextBlock Text="Sistema" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Visibility="Collapsed" />
+                    <TextBlock Text="Sistema" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Margin="7,0,0,0" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
             <!-- Punto de «versión nueva» sobre el icono de Sistema -->
-            <Ellipse x:Name="UpdateDot" Grid.Column="5" Width="7" Height="7" Fill="{StaticResource WarnBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
+            <Ellipse x:Name="UpdateDot" Grid.Column="6" Width="7" Height="7" Fill="{StaticResource WarnBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
                      Margin="0,5,7,0" IsHitTestVisible="False" Visibility="Collapsed" />
-            <Border Grid.Column="7" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Padding="5,1" VerticalAlignment="Center">
+            <Border Grid.Column="8" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="5" Padding="5,1" VerticalAlignment="Center">
                 <TextBlock Text="RT" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource MutedBrush}" />
             </Border>
         </Grid>

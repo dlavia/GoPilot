@@ -43,12 +43,15 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .top .sys { display: flex; gap: 8px; align-items: center; font-weight: 600; } .top .ic { font-size: 18px; }
 .tabs { display: flex; align-items: center; gap: 4px; margin: 0 0 4px; position: relative; }
 .bump { height: 22px; min-width: 30px; padding: 0 6px; border-radius: 7px; border: 1px solid rgba(255,255,255,.2); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.4); }
-.tb { height: 42px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 8px; font-size: 21px; color: var(--text-3); transition: color .25s; position: relative; z-index: 1; cursor: pointer; }
-.tb b { font-size: 14.5px; font-weight: 700; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width .38s var(--ease), opacity .25s; }
-.tb.on { color: #fff; } .tb.on b { max-width: 130px; opacity: 1; }
+.tb { height: 42px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 0; font-size: 21px; color: var(--text-3); transition: color .25s; position: relative; z-index: 1; cursor: pointer; }
+.tb b { font-size: 14.5px; font-weight: 700; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; margin-left: 0;
+  transition: max-width .38s var(--ease), opacity .25s, margin-left .38s var(--ease); }
+.tb.on { color: #fff; } .tb.on b { max-width: 130px; opacity: 1; margin-left: 8px; }
+.tb .dot[hidden] { display: none; }
 .tb .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
 .tabind { position: absolute; top: 0; height: 42px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.9);
-  box-shadow: 0 0 18px rgba(255,255,255,.22); transition: left .12s linear, width .12s linear; }
+  box-shadow: 0 0 18px rgba(255,255,255,.22); }
+.tb .ic { display: block; margin: 0 auto; }
 .tabs .grow { flex: 1; }
 
 .body { position: relative; flex: 1; min-height: 0; margin: 10px -8px 0; overflow: hidden; }
@@ -450,13 +453,30 @@ function resolve(r) {
 }
 const val = (d, x) => typeof x == "function" ? x(d) : x;
 
+// Pestañas: se construyen una vez y luego solo cambian de clase, así el nombre se despliega con su transición y el
+// contorno se desliza de una a otra (antes se rehacían enteras y saltaban). Van centradas entre LT y RT.
+let tabAnim = 0;
 function tabs() {
-  $("#tabs").innerHTML = `<span class="bump">LT</span><span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
-    `<div class="tb ${i === sec ? "on" : ""}" data-i="${i}">${I(s.icon, false)}<b>${s.name}</b>${s.dot && s.dot() && i !== sec ? '<span class="dot"></span>' : ""}</div>`).join("")
-    + `<span class="grow"></span><span class="bump">RT</span>`;
-  $$(".tb").forEach(t => t.onclick = () => go2(+t.dataset.i));
-  const end = performance.now() + 600;
-  (function place() { const t = $(".tb.on"), ind = $("#tabind"); if (!t) return; ind.style.left = t.offsetLeft + "px"; ind.style.width = t.offsetWidth + "px"; if (performance.now() < end) requestAnimationFrame(place); })();
+  if (!$("#tabs .tb")) {
+    $("#tabs").innerHTML = `<span class="bump">LT</span><span class="grow"></span><span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
+      `<div class="tb" data-i="${i}">${I(s.icon, false)}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("")
+      + `<span class="grow"></span><span class="bump">RT</span>`;
+    $$(".tb").forEach(t => t.onclick = () => go2(+t.dataset.i));
+  }
+  $$(".tb").forEach((t, i) => {
+    t.classList.toggle("on", i === sec);
+    t.querySelector(".dot").hidden = !(SECTIONS[i].dot && SECTIONS[i].dot() && i !== sec);
+  });
+  // El contorno va de donde está a la pestaña elegida mientras su nombre se despliega (sigue su tamaño en cada fotograma)
+  const ind = $("#tabind"), from = { l: ind.offsetLeft, w: ind.offsetWidth }, t0 = performance.now(), dur = 380, id = ++tabAnim;
+  const first = !ind.style.width;
+  (function step(now) {
+    if (id !== tabAnim) return;
+    const t = $(".tb.on"), k = first ? 1 : Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    ind.style.left = from.l + (t.offsetLeft - from.l) * e + "px";
+    ind.style.width = (first ? t.offsetWidth : from.w + (t.offsetWidth - from.w) * e) + "px";
+    if (now - t0 < dur + 80) requestAnimationFrame(step);
+  })(t0);
 }
 
 function rightHtml(d) {
