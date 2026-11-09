@@ -4,6 +4,7 @@ using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media.Animation;
 
 namespace GoSPanel.Widget
 {
@@ -59,13 +60,15 @@ namespace GoSPanel.Widget
 
             _panels[_tab].Visibility = Visibility.Collapsed;
             SubPanel.Visibility = Visibility.Visible;
+            SlideIn(SubPanel, 1);   // entra desde la derecha
             SubPanel.ChangeView(null, 0, null, true);
             SubPanel.UpdateLayout();
             _lastContentFocus = null;
             (FocusManager.FindFirstFocusableElement(SubHost) as Control)?.Focus(FocusState.Keyboard);
         }
 
-        private void CloseSub(bool focusOpener)
+        /// <param name="animate">false al cambiar de pestaña (ya se anima el cambio de pestaña).</param>
+        private void CloseSub(bool focusOpener, bool animate = true)
         {
             if (!SubOpen) return;
             SubHost.Children.Clear();
@@ -79,6 +82,8 @@ namespace GoSPanel.Widget
 
             SubPanel.Visibility = Visibility.Collapsed;
             _panels[_tab].Visibility = Visibility.Visible;
+            if (animate) SlideIn(_panels[_tab], -1);   // la pestaña vuelve desde la izquierda
+            else StopSubSlide();
             HintTabs.Visibility = Visibility.Visible;
             HintBack.Visibility = Visibility.Collapsed;
 
@@ -97,5 +102,35 @@ namespace GoSPanel.Widget
         }
 
         private void OnSubBackClick(object sender, RoutedEventArgs e) => CloseSub(true);
+
+        // ---------------------------------------------------------------------
+        // Transición: lo que entra se desliza un poco y aparece (como al cambiar de pestaña); lo que sale se va al momento
+        // ---------------------------------------------------------------------
+
+        private Storyboard _subSlide;
+        private UIElement _subSlideTarget;
+
+        private void SlideIn(UIElement element, int direction)
+        {
+            StopSubSlide();
+            if (!_animate) return;
+            var sb = new Storyboard();
+            AddSpline(sb, element.RenderTransform, "X", direction * PanelHost.ActualWidth * 0.18, 0);
+            AddSpline(sb, element, "Opacity", 0, 1);
+            sb.Completed += (s, e) => { if (_subSlide == sb) StopSubSlide(); };
+            _subSlide = sb;
+            _subSlideTarget = element;
+            sb.Begin();
+        }
+
+        /// <summary>Para la transición en curso y deja el elemento en su sitio y visible del todo.</summary>
+        private void StopSubSlide()
+        {
+            if (_subSlide == null) return;
+            _subSlide.Stop();
+            if (_subSlideTarget != null) ResetSlide(_subSlideTarget);
+            _subSlide = null;
+            _subSlideTarget = null;
+        }
     }
 }

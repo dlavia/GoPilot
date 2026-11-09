@@ -169,20 +169,6 @@
                     <!-- Cerrar juego: pulsar dos veces -->
                     <c:Tile Row="value" x:Name="HomeKillTile" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
-                    <!-- Baldosas del diseño anterior que el código aún actualiza: no se ven. TODO: quitarlas del código. -->
-                    <StackPanel x:Name="LegacyHomeTiles" Visibility="Collapsed">
-                        <c:Tile x:Name="HomeHzTile" />
-                        <c:Tile x:Name="HomeBoostTile" />
-                        <c:Tile x:Name="HomeAfmfTile" Tag="afmf" />
-                        <c:Tile x:Name="HomeRsrTile" Tag="rsr" />
-                        <c:Tile x:Name="HomeChillTile" Tag="chill" />
-                        <c:Tile x:Name="HomeFanTile" />
-                        <c:Tile x:Name="HomeOverlayTile" />
-                        <c:Tile x:Name="HomeLightsTile" />
-                        <c:Tile x:Name="HomeTouchpadTile" />
-                        <c:Tile x:Name="HomeTouchscreenTile" />
-                        <c:Tile x:Name="HomeSharpTile" Tag="sharpening" />
-                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
 
@@ -190,14 +176,6 @@
             <ScrollViewer x:Name="PowerPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
                 <StackPanel Spacing="8" Padding="4,6,4,12">
                     <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto" />
-                    <!-- Vatios de cada modo (los lee el código del firmware); no se ven -->
-                    <StackPanel Visibility="Collapsed">
-                        <c:Tile x:Name="ModeQuiet" Tag="quiet" />
-                        <c:Tile x:Name="ModeBalanced" Tag="balanced" />
-                        <c:Tile x:Name="ModePerformance" Tag="performance" />
-                        <c:Tile x:Name="ModeCustom" Tag="custom" />
-                        <c:Tile x:Name="ModeAuto" Tag="auto" />
-                    </StackPanel>
                     <TextBlock x:Name="ModeHint" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0,6,2"
                                Text="Los vatios cambian si la consola está enchufada. Legion L + Y también cambia de modo." />
 
@@ -682,12 +660,6 @@
                         <TextBlock Text="mando como ratón" Style="{StaticResource SectionHint}" />
                     </Grid>
                     <c:Tile Row="value" x:Name="DesktopTile" Glyph="&#xE33A;" Title="Modo escritorio" Choices="Apagado|Auto|Siempre" />
-                    <!-- Botones del diseño anterior (el código aún los pinta): no se ven -->
-                    <Grid x:Name="DesktopModeButtons" Visibility="Collapsed">
-                        <Button Style="{StaticResource FlatButton}" Tag="off"><TextBlock Text="Apagado" /></Button>
-                        <Button Style="{StaticResource FlatButton}" Tag="auto"><TextBlock Text="Automático" /></Button>
-                        <Button Style="{StaticResource FlatButton}" Tag="always"><TextBlock Text="Siempre" /></Button>
-                    </Grid>
                     <Border Tag="row" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,2,13,2" MinHeight="46">
                         <Grid ColumnSpacing="10">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="22" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="36" /></Grid.ColumnDefinitions>
@@ -756,8 +728,6 @@
                     <c:Tile Row="value" x:Name="ThemeTile" Glyph="&#xE6F0;" Title="Tema" Choices="Sencillo|Contraste" />
                     <c:Tile Row="switch" x:Name="AnimationsTile" Glyph="&#xE6A2;" Title="Animaciones" State="—" Click="OnAnimationsClick" />
                     <c:Tile Row="switch" x:Name="SoundsTile" Glyph="&#xE450;" Title="Sonidos" State="—" Click="OnSoundsClick" />
-                    <!-- Datos del pie: ya no hay datos en el pie (diseño nuevo); se mantiene oculto para el código -->
-                    <c:Tile x:Name="ShowMonitorTile" Visibility="Collapsed" />
 
                     <Grid Margin="6,12,6,0">
                         <TextBlock Text="PERFILES" Style="{StaticResource GroupTitle}" Margin="0" />
@@ -885,15 +855,6 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-            <!-- Datos del pie del diseño anterior (el código aún los rellena): no se ven -->
-            <StackPanel x:Name="FooterStats" Grid.Column="1" Visibility="Collapsed">
-                <StackPanel x:Name="FpsItem">
-                    <TextBlock x:Name="FpsValue" Text="—" />
-                </StackPanel>
-                <TextBlock x:Name="TempValue" Text="—" />
-                <TextBlock x:Name="PowerValue" Text="—" />
-                <TextBlock x:Name="FanValue" Text="—" />
-            </StackPanel>
         </Grid>
 
     </Grid>

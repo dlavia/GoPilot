@@ -31,11 +31,6 @@ namespace GoSPanel.Widget
         {
             ["quiet"] = "Silencio", ["balanced"] = "Equilibrado", ["performance"] = "Rendimiento", ["custom"] = "Manual", ["auto"] = "Auto",
         };
-        private static readonly Dictionary<string, string> ModeGlyphs = new Dictionary<string, string>
-        {
-            ["quiet"] = "", ["balanced"] = "", ["performance"] = "", ["custom"] = "", ["auto"] = "",
-        };
-
         private static readonly CultureInfo Es = new CultureInfo("es-ES");
         private const string SlideSpline = "0.2,0.8 0.2,1";
         private static readonly TimeSpan SlideDuration = TimeSpan.FromMilliseconds(260);
@@ -78,6 +73,7 @@ namespace GoSPanel.Widget
             _panels = new[] { HomePanel, PowerPanel, DisplayPanel, DevicePanel, ProfilesPanel };
             _tabs = new[] { TabHome, TabPower, TabDisplay, TabDevice, TabProfiles };
             foreach (var panel in _panels) panel.RenderTransform = new TranslateTransform();
+            SubPanel.RenderTransform = new TranslateTransform();
 
             _timer.Tick += async (s, e) =>
             {
@@ -345,7 +341,7 @@ namespace GoSPanel.Widget
 
         private void ShowTab(int index)
         {
-            if (SubOpen) CloseSub(false);
+            if (SubOpen) CloseSub(false, index == _tab);
             if (index == _tab) return;
             var from = _panels[_tab];
             var to = _panels[index];
@@ -413,20 +409,36 @@ namespace GoSPanel.Widget
             }
         }
 
+        private Storyboard _pillSlide;
+
+        /// <summary>
+        /// El contorno blanco va a la pestaña elegida: se desliza y cambia de ancho a la vez (la elegida lleva su
+        /// nombre, así que es más ancha). Los valores finales se ponen como valores propios y la animación solo los
+        /// recorre; al terminar se para, para que un cambio de tamaño posterior no quede tapado por ella.
+        /// </summary>
         private void MovePill(bool animate)
         {
             var tab = _tabs[_tab];
             if (tab.ActualWidth <= 0) return;
-            TabPill.Width = tab.ActualWidth;
-            TabPill.Height = tab.ActualHeight;
             var x = tab.TransformToVisual(TabHome).TransformPoint(new Windows.Foundation.Point(0, 0)).X;
-            if (!animate)
-            {
-                TabPillTransform.X = x;
-                return;
-            }
+            var width = tab.ActualWidth;
+            if (_pillSlide != null) { _pillSlide.Stop(); _pillSlide = null; }
+            var fromX = TabPillTransform.X;
+            var fromWidth = TabPill.ActualWidth > 0 ? TabPill.ActualWidth : width;
+            TabPill.Height = tab.ActualHeight;
+            TabPillTransform.X = x;
+            TabPill.Width = width;
+            if (!animate) return;
             var sb = new Storyboard();
-            AddSpline(sb, TabPillTransform, "X", TabPillTransform.X, x);
+            AddSpline(sb, TabPillTransform, "X", fromX, x);
+            AddSpline(sb, TabPill, "Width", fromWidth, width, true);
+            sb.Completed += (s, e) =>
+            {
+                if (_pillSlide != sb) return;
+                sb.Stop();
+                _pillSlide = null;
+            };
+            _pillSlide = sb;
             sb.Begin();
         }
 
@@ -436,9 +448,10 @@ namespace GoSPanel.Widget
             PanelHost.Clip = new RectangleGeometry { Rect = new Windows.Foundation.Rect(0, 0, e.NewSize.Width, e.NewSize.Height) };
         }
 
-        private static void AddSpline(Storyboard sb, DependencyObject target, string property, double from, double to)
+        private static void AddSpline(Storyboard sb, DependencyObject target, string property, double from, double to, bool dependent = false)
         {
-            var animation = new DoubleAnimationUsingKeyFrames();
+            // dependent: propiedades de diseño (Width), que XAML solo anima si se le pide expresamente
+            var animation = new DoubleAnimationUsingKeyFrames { EnableDependentAnimation = dependent };
             animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
             var spline = new SplineDoubleKeyFrame { KeyTime = SlideDuration, Value = to };
             spline.KeySpline = (KeySpline)Windows.UI.Xaml.Markup.XamlBindingHelper.ConvertValue(typeof(KeySpline), SlideSpline);
@@ -491,10 +504,10 @@ namespace GoSPanel.Widget
         {
             switch (feature)
             {
-                case "afmf": return new[] { HomeAfmfTile, AmdAfmfTile };
-                case "rsr": return new[] { HomeRsrTile, AmdRsrTile };
-                case "chill": return new[] { HomeChillTile, AmdChillTile };
-                case "sharpening": return new[] { HomeSharpTile, AmdSharpTile };
+                case "afmf": return new[] { AmdAfmfTile };
+                case "rsr": return new[] { AmdRsrTile };
+                case "chill": return new[] { AmdChillTile };
+                case "sharpening": return new[] { AmdSharpTile };
                 case "antilag": return new[] { AmdAntiLagTile };
                 case "varibright": return new[] { AmdVariBrightTile };
                 case "freesync": return new[] { AmdFreeSyncTile };
@@ -534,8 +547,7 @@ namespace GoSPanel.Widget
                 {
                     tile.Available = supported;
                     tile.IsOn = on;
-                    var inGrid = tile == HomeAfmfTile || tile == HomeRsrTile || tile == HomeChillTile || tile == HomeSharpTile;
-                    tile.State = !supported ? "No disponible" : inGrid ? (on ? "Activado" : "Desactivado") : detail;
+                    tile.State = !supported ? "No disponible" : detail;
                 }
             }
         }
@@ -706,17 +718,6 @@ namespace GoSPanel.Widget
             var i = Array.IndexOf(steps, current);
             return steps[(i + 1) % steps.Length];
         }
-
-        private async void OnVibrationClick(object sender, RoutedEventArgs e) =>
-            await SetControllerAsync("vibration", JsonValue.CreateNumberValue((_vibration + 1) % 4));
-        private async void OnTouchVibrationClick(object sender, RoutedEventArgs e) =>
-            await SetControllerAsync("touchpadVibration", JsonValue.CreateNumberValue((_touchVibration + 1) % 4));
-        private async void OnAutoSleepClick(object sender, RoutedEventArgs e) =>
-            await SetControllerAsync("autoSleep", JsonValue.CreateNumberValue(Next(AutoSleepSteps, _autoSleep)));
-        private async void OnPollRateClick(object sender, RoutedEventArgs e) =>
-            await SetControllerAsync("pollRate", JsonValue.CreateNumberValue(Next(PollRateSteps, _pollRate)));
-        private async void OnDpadClick(object sender, RoutedEventArgs e) =>
-            await SetControllerAsync("dpad", JsonValue.CreateStringValue(_dpad == "8" ? "4" : "8"));
 
         // Con ◀ ▶ (diseño nuevo): el índice es el de las opciones de cada fila
         private async void OnVibrationPicked(object sender, int index) =>
@@ -1126,8 +1127,6 @@ namespace GoSPanel.Widget
             GameOverlayTile.IsOn = _gameOverlay;
             GameOverlayTile.State = !_gameOverlay ? "Desactivado" : _overlayAlways ? "Siempre" : "En juegos";
             OverlaySettings.Visibility = _gameOverlay ? Visibility.Visible : Visibility.Collapsed;
-            HomeOverlayTile.IsOn = _gameOverlay;
-            HomeOverlayTile.State = _gameOverlay ? "Activado" : "Desactivado";
             GameOverlayTile.SelectedIndex = !_gameOverlay ? 0 : _overlayAlways ? 2 : 1;
             OverlayOpenTile.State = !_gameOverlay ? "No" : _overlayAlways ? "Siempre" : "En juegos";
             var content = data.GetNamedString("content", "full");
@@ -1138,25 +1137,7 @@ namespace GoSPanel.Widget
             OverlayPositionTile.SelectedIndex = Array.FindIndex(OverlayPositions, o => (string)o.Value == position);
         }
 
-        private async void OnGameOverlayClick(object sender, RoutedEventArgs e)
-        {
-            var data = await CallAsync("overlay.set", new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(!_gameOverlay) });
-            if (data != null) ApplyGameOverlay(data);
-        }
-
         private bool _overlayAlways;
-
-        // Ajustes › Overlay: Desactivado → Activado en juegos → Activado siempre → Desactivado
-        private async void OnOverlayCycleClick(object sender, RoutedEventArgs e)
-        {
-            var args = !_gameOverlay
-                ? new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(true), ["always"] = JsonValue.CreateBooleanValue(false) }
-                : !_overlayAlways
-                    ? new JsonObject { ["always"] = JsonValue.CreateBooleanValue(true) }
-                    : new JsonObject { ["enabled"] = JsonValue.CreateBooleanValue(false) };
-            var data = await CallAsync("overlay.set", args);
-            if (data != null) ApplyGameOverlay(data);
-        }
 
         // No / En juegos / Siempre con ◀ ▶
         private async void OnOverlayPicked(object sender, int index)
@@ -1208,8 +1189,7 @@ namespace GoSPanel.Widget
         private void ApplyFan(bool on)
         {
             _fullFan = on;
-            HomeFanTile.IsOn = PowerFanTile.IsOn = on;
-            HomeFanTile.State = on ? "Al máximo" : "Automático";
+            PowerFanTile.IsOn = on;
             PowerFanTile.State = on ? "Activado" : "Desactivado";
             FanHintText.Text = on ? "Velocidad máxima" : "Curva automática";
         }
@@ -1282,7 +1262,7 @@ namespace GoSPanel.Widget
             var effect = state.GetNamedString("effect", "solid");
             var color = state.GetNamedString("color", "#242299").ToUpperInvariant();
 
-            foreach (var tile in new[] { HomeLightsTile, DeviceLightsTile })
+            foreach (var tile in new[] { DeviceLightsTile })
             {
                 tile.Available = available;
                 tile.IsOn = on;
@@ -1379,8 +1359,7 @@ namespace GoSPanel.Widget
         private void ApplyBoost(bool on)
         {
             _boost = on;
-            HomeBoostTile.IsOn = PowerBoostTile.IsOn = on;
-            HomeBoostTile.State = on ? "Activado" : "Desactivado";
+            PowerBoostTile.IsOn = on;
             PowerBoostTile.State = on ? "Hasta 5,1 GHz" : "Off · ahorra batería";
         }
 
@@ -1393,8 +1372,8 @@ namespace GoSPanel.Widget
         private void ApplyTouchpad(bool on)
         {
             _touchpad = on;
-            HomeTouchpadTile.IsOn = DeviceTouchpadTile.IsOn = on;
-            HomeTouchpadTile.State = DeviceTouchpadTile.State = on ? "Activado" : "Desactivado";
+            DeviceTouchpadTile.IsOn = on;
+            DeviceTouchpadTile.State = on ? "Activado" : "Desactivado";
         }
 
         private bool _touchscreen;
@@ -1408,9 +1387,9 @@ namespace GoSPanel.Widget
         private void ApplyTouchscreen(JsonObject data)
         {
             _touchscreen = data.GetNamedBoolean("enabled", true);
-            HomeTouchscreenTile.Available = TouchscreenTile.Available = data.GetNamedBoolean("supported", true);
-            HomeTouchscreenTile.IsOn = TouchscreenTile.IsOn = _touchscreen;
-            HomeTouchscreenTile.State = TouchscreenTile.State = !TouchscreenTile.Available ? "No disponible" : _touchscreen ? "Activada" : "Desactivada";
+            TouchscreenTile.Available = data.GetNamedBoolean("supported", true);
+            TouchscreenTile.IsOn = _touchscreen;
+            TouchscreenTile.State = !TouchscreenTile.Available ? "No disponible" : _touchscreen ? "Activada" : "Desactivada";
         }
 
         private async void OnResumeClick(object sender, RoutedEventArgs e)
@@ -1446,28 +1425,16 @@ namespace GoSPanel.Widget
 
         private void ApplyInterfacePrefs()
         {
-            var showMonitor = Pref("showMonitor", true);
             var animations = Pref("animations", true);
             var seconds = Pref("refreshSeconds", 2);
 
-            // El pie siempre está (lleva el perfil); lo que se oculta son los datos de la derecha.
-            FooterStats.Visibility = Visibility.Collapsed;   // diseño nuevo: el pie lleva el perfil y las ayudas del mando
             _timer.Interval = TimeSpan.FromSeconds(seconds);
 
-            ShowMonitorTile.IsOn = showMonitor;
-            ShowMonitorTile.State = showMonitor ? "Visibles" : "Ocultos";
             AnimationsTile.IsOn = animations && _systemAnimations;
             AnimationsTile.State = !_systemAnimations ? "Off en Windows" : animations ? "Activadas" : "Desactivadas";
             AnimationsTile.Available = _systemAnimations;
             RefreshRateTile.SelectedIndex = Array.FindIndex(RefreshRates, o => (int)o.Value == seconds);
             UpdateAbout();
-        }
-
-        // Datos del pie (FPS, temperatura, consumo y ventilador): visibles u ocultos
-        private void OnShowMonitorClick(object sender, RoutedEventArgs e)
-        {
-            SetPref("showMonitor", !Pref("showMonitor", true));
-            ApplyInterfacePrefs();
         }
 
         private void OnAnimationsClick(object sender, RoutedEventArgs e)
@@ -1517,16 +1484,6 @@ namespace GoSPanel.Widget
 
             await RefreshProfilesAsync(active);
             await RefreshLosslessAsync(active);
-
-            // FPS del juego en primer plano (contador ETW del servicio).
-            double? fps = null;
-            if (active)
-            {
-                var fpsData = await CallAsync("fps.get", new JsonObject { ["pid"] = JsonValue.CreateNumberValue(data.GetNamedNumber("pid", 0)) }, false);
-                fps = Num(fpsData, "fps");
-            }
-            FpsValue.Text = fps.HasValue ? fps.Value.ToString("0") : "—";
-            FpsItem.Visibility = active ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // =====================================================================
@@ -1862,15 +1819,9 @@ namespace GoSPanel.Widget
                     var _ = RefreshAllButStatusAsync();
                 }
 
-                var temp = Num(Obj(data, "cpu"), "tempC");
-                var rpm = Num(Obj(data, "fan"), "rpm");
-                // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería
+                // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería: se ve en Manual
                 var watts = Num(Obj(data, "apu"), "watts");
-                TempValue.Text = temp.HasValue ? temp.Value.ToString("0") + "°" : "—";
-                TempValue.Foreground = Brush(temp >= 85 ? "WarnBrush" : "TextBrush");
-                PowerValue.Text = watts.HasValue ? watts.Value.ToString(watts.Value < 10 ? "0.0" : "0", Es) : "—";
                 TdpNowText.Text = watts.HasValue ? "Ahora: " + watts.Value.ToString("0", Es) + " W de consumo real" : "";
-                FanValue.Text = rpm.HasValue ? (rpm.Value / 1000).ToString("0.0", Es) + "k" : "—";
 
                 UpdateBattery(Obj(data, "battery"));
                 await RefreshForegroundAsync();
@@ -1940,12 +1891,10 @@ namespace GoSPanel.Widget
             var limits = Obj(power, "limits");
             if (limits == null) return;
             var changed = false;
-            foreach (var tile in new[] { ModeQuiet, ModeBalanced, ModePerformance })
+            foreach (var mode in new[] { "quiet", "balanced", "performance" })
             {
-                var mode = (string)tile.Tag;
                 var spl = Num(Obj(limits, mode), "spl");
                 if (!spl.HasValue) continue;
-                tile.Title = spl.Value.ToString("0") + " W";
                 changed |= _presetSpl[mode] != (int)spl.Value;
                 _presetSpl[mode] = (int)spl.Value;
             }
@@ -1973,7 +1922,6 @@ namespace GoSPanel.Widget
                 _loading = false;
             }
             _customSpl = (int)SplSlider.Value;
-            ModeCustom.Title = _customSpl + " W";
             _tdpLoaded = true;
             SplMinText.Text = SplSlider.Minimum.ToString("0") + " W";
             SplMaxText.Text = SplSlider.Maximum.ToString("0") + " W";
@@ -2016,20 +1964,9 @@ namespace GoSPanel.Widget
         // Modos y TDP
         // =====================================================================
 
-        private async void OnModeTileClick(object sender, RoutedEventArgs e)
-        {
-            await SetModeAsync((string)((Tile)sender).Tag);
-        }
-
         private async void OnModePicked(object sender, int index)
         {
             if (index >= 0 && index < ModeOrder.Length) await SetModeAsync(ModeOrder[index]);
-        }
-
-        private async void OnHomeModeClick(object sender, RoutedEventArgs e)
-        {
-            var index = Array.IndexOf(ModeOrder, _autoTdp ? "auto" : _mode);
-            await SetModeAsync(ModeOrder[(index + 1) % ModeOrder.Length]);
         }
 
         private async Task SetModeAsync(string mode)
@@ -2051,11 +1988,6 @@ namespace GoSPanel.Widget
             _mode = mode;
             // Con AutoTDP el firmware está en Manual, pero se muestra «Auto»
             var shown = _autoTdp ? "auto" : mode;
-            ModeQuiet.IsOn = shown == "quiet";
-            ModeBalanced.IsOn = shown == "balanced";
-            ModePerformance.IsOn = shown == "performance";
-            ModeCustom.IsOn = shown == "custom";
-            ModeAuto.IsOn = shown == "auto";
             HomeModeTile.SelectedIndex = PowerModeTile.SelectedIndex = Array.IndexOf(ModeOrder, shown);
             ModeHint.Visibility = shown == "custom" || shown == "auto" ? Visibility.Collapsed : Visibility.Visible;
 
@@ -2186,7 +2118,6 @@ namespace GoSPanel.Widget
             };
             if (await CallAsync("tdp.set", args) == null) return;
             _customSpl = (int)SplSlider.Value;
-            ModeCustom.Title = _customSpl + " W";
             await RefreshPowerModeAsync();
             UpdateModeSummary();
         }
@@ -2255,27 +2186,10 @@ namespace GoSPanel.Widget
             _hzOptions = AvailableHz(_currentWidth, _currentHeight).OrderBy(h => h).ToList();
             HzTile.SetChoices(_hzOptions.Select(hz => hz + " Hz"));
             HzTile.SelectedIndex = _hzOptions.IndexOf(_currentHz);
-
-            HomeHzTile.State = _currentHz + " Hz";
-            HomeHzTile.IsOn = _currentHz >= AvailableHz(_currentWidth, _currentHeight).DefaultIfEmpty(_currentHz).Max();
         }
 
         private IEnumerable<int> AvailableHz(int width, int height) =>
             _modes.Where(m => m.Width == width && m.Height == height).Select(m => m.Hz).Distinct();
-
-        private async void OnResolutionSelected(object sender, object value)
-        {
-            var resolution = (DisplayMode)value;
-            // Se conserva el refresco si la nueva resolución lo admite; si no, el más alto disponible.
-            var available = AvailableHz(resolution.Width, resolution.Height).ToList();
-            var hz = available.Contains(_currentHz) ? _currentHz : available.DefaultIfEmpty(_currentHz).Max();
-            await SetDisplayAsync(resolution.Width, resolution.Height, hz);
-        }
-
-        private async void OnRefreshSelected(object sender, object value)
-        {
-            await SetDisplayAsync(_currentWidth, _currentHeight, (int)value);
-        }
 
         private List<DisplayMode> _resolutions = new List<DisplayMode>();
         private List<int> _hzOptions = new List<int>();
@@ -2294,14 +2208,6 @@ namespace GoSPanel.Widget
         {
             if (index < 0 || index >= _hzOptions.Count) return;
             await SetDisplayAsync(_currentWidth, _currentHeight, _hzOptions[index]);
-        }
-
-        private async void OnHomeHzClick(object sender, RoutedEventArgs e)
-        {
-            var options = AvailableHz(_currentWidth, _currentHeight).OrderByDescending(h => h).ToList();
-            if (options.Count < 2) return;
-            var next = options[(options.IndexOf(_currentHz) + 1) % options.Count];
-            await SetDisplayAsync(_currentWidth, _currentHeight, next);
         }
 
         private async Task SetDisplayAsync(int width, int height, int hz)

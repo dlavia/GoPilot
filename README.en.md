@@ -18,7 +18,9 @@ lights, Legion buttons and per-game profiles, without leaving your game.
 ## Why GoPilot
 
 - **Instant, on top of your game.** Legion R opens it over the game; LT and RT switch tabs.
-- **Real numbers.** The footer shows FPS, temperature, fan and the console's **real power draw in watts**.
+- **Made for the controller.** Same style as the Legion L menu: big rows, white focus, ◀ ▶ to change options and
+  bars, and sub-pages you open with A and close with B.
+- **Real numbers.** In Manual mode you see the console's **real power draw in watts** right away.
 - **One profile per game, automatically.** Every new game gets its own profile and what you tweak while playing stays there.
 - **Steam Deck-style Manual mode.** A single power limit; bursts and peaks adjust themselves.
 - **Lights that react to sound.** The sticks light up with the game's gunshots and explosions.
@@ -27,6 +29,9 @@ lights, Legion buttons and per-game profiles, without leaving your game.
 - **Updates itself and uninstalls cleanly.** No telemetry, no leftovers.
 
 ## Screenshots
+
+> These screenshots show the previous design. The new one (Legion L menu style) is in
+> [`design/widget-gamebar-completo.html`](design/widget-gamebar-completo.html).
 
 <table>
   <tr>
@@ -53,12 +58,12 @@ lights, Legion buttons and per-game profiles, without leaving your game.
 > **Run anyway**. It can't be installed with Smart App Control turned on.
 
 When installed, GoPilot **replaces Legion Space** (it disables it, it doesn't delete it). You can turn it back on in
-Settings › Legion buttons.
+System › Legion Space.
 
-**Updating:** when a new version is out you get a notice on Home; install it from Settings › Updates in about
+**Updating:** when a new version is out you get a notice on Home; install it from System › Updates in about
 20 seconds, keeping your settings and profiles.
 
-**Uninstalling:** Settings › Updates › Uninstall GoPilot (press twice). It leaves the console as it was, with Legion
+**Uninstalling:** System › Updates › Uninstall GoPilot (press twice). It leaves the console as it was, with Legion
 Space back.
 
 ---
@@ -70,10 +75,13 @@ Space back.
 | **Legion R** | Opens and closes GoPilot (hold: Task View) |
 | **Legion L** | Opens the Xbox app (hold: Game Bar) |
 | **LT / RT** | Switch tabs |
-| **A / B** | Select / back. On sliders: A to enter, D-pad to adjust, A or B to leave |
+| **▲ ▼** | Move between rows |
+| **◀ ▶** | Change the row's option (mode, refresh rate, vibration…) or move its bar (brightness, volume, watts…) |
+| **A** | Toggle a switch, open a sub-page or run an action (does nothing on option rows) |
+| **B** | Go back from a sub-page |
 
-The **footer** at the bottom is always visible: the applied profile (A to change it) and live data.
-It also works with the touch screen.
+The **footer** at the bottom is always visible: the applied profile (A to change it) and the controller hints.
+It also works with the touch screen (tap the options directly).
 
 ---
 
@@ -81,22 +89,10 @@ It also works with the touch screen.
 
 ### Home
 
-Brightness, volume and **quick tiles** you can reorder, remove and add ("Editar baldosas").
+The game in front and the applied profile, the new-version notice, **brightness**, **volume**, **mode** and **close
+game** (press A twice).
 
-<details>
-<summary>All 35 available tiles</summary>
-
-| Group | Tiles |
-|---|---|
-| Performance | Mode · CPU Boost · Max fan · Fan curve |
-| Display | Hz · VRR · Lossless Scaling · AFMF · RSR · Chill · Sharpening · Anti-Lag · Vari-Bright |
-| Controller | Lights · Gyro · Vibration · Touchpad vibration · Controller auto-off · Polling rate · D-pad 8/4 |
-| Touch & system | Touchpad · Touch screen · On-screen keyboard · Close game · Charge to 80 % |
-| GoPilot | Overlay · Footer data · Theme · Animations · Sounds · Legion buttons · Legion Space · Auto profiles · Auto-save · Re-apply after sleep |
-
-</details>
-
-### Power
+### Performance
 
 Lenovo's modes with their **real watts**, which change depending on whether the console is plugged in or on battery:
 
@@ -106,31 +102,34 @@ Lenovo's modes with their **real watts**, which change depending on whether the 
 | Balanced | 16 W | 15 W |
 | Performance | up to 30 W | up to 25 W |
 
-- **Manual, Steam Deck style:** pick a limit (5–30 W) and see right away what it draws. Under "Advanced" you can set
-  bursts (sPPT) and peaks (fPPT) by hand.
-- **CPU Boost**, **max fan** and **fan curve**.
+- **Manual, Steam Deck style:** pick a limit (5–30 W) and see right away what it draws. In the "Advanced" sub-page
+  you can set bursts (sPPT) and peaks (fPPT) by hand.
+- **Auto (AutoTDP):** pick the FPS you want and GoPilot adjusts the watts itself, between the minimum and maximum you
+  set, and can cap FPS with Radeon Chill.
+- **CPU Boost**, **max fan** and **fan curve** (sub-page with presets and the ten bars).
+- **Game:** FPS limit (Radeon Chill, with minimum and maximum), **Lossless Scaling** and the **built-in overlay**
+  (sub-page: in games or always, what it shows and in which corner).
 - **Legion L + Y** switches modes and GoPilot shows it big with its watts.
 
 ### Display
 
 - **Resolution**, **refresh rate** (up to 120 Hz) and **VRR (FreeSync)**, also for windowed games.
-- **AMD Radeon without opening Adrenalin:** AFMF (more FPS), RSR (upscaling), Chill (FPS limit), Sharpening,
-  Anti-Lag and Vari-Bright.
-- **Lossless Scaling:** turn it on with the game in front.
+- **AMD Radeon without opening Adrenalin:** AFMF (more FPS), RSR (upscaling), Sharpening, Anti-Lag and Vari-Bright.
 
-### Device
+### Controller
 
-- **Stick lights:** colour, brightness and speed, with Solid, Breathing, Chroma, Rainbow and **Reactive** effects —
-  Reactive pulses with the game's sound.
-- **Controller:** vibration (touchpad too), auto-off, polling rate and 8 or 4-way D-pad.
-- **Advanced settings:** stick dead zones, trigger travel and **gyro** (as mouse or as a stick), with calibrate, live
-  test and defaults.
-- Turn the **touchpad** and **touch screen** on or off, and factory-reset the controller.
+- **Stick lights** (sub-page): colour, brightness and speed, with Solid, Breathing, Chroma, Rainbow and **Reactive**
+  effects — Reactive pulses with the game's sound.
+- **Vibration** (touchpad too), **touchpad**, **touch screen** and **gyro**.
+- **Controller settings:** auto-off, polling rate and 8 or 4-way D-pad.
+- **Advanced settings** (sub-pages): stick dead zones, trigger travel and **gyro** (as mouse or as a stick), with
+  calibrate, live test and defaults.
+- **Legion buttons** (sub-page), **desktop mode** (the controller as a mouse) and factory-reset the controller.
 
-### Settings
+### System
 
-Theme (Simple or Contrast), overlay, sounds, animations, **charge to 80 %** with battery health, Legion buttons,
-profiles and updates.
+**Charge to 80 %** with battery health, on-screen keyboard, theme (Simple or Contrast), animations, sounds, profiles,
+updates and, at the very bottom, **Legion Space**.
 
 ### Per-game profiles
 
@@ -141,7 +140,7 @@ profiles and updates.
 
 ### Legion buttons and overlay
 
-- Every press and long press of **Legion L and R** can be changed, and "Advanced shortcuts" adds Legion + button
+- In Controller › Legion buttons, every press and long press of **Legion L and R** can be changed, and "Advanced shortcuts" adds Legion + button
   combinations.
 - **Its own overlay** on top of the game with FPS, temperature and battery, in the corner you like.
 
@@ -153,13 +152,6 @@ Ctrl+Alt+Del · Task Manager · Lossless · Overlay · Close game.
 The firmware's own combinations (Legion L + Y, X, A, B, LB) keep working.
 
 </details>
-
----
-
-## Coming soon
-
-- **AutoTDP:** GoPilot will adjust the power limit by itself, game by game, to hold the FPS you choose while using as
-  little battery as possible.
 
 ---
 

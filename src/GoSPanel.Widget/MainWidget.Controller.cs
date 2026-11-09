@@ -142,13 +142,6 @@ namespace GoSPanel.Widget
         // Giroscopio
         // ---------------------------------------------------------------------
 
-        private async void OnGyroModeClick(object sender, RoutedEventArgs e)
-        {
-            await SetAdvancedAsync(new JsonObject { ["gyroMode"] = JsonValue.CreateNumberValue((_gyroMode + 1) % GyroModeNames.Length) });
-            var lights = await CallAsync("lights.get", null, false);   // el sensor se enciende solo al elegir un modo
-            if (lights != null) ApplyLights(lights);
-        }
-
         private async void OnGyroModePicked(object sender, int index)
         {
             await SetAdvancedAsync(new JsonObject { ["gyroMode"] = JsonValue.CreateNumberValue(index) });

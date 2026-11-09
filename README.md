@@ -16,7 +16,9 @@ luces, botones Legion y perfiles por juego, sin salir del juego.
 ## Por qué GoPilot
 
 - **Al momento y sin salir del juego.** Legion R lo abre encima del juego; LT y RT cambian de pestaña.
-- **Datos reales.** El pie muestra FPS, temperatura, ventilador y el **consumo real en vatios** de la consola.
+- **Pensado para el mando.** El mismo estilo que el menú de Legion L: filas grandes, foco blanco, ◀ ▶ para cambiar
+  opciones y barras, y subpáginas que se abren con A y se cierran con B.
+- **Datos reales.** En modo Manual ves al momento el **consumo real en vatios** de la consola.
 - **Un perfil por juego, solo.** Cada juego nuevo recibe su perfil y lo que ajustas jugando se queda en él.
 - **Modo Manual como la Steam Deck.** Un único límite de potencia; ráfagas y picos se ajustan solos.
 - **Luces que reaccionan al sonido.** Los sticks se iluminan con los disparos y explosiones del juego.
@@ -25,6 +27,9 @@ luces, botones Legion y perfiles por juego, sin salir del juego.
 - **Se actualiza solo y se desinstala limpio.** Sin telemetría y sin dejar rastro.
 
 ## Capturas
+
+> Las capturas son del diseño anterior. El nuevo (estilo del menú de Legion L) se puede ver en
+> [`design/widget-gamebar-completo.html`](design/widget-gamebar-completo.html).
 
 <table>
   <tr>
@@ -51,12 +56,12 @@ luces, botones Legion y perfiles por juego, sin salir del juego.
 > **Ejecutar de todas formas**. Con Smart App Control activado no se puede instalar.
 
 Al instalarlo, GoPilot **sustituye a Legion Space** (lo desactiva, no lo borra). Puedes volver a activarlo en
-Ajustes › Botones Legion.
+Sistema › Legion Space.
 
-**Actualizar:** cuando hay versión nueva sale un aviso en Inicio; se instala desde Ajustes › Actualizaciones en unos
+**Actualizar:** cuando hay versión nueva sale un aviso en Inicio; se instala desde Sistema › Actualizaciones en unos
 20 segundos, sin perder ajustes ni perfiles.
 
-**Desinstalar:** Ajustes › Actualizaciones › Desinstalar GoPilot (pulsar dos veces). Deja la consola como estaba,
+**Desinstalar:** Sistema › Actualizaciones › Desinstalar GoPilot (pulsar dos veces). Deja la consola como estaba,
 con Legion Space de vuelta.
 
 ---
@@ -68,10 +73,13 @@ con Legion Space de vuelta.
 | **Legion R** | Abre y cierra GoPilot (mantenido: vista de tareas) |
 | **Legion L** | Abre la app Xbox (mantenido: Game Bar) |
 | **LT / RT** | Cambian de pestaña |
-| **A / B** | Activar / volver. En los deslizadores: A para entrar, cruceta para ajustar, A o B para salir |
+| **▲ ▼** | Pasan de una fila a otra |
+| **◀ ▶** | Cambian la opción de la fila (modo, refresco, vibración…) o mueven su barra (brillo, volumen, vatios…) |
+| **A** | Activa un interruptor, abre una subpágina o ejecuta una acción (en las filas con opciones no hace nada) |
+| **B** | Vuelve de una subpágina |
 
-Abajo, siempre visible, está el **pie**: el perfil aplicado (A para cambiarlo) y los datos en vivo.
-También se puede usar con la pantalla táctil.
+Abajo, siempre visible, está el **pie**: el perfil aplicado (A para cambiarlo) y las ayudas del mando.
+También se puede usar con la pantalla táctil (tocando las opciones directamente).
 
 ---
 
@@ -79,22 +87,10 @@ También se puede usar con la pantalla táctil.
 
 ### Inicio
 
-Brillo, volumen y **baldosas de acceso rápido** que puedes ordenar, quitar y añadir («Editar baldosas»).
+El juego abierto y el perfil aplicado, el aviso de versión nueva, **brillo**, **volumen**, **modo** y **cerrar juego**
+(pulsando A dos veces).
 
-<details>
-<summary>Las 35 baldosas disponibles</summary>
-
-| Grupo | Baldosas |
-|---|---|
-| Rendimiento | Modo · CPU Boost · Ventilador al máximo · Curva del ventilador |
-| Pantalla | Hz · VRR · Lossless Scaling · AFMF · RSR · Chill · Nitidez · Anti-Lag · Vari-Bright |
-| Mando | Luces · Giroscopio · Vibración · Vibración del touchpad · Apagado del mando · Sondeo · Cruceta 8/4 |
-| Táctil y sistema | Touchpad · Pantalla táctil · Teclado en pantalla · Cerrar juego · Carga al 80 % |
-| GoPilot | Overlay · Datos del pie · Tema · Animaciones · Sonidos · Botones Legion · Legion Space · Perfiles automáticos · Autoguardado · Reaplicar tras suspender |
-
-</details>
-
-### Potencia
+### Rendimiento
 
 Los modos de Lenovo con sus **vatios reales**, que cambian si la consola está enchufada o con batería:
 
@@ -104,31 +100,34 @@ Los modos de Lenovo con sus **vatios reales**, que cambian si la consola está e
 | Equilibrado | 16 W | 15 W |
 | Rendimiento | hasta 30 W | hasta 25 W |
 
-- **Manual, como la Steam Deck:** eliges un límite (5–30 W) y ves al momento lo que consume. En «Avanzado» puedes
-  ajustar a mano las ráfagas (sPPT) y los picos (fPPT).
-- **CPU Boost**, **ventilador al máximo** y **curva del ventilador**.
+- **Manual, como la Steam Deck:** eliges un límite (5–30 W) y ves al momento lo que consume. En la subpágina
+  «Avanzado» puedes ajustar a mano las ráfagas (sPPT) y los picos (fPPT).
+- **Auto (AutoTDP):** eliges los FPS que quieres y GoPilot ajusta los vatios solo, entre el mínimo y el máximo que
+  marques, y puede limitar los FPS con Radeon Chill.
+- **CPU Boost**, **ventilador al máximo** y **curva del ventilador** (subpágina, con preajustes y las diez barras).
+- **Juego:** límite de FPS (Radeon Chill, con mínimo y máximo), **Lossless Scaling** y el **overlay propio**
+  (subpágina: en juegos o siempre, qué muestra y en qué esquina).
 - **Legion L + Y** cambia de modo y GoPilot lo muestra en grande con sus vatios.
 
 ### Pantalla
 
 - **Resolución**, **frecuencia** (hasta 120 Hz) y **VRR (FreeSync)**, también en juegos en ventana.
-- **AMD Radeon sin abrir Adrenalin:** AFMF (más FPS), RSR (escalado), Chill (límite de FPS), Nitidez, Anti-Lag y
-  Vari-Bright.
-- **Lossless Scaling:** actívalo con el juego delante.
+- **AMD Radeon sin abrir Adrenalin:** AFMF (más FPS), RSR (escalado), Nitidez, Anti-Lag y Vari-Bright.
 
-### Equipo
+### Mando
 
-- **Luces de los sticks:** color, brillo y velocidad, con los efectos Fijo, Respiración, Croma, Arcoíris y
+- **Luces de los sticks** (subpágina): color, brillo y velocidad, con los efectos Fijo, Respiración, Croma, Arcoíris y
   **Reactivo**, que late con el sonido del juego.
-- **Mando:** vibración (también del touchpad), apagado automático, frecuencia de sondeo y cruceta de 8 o 4 direcciones.
-- **Ajustes avanzados:** zonas muertas de los sticks, recorrido de los gatillos y **giroscopio** (como ratón o como
-  stick), con calibrar, probar en directo y valores por defecto.
-- Activar o desactivar el **touchpad** y la **pantalla táctil**, y restablecer el mando de fábrica.
+- **Vibración** (también del touchpad), **touchpad**, **pantalla táctil** y **giroscopio**.
+- **Ajustes del mando:** apagado automático, frecuencia de sondeo y cruceta de 8 o 4 direcciones.
+- **Ajustes avanzados** (subpáginas): zonas muertas de los sticks, recorrido de los gatillos y **giroscopio** (como
+  ratón o como stick), con calibrar, probar en directo y valores por defecto.
+- **Botones Legion** (subpágina), **modo escritorio** (el mando como ratón) y restablecer el mando de fábrica.
 
-### Ajustes
+### Sistema
 
-Tema (Sencillo o Contraste), overlay, sonidos, animaciones, **carga al 80 %** con la salud de la batería, botones
-Legion, perfiles y actualizaciones.
+**Carga al 80 %** con la salud de la batería, teclado en pantalla, tema (Sencillo o Contraste), animaciones, sonidos,
+perfiles, actualizaciones y, abajo del todo, **Legion Space**.
 
 ### Perfiles por juego
 
@@ -139,8 +138,8 @@ Legion, perfiles y actualizaciones.
 
 ### Botones Legion y overlay
 
-- Cada pulsación y pulsación larga de **Legion L y R** se puede cambiar, y en «Atajos avanzados» se añaden
-  combinaciones Legion + botón.
+- En Mando › Botones Legion: cada pulsación y pulsación larga de **Legion L y R** se puede cambiar, y en «Atajos
+  avanzados» se añaden combinaciones Legion + botón.
 - **Overlay propio** encima del juego con FPS, temperatura y batería, en la esquina que quieras.
 
 <details>
@@ -151,13 +150,6 @@ Modo térmico · Ctrl+Alt+Supr · Administrador de tareas · Lossless · Overlay
 Las combinaciones del propio firmware (Legion L + Y, X, A, B, LB) siguen funcionando.
 
 </details>
-
----
-
-## Próximamente
-
-- **AutoTDP:** GoPilot ajustará el consumo solo, juego a juego, para mantener los FPS que elijas gastando la menor
-  batería posible.
 
 ---
 

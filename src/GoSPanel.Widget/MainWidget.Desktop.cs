@@ -38,13 +38,6 @@ namespace GoSPanel.Widget
             DesktopTile.Sub = _desktopMode == "off" ? "El mando como ratón sin juego delante" : active ? "Activo ahora" : string.IsNullOrEmpty(reason) ? "En espera" : reason;
             DesktopTile.State = DesktopModeNames[index] + (_desktopMode == "off" ? "" : active ? " · activo" : string.IsNullOrEmpty(reason) ? "" : " · " + reason.ToLowerInvariant());
 
-            foreach (var button in DesktopModeButtons.Children.OfType<Button>())
-            {
-                var selected = (string)button.Tag == _desktopMode;
-                button.Background = Brush(selected ? "AccentBrush" : "Panel3Brush");
-                ((TextBlock)button.Content).Foreground = selected && Theme.IsContrast ? new Windows.UI.Xaml.Media.SolidColorBrush(Theme.OnAccent) : Brush("TextBrush");
-            }
-
             // No pisar un deslizador que se está moviendo
             if (!DesktopPointerSlider.IsFocusEngaged && !DesktopScrollSlider.IsFocusEngaged && _desktopSaveTimer?.IsEnabled != true)
             {
@@ -62,15 +55,6 @@ namespace GoSPanel.Widget
             var data = await CallAsync("desktop.set", new JsonObject { ["mode"] = JsonValue.CreateStringValue(mode) });
             if (data != null) ApplyDesktop(data);
         }
-
-        /// <summary>La fila (y su copia en Inicio) pasa al siguiente modo: Apagado → Automático → Siempre.</summary>
-        private async void OnDesktopTileClick(object sender, RoutedEventArgs e)
-        {
-            var next = DesktopModes[(Array.IndexOf(DesktopModes, _desktopMode) + 1) % DesktopModes.Length];
-            await SetDesktopModeAsync(next);
-        }
-
-        private async void OnDesktopModeClick(object sender, RoutedEventArgs e) => await SetDesktopModeAsync((string)((Button)sender).Tag);
 
         /// <summary>Apagado / Auto / Siempre con ◀ ▶.</summary>
         private async void OnDesktopPicked(object sender, int index)
