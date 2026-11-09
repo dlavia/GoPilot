@@ -308,13 +308,8 @@ const SECTIONS = [
     { ic: "joystick", t: "Sticks", s: `Zonas muertas · centro ${S.dzLC} % · borde ${S.dzLB} %`, type: "go", page: "sticks" },
     { ic: "hand-pointing", t: "Gatillos", s: `Recorrido ${S.trLS}–${S.trLE} %`, type: "go", page: "triggers" },
     { ic: "compass", t: "Giroscopio", s: S.gyro ? ["", "Como ratón", "Como stick izquierdo", "Como stick derecho"][S.gyroMode] + ` · sensibilidad ${S.gyroSens}` : "Desactivado", type: "go", page: "gyro" },
-    L("Botones Legion"), "buttons",
-    ...(S.buttons ? [
-      { ic: "number-circle-one", t: "Legion L", type: "cyc", k: "bL", opts: ACTIONS },
-      { ic: "number-circle-two", t: "Legion R", type: "cyc", k: "bR", opts: ACTIONS },
-      { ic: "number-circle-one", t: "Legion L mantenido", type: "cyc", k: "bLl", opts: ACTIONS },
-      { ic: "number-circle-two", t: "Legion R mantenido", type: "cyc", k: "bRl", opts: ACTIONS },
-      { ic: "command", t: "Atajos avanzados", s: S.advButtons ? "Legion L / R + otro botón" : "Ocultos", type: "go", page: "combos" }] : []),
+    L("Botones Legion"),
+    { ic: "game-controller", t: "Botones Legion", s: !S.buttons ? "Desactivados" : S.advButtons ? "Con atajos avanzados" : "Legion L / R", type: "go", page: "buttons" },
     L("Modo escritorio", "mando como ratón"), "desktop",
     ...(S.desktop ? [
       { ic: "cursor", t: "Velocidad del ratón", type: "lvl", k: "mouseSpeed", min: 0, max: 100, step: 5, u: "" },
@@ -397,10 +392,17 @@ const PAGES = {
     { html: `<div class="pv full"><figure><div class="ring" style="--c:#fff;background:#222"><span id="gdot" style="position:absolute;z-index:1;width:10px;height:10px;border-radius:50%;background:#fff;left:27px;top:27px;transition:left .3s,top .3s"></span></div>Mueve la consola</figure></div>` },
     tools("gyro"),
   ] },
-  combos: { t: "Atajos avanzados", from: "Mando", rows: () => [
-    { ic: "command", t: "Mostrar atajos avanzados", s: "Legion L / R + otro botón", type: "sw", k: "advButtons" },
-    ...(S.advButtons ? COMBOS.map(c => ({ ic: c[0] == "L" ? "number-circle-one" : "number-circle-two", t: `${bLabel(c)} + ${c.slice(2)}`, type: "cyc", k: "c" + c, opts: ACTIONS0 })) : []),
-    H("L+Y, L+X, L+A, L+B y L+LB los hace el firmware del mando y no se pueden cambiar."),
+  buttons: { t: "Botones Legion", from: "Mando", rows: () => [
+    "buttons",
+    ...(S.buttons ? [
+      { ic: "number-circle-one", t: "Legion L", type: "cyc", k: "bL", opts: ACTIONS },
+      { ic: "number-circle-two", t: "Legion R", type: "cyc", k: "bR", opts: ACTIONS },
+      { ic: "number-circle-one", t: "Legion L mantenido", type: "cyc", k: "bLl", opts: ACTIONS },
+      { ic: "number-circle-two", t: "Legion R mantenido", type: "cyc", k: "bRl", opts: ACTIONS },
+      L("Atajos avanzados"),
+      { ic: "command", t: "Atajos avanzados", s: "Legion L / R + otro botón", type: "sw", k: "advButtons" },
+      ...(S.advButtons ? COMBOS.map(c => ({ ic: c[0] == "L" ? "number-circle-one" : "number-circle-two", t: `${bLabel(c)} + ${c.slice(2)}`, type: "cyc", k: "c" + c, opts: ACTIONS0 })) : []),
+      H("L+Y, L+X, L+A, L+B y L+LB los hace el firmware del mando y no se pueden cambiar.")] : []),
   ] },
   desktopHelp: { t: "Modo escritorio", from: "Mando", rows: () => [
     { html: `<div class="table full"><b>Stick derecho</b><span>Mover el ratón</span><b>RT · LT</b><span>Clic izquierdo · clic derecho</span><b>Stick izquierdo</b><span>Desplazar (rueda)</span><b>A · B</b><span>Intro · Esc</span><b>X · Y</b><span>Teclado en pantalla · vista de tareas</span><b>LB · RB</b><span>Pestaña anterior · siguiente</span></div>` },

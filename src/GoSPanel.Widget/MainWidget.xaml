@@ -652,24 +652,24 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <Grid Margin="6,12,6,0">
-                        <TextBlock Text="BOTONES LEGION" Style="{StaticResource GroupTitle}" Margin="0" />
-                        <TextBlock x:Name="ButtonsHint" Style="{StaticResource SectionHint}" />
-                    </Grid>
-                    <!-- Se usan juntos: GoPilot atiende los botones y Legion Space debe estar desactivado para que no responda también -->
-                    <c:Tile Row="switch" x:Name="ButtonsTile" Glyph="&#xE26E;" Title="Botones Legion con GoPilot" State="—" Click="OnButtonsToggleClick" />
-                    <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="6,0,6,0" Visibility="Collapsed">
-                        <TextBlock x:Name="ButtonsWarning" Visibility="Collapsed" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"
-                                   Text="Legion Space sigue activo y también responde a Legion L / R: desactívalo en Sistema › Legion Space." />
-                    </StackPanel>
-                    <!-- Legion L / R y mantenidos: ◀ ▶ eligen la acción -->
-                    <StackPanel x:Name="ButtonsList" Spacing="8" />
-                    <!-- Combinaciones Legion + botón (ocultas salvo que se activen) -->
-                    <StackPanel x:Name="AdvancedButtonsCard" Spacing="8">
-                        <c:Tile Row="sub" x:Name="AdvancedButtonsOpenTile" Glyph="&#xE1C4;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsOpenClick" />
-                        <!-- ===== Subpágina: combinaciones Legion + botón ===== -->
-                        <StackPanel x:Name="AdvancedButtonsPage" Spacing="8" Visibility="Collapsed">
-                            <c:Tile Row="switch" x:Name="AdvancedButtonsTile" Glyph="&#xE1C4;" Title="Mostrar atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
+                    <!-- Botones Legion: una fila que abre su subpágina (para no alargar Mando) -->
+                    <TextBlock Text="BOTONES LEGION" Style="{StaticResource GroupTitle}" />
+                    <c:Tile Row="sub" x:Name="ButtonsOpenTile" Glyph="&#xE26E;" Title="Botones Legion" State="—" Click="OnButtonsOpenClick" />
+                    <!-- ===== Subpágina: Botones Legion (L / R, mantenidos y atajos avanzados) ===== -->
+                    <StackPanel x:Name="ButtonsPage" Spacing="8" Visibility="Collapsed">
+                        <!-- Se usan juntos: GoPilot atiende los botones y Legion Space debe estar desactivado para que no responda también -->
+                        <c:Tile Row="switch" x:Name="ButtonsTile" Glyph="&#xE26E;" Title="Botones Legion con GoPilot" State="—" Click="OnButtonsToggleClick" />
+                        <TextBlock x:Name="ButtonsHint" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
+                        <StackPanel x:Name="ButtonsBody" Spacing="8" Margin="6,0,6,0" Visibility="Collapsed">
+                            <TextBlock x:Name="ButtonsWarning" Visibility="Collapsed" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource WarnBrush}"
+                                       Text="Legion Space sigue activo y también responde a Legion L / R: desactívalo en Sistema › Legion Space." />
+                        </StackPanel>
+                        <!-- Legion L / R y mantenidos: ◀ ▶ eligen la acción -->
+                        <StackPanel x:Name="ButtonsList" Spacing="8" />
+                        <!-- Combinaciones Legion + botón (ocultas salvo que se activen) -->
+                        <StackPanel x:Name="AdvancedButtonsCard" Spacing="8">
+                            <TextBlock Text="ATAJOS AVANZADOS" Style="{StaticResource GroupTitle}" />
+                            <c:Tile Row="switch" x:Name="AdvancedButtonsTile" Glyph="&#xE1C4;" Title="Atajos avanzados" State="—" Click="OnAdvancedButtonsClick" />
                             <StackPanel x:Name="AdvancedButtonsList" Spacing="8" Visibility="Collapsed" />
                             <TextBlock Text="L+Y, L+X, L+A, L+B y L+LB los hace el firmware del mando y no se pueden cambiar." FontSize="11.5" TextWrapping="Wrap"
                                        Foreground="{StaticResource MutedBrush}" Margin="6,0" />

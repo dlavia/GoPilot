@@ -1018,6 +1018,7 @@ namespace GoSPanel.Widget
             ButtonsTile.IsOn = _buttonsEnabled;
             ButtonsTile.State = _buttonsEnabled ? "Activado" : "Desactivado";
             ButtonsHint.Text = data.GetNamedBoolean("controller", false) ? "" : "Mando no encontrado";
+            ButtonsHint.Visibility = string.IsNullOrEmpty(ButtonsHint.Text) ? Visibility.Collapsed : Visibility.Visible;
             ButtonsWarning.Visibility = _buttonsEnabled && data.GetNamedBoolean("legionSpace", false) ? Visibility.Visible : Visibility.Collapsed;
             ButtonsBody.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
             ButtonsList.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
@@ -1027,7 +1028,7 @@ namespace GoSPanel.Widget
             var advanced = Pref("advancedButtons", false);
             AdvancedButtonsTile.IsOn = advanced;
             AdvancedButtonsTile.State = advanced ? "Legion L / R + otro botón" : "Ocultos";
-            AdvancedButtonsOpenTile.State = advanced ? "Legion L / R + otro botón" : "Ocultos";
+            ButtonsOpenTile.State = !_buttonsEnabled ? "Desactivados" : advanced ? "Con atajos avanzados" : "Legion L / R";
             AdvancedButtonsCard.Visibility = _buttonsEnabled ? Visibility.Visible : Visibility.Collapsed;
             AdvancedButtonsList.Visibility = advanced ? Visibility.Visible : Visibility.Collapsed;
             var signature = bindings.Stringify() + advanced;
@@ -1072,8 +1073,8 @@ namespace GoSPanel.Widget
             if (index >= 0 && index < _buttonActions.Count) OnButtonBindingSelected(sender, _buttonActions[index].Value);
         }
 
-        private void OnAdvancedButtonsOpenClick(object sender, RoutedEventArgs e) =>
-            OpenSub("Atajos avanzados", "Mando", AdvancedButtonsOpenTile.FocusTarget, null, AdvancedButtonsPage);
+        private void OnButtonsOpenClick(object sender, RoutedEventArgs e) =>
+            OpenSub("Botones Legion", "Mando", ButtonsOpenTile.FocusTarget, null, ButtonsPage);
 
         private async void OnAdvancedButtonsClick(object sender, RoutedEventArgs e)
         {
