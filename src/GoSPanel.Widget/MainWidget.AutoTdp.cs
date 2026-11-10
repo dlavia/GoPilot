@@ -85,7 +85,7 @@ namespace GoSPanel.Widget
                 : status;
 
             if (was != _autoTdp) ApplyMode(_mode, true);
-            else if (_autoTdp) UpdateModeSummary();
+            else UpdateModeSummary();   // también el FPS objetivo de la caja Auto
         }
 
         private async Task SetAutoTdpAsync(JsonObject args)

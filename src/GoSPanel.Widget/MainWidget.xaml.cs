@@ -1888,7 +1888,7 @@ namespace GoSPanel.Widget
                 changed |= _presetSpl[mode] != (int)spl.Value;
                 _presetSpl[mode] = (int)spl.Value;
             }
-            if (changed && _mode != "custom" && _presetSpl.ContainsKey(_mode)) UpdateModeSummary();
+            if (changed) UpdateModeSummary();
         }
 
         private async Task RefreshTdpAsync()
@@ -1979,7 +1979,6 @@ namespace GoSPanel.Widget
             // Con AutoTDP el firmware está en Manual, pero se muestra «Auto»
             var shown = _autoTdp ? "auto" : mode;
             HomeModeTile.SelectedIndex = PowerModeTile.SelectedIndex = Array.IndexOf(ModeOrder, shown);
-            ModeHint.Visibility = shown == "custom" || shown == "auto" ? Visibility.Collapsed : Visibility.Visible;
 
             var isCustom = shown == "custom";
             if (TdpPanel.Visibility == Visibility.Visible != isCustom)
@@ -2005,6 +2004,16 @@ namespace GoSPanel.Widget
 
         private void UpdateModeSummary()
         {
+            // Lo que mide cada modo, en su caja: los vatios reales del firmware (cambian al enchufar), el límite de
+            // Manual y los FPS objetivo de Auto
+            var values = new[]
+            {
+                _presetSpl["quiet"] + " W", _presetSpl["balanced"] + " W", _presetSpl["performance"] + " W",
+                _customSpl > 0 ? _customSpl + " W" : "—", _autoTarget + " FPS",
+            };
+            HomeModeTile.SetBoxValues(values);
+            PowerModeTile.SetBoxValues(values);
+
             var shown = _autoTdp ? "auto" : _mode;
             if (!ModeNames.ContainsKey(shown))
             {

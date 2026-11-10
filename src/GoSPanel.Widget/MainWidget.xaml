@@ -166,8 +166,9 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Modo: ◀ ▶ (A no cambia nada) -->
-                    <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto" />
+                    <!-- Modo: una caja por modo con sus vatios (o FPS en Auto); ◀ ▶ (A no cambia nada) -->
+                    <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
+                            Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
                     <!-- Cerrar juego: pulsar dos veces -->
                     <c:Tile Row="value" x:Name="HomeKillTile" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
@@ -177,9 +178,8 @@
             <!-- ================= RENDIMIENTO ================= -->
             <ScrollViewer x:Name="PowerPanel" VerticalScrollBarVisibility="Hidden" Visibility="Collapsed">
                 <StackPanel Spacing="8" Padding="4,6,4,12">
-                    <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto" />
-                    <TextBlock x:Name="ModeHint" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0,6,2"
-                               Text="Los vatios cambian si la consola está enchufada. Legion L + Y también cambia de modo." />
+                    <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
+                            Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
 
                     <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
                     <StackPanel x:Name="AutoPanel" Spacing="8" Visibility="Collapsed">

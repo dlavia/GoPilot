@@ -30,6 +30,8 @@
             </Border>
             <!-- Opciones: pastillas (Choices) o «‹ valor ›» (Compact). Se cambian con ◀ ▶; A no hace nada. -->
             <StackPanel x:Name="ChoicesPanel" Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Visibility="Collapsed" />
+            <!-- Opciones como cajas (Boxes): una por opción, a todo el ancho y sin cabecera (Modo de CPU) -->
+            <Grid x:Name="BoxesGrid" Grid.ColumnSpan="4" Grid.RowSpan="3" ColumnSpacing="6" Visibility="Collapsed" />
             <!-- Modo fila: interruptor o › a la derecha -->
             <Border x:Name="SwitchTrack" Grid.Column="3" Width="38" Height="22" CornerRadius="11" VerticalAlignment="Center" Visibility="Collapsed">
                 <Ellipse x:Name="SwitchKnob" Width="16" Height="16" Margin="3,0" VerticalAlignment="Center" HorizontalAlignment="Left" />

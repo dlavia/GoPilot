@@ -13,7 +13,7 @@ namespace GoSPanel.Widget.Controls
     /// Fila del widget (estilo del menú de Legion L): icono, nombre, subtítulo y a la derecha un interruptor, un valor,
     /// un › (abre una subpágina) o unas opciones.
     /// Row = "switch" | "value" | "sub". Sin Row: baldosa (vertical u horizontal), solo para lo que aún no se ha pasado a filas.
-    /// Opciones (Choices): pastillas, o «‹ valor ›» con Compact. Se cambian SOLO con ◀ ▶ (o tocando la opción);
+    /// Opciones (Choices): pastillas, «‹ valor ›» con Compact, o cajas con Boxes (icono, valor y nombre; sin cabecera). Se cambian SOLO con ◀ ▶ (o tocando la opción);
     /// A no hace nada en ellas. Picked se lanza un momento después de dejar de pulsar (así cruzar varias opciones
     /// seguidas no aplica cada una por el camino).
     /// </summary>
@@ -99,7 +99,7 @@ namespace GoSPanel.Widget.Controls
             StateText.Text = text;
             StateText.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
             SubText.Text = _sub;
-            SubText.Visibility = _row != null && !string.IsNullOrEmpty(_sub) ? Visibility.Visible : Visibility.Collapsed;
+            SubText.Visibility = _row != null && !_boxes && !string.IsNullOrEmpty(_sub) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private string _row;
@@ -186,6 +186,37 @@ namespace GoSPanel.Widget.Controls
 
         private bool HasChoices => _choices.Count > 0;
 
+        private bool _boxes;
+        private string[] _boxGlyphs = new string[0];
+        private string[] _boxValues = new string[0];
+
+        /// <summary>
+        /// Cada opción en su caja, a todo el ancho de la fila: icono arriba, un valor grande (SetBoxValues) y el nombre
+        /// pequeño. La fila no muestra icono, nombre ni subtítulo: las cajas se explican solas. La elegida va con
+        /// contorno y fondo suave del acento de Windows.
+        /// </summary>
+        public bool Boxes
+        {
+            get => _boxes;
+            set { _boxes = value; ApplyLayout(); BuildChoices(); ApplyState(); }
+        }
+
+        /// <summary>Iconos de las cajas (Phosphor), separados por «|», en el orden de Choices.</summary>
+        public string BoxGlyphs
+        {
+            get => string.Join("|", _boxGlyphs);
+            set { _boxGlyphs = string.IsNullOrEmpty(value) ? new string[0] : value.Split('|'); BuildChoices(); }
+        }
+
+        /// <summary>Valor de cada caja (p. ej. «15 W»), en el orden de Choices.</summary>
+        public void SetBoxValues(IEnumerable<string> values)
+        {
+            var list = values.ToArray();
+            if (list.SequenceEqual(_boxValues)) return;
+            _boxValues = list;
+            PaintChoices();
+        }
+
         /// <summary>Opciones separadas por «|» (p. ej. "No|Suave|Media|Fuerte").</summary>
         public string Choices
         {
@@ -224,9 +255,46 @@ namespace GoSPanel.Widget.Controls
         private void BuildChoices()
         {
             ChoicesPanel.Children.Clear();
-            ChoicesPanel.Visibility = HasChoices ? Visibility.Visible : Visibility.Collapsed;
+            BoxesGrid.Children.Clear();
+            BoxesGrid.ColumnDefinitions.Clear();
+            ChoicesPanel.Visibility = HasChoices && !_boxes ? Visibility.Visible : Visibility.Collapsed;
+            BoxesGrid.Visibility = HasChoices && _boxes ? Visibility.Visible : Visibility.Collapsed;
             if (!HasChoices) return;
-            if (_compact)
+            if (_boxes)
+            {
+                for (var i = 0; i < _choices.Count; i++)
+                {
+                    var index = i;
+                    var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                    panel.Children.Add(new TextBlock
+                    {
+                        FontFamily = (FontFamily)Application.Current.Resources["Phosphor"],
+                        Text = i < _boxGlyphs.Length ? _boxGlyphs[i] : "", FontSize = 22, HorizontalAlignment = HorizontalAlignment.Center,
+                    });
+                    panel.Children.Add(new TextBlock
+                    {
+                        FontSize = 15, FontWeight = Windows.UI.Text.FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 4, 0, 0), TextTrimming = TextTrimming.Clip,
+                    });
+                    panel.Children.Add(new TextBlock
+                    {
+                        Text = _choices[i], FontSize = 11, FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                        HorizontalAlignment = HorizontalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Thickness(0, 1, 0, 0),
+                    });
+                    var box = new Border
+                    {
+                        CornerRadius = new CornerRadius(11),
+                        BorderThickness = new Thickness(2),
+                        Padding = new Thickness(2, 8, 2, 7),
+                        Child = panel,
+                    };
+                    box.AddHandler(TappedEvent, new TappedEventHandler((s, e) => { Pick(index); e.Handled = true; }), true);
+                    BoxesGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    Grid.SetColumn(box, i);
+                    BoxesGrid.Children.Add(box);
+                }
+            }
+            else if (_compact)
             {
                 ChoicesPanel.Spacing = 6;
                 ChoicesPanel.Children.Add(Caret("", -1));
@@ -267,6 +335,23 @@ namespace GoSPanel.Widget.Controls
         {
             if (!HasChoices) return;
             var focused = Root.FocusState != FocusState.Unfocused;
+            if (_boxes)
+            {
+                for (var i = 0; i < BoxesGrid.Children.Count; i++)
+                {
+                    var box = (Border)BoxesGrid.Children[i];
+                    var texts = ((StackPanel)box.Child).Children.OfType<TextBlock>().ToArray();
+                    var on = i == _selectedIndex;
+                    box.Background = on ? Brush("AccentSoftBrush") : new SolidColorBrush(Windows.UI.Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF));
+                    box.BorderBrush = on ? Brush("AccentBrush") : new SolidColorBrush(Windows.UI.Colors.Transparent);
+                    texts[0].Foreground = on ? Brush("AccentLightBrush") : Brush("IconBrush");
+                    texts[1].Text = i < _boxValues.Length ? _boxValues[i] : "";
+                    texts[1].Visibility = string.IsNullOrEmpty(texts[1].Text) ? Visibility.Collapsed : Visibility.Visible;
+                    texts[1].Foreground = Brush("TextBrush");
+                    texts[2].Foreground = Brush(on ? "TextBrush" : "MutedBrush");
+                }
+                return;
+            }
             if (_compact)
             {
                 var value = (TextBlock)ChoicesPanel.Children[1];
@@ -358,6 +443,15 @@ namespace GoSPanel.Widget.Controls
                 Layout.Margin = new Thickness(0, 6, 0, 6);
                 Root.MinHeight = 46;
                 Root.Padding = new Thickness(13, 0, 13, 0);
+                // Con cajas, la fila es solo las cajas (sin icono ni nombre)
+                Place(BoxesGrid, 0, 0, 4);
+                Grid.SetRowSpan(BoxesGrid, 3);
+                IconText.Visibility = TitleText.Visibility = _boxes ? Visibility.Collapsed : Visibility.Visible;
+                if (_boxes)
+                {
+                    Layout.Margin = new Thickness(0, 11, 0, 11);
+                    Root.Padding = new Thickness(11, 0, 11, 0);
+                }
                 return;
             }
             if (_vertical)
