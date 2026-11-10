@@ -252,7 +252,7 @@ const D = {
   antilag: { ic: "timer", t: "Anti-Lag", s: "Menos latencia", type: "sw", k: "antilag" },
   vari: { ic: "sun-dim", t: "Vari-Bright", s: "Ahorro de pantalla", type: "sw", k: "vari" },
   lights: { ic: "lightbulb", t: "Luces", s: () => S.lights ? `${FX[S.lightFx]} · ${S.lightBright} %` : "Apagadas", type: "sw", k: "lights" },
-  lightsGo: { ic: "palette", t: "Luces de los sticks", s: () => S.lights ? `${FX[S.lightFx]} · color, brillo y velocidad` : "Apagadas", type: "go", page: "lights" },
+  lightsGo: { ic: "lightbulb", t: "Luces de los sticks", s: () => S.lights ? `${FX[S.lightFx]} · color, brillo y velocidad` : "Apagadas", type: "go", page: "lights" },
   vib: { ic: "vibrate", t: "Vibración del mando", type: "pills", k: "vib", opts: VIB },
   tvib: { ic: "vibrate", t: "Vibración del touchpad", type: "pills", k: "tvib", opts: VIB },
   gyro: { ic: "compass", t: "Giroscopio", s: () => S.gyro ? ["Desactivado", "Como ratón", "Como stick izquierdo", "Como stick derecho"][S.gyroMode] : "Desactivado", type: "sw", k: "gyro" },
@@ -305,7 +305,7 @@ const SECTIONS = [
     H("El límite de FPS (Radeon Chill) está en Rendimiento › Juego."),
   ] },
   { name: "Mando", icon: "game-controller", rows: () => [
-    "lights", "lightsGo", "vib", "tvib", "touchpad", "touch", "gyro",
+    "lightsGo", "vib", "tvib", "touchpad", "touch", "gyro",
     L("Ajustes del mando", "guardados en el propio mando"), "sleep", "poll", "dpad",
     L("Ajustes avanzados"),
     { ic: "joystick", t: "Sticks", s: `Zonas muertas · centro ${S.dzLC} % · borde ${S.dzLB} %`, type: "go", page: "sticks" },
