@@ -257,6 +257,7 @@ const D = {
   tvib: { ic: "vibrate", t: "Vibración del touchpad", type: "pills", k: "tvib", opts: VIB },
   gyro: { ic: "compass", t: "Giroscopio", s: () => S.gyro ? ["Desactivado", "Como ratón", "Como stick izquierdo", "Como stick derecho"][S.gyroMode] : "Desactivado", type: "sw", k: "gyro" },
   touchpad: { ic: "hand-tap", t: "Touchpad", type: "sw", k: "touchpad" },
+  touchpadGo: { ic: "hand-tap", t: "Touchpad", s: () => S.touchpad ? `Activado · vibración ${VIB[S.tvib].toLowerCase()}` : "Desactivado", type: "go", page: "touchpad" },
   touch: { ic: "device-mobile", t: "Pantalla táctil", type: "sw", k: "touch" },
   sleep: { ic: "moon", t: "Apagado automático", s: "Del mando, sin usarlo", type: "cyc", k: "sleep", opts: SLEEP },
   poll: { ic: "pulse", t: "Frecuencia de sondeo", type: "cyc", k: "poll", opts: POLL },
@@ -305,7 +306,7 @@ const SECTIONS = [
     H("El límite de FPS (Radeon Chill) está en Rendimiento › Juego."),
   ] },
   { name: "Mando", icon: "game-controller", rows: () => [
-    "lightsGo", "vib", "tvib", "touchpad", "touch", "gyro",
+    "lightsGo", "vib", "touchpadGo", "touch", "gyro",
     L("Ajustes del mando", "guardados en el propio mando"), "sleep", "poll", "dpad",
     L("Ajustes avanzados"),
     { ic: "joystick", t: "Sticks", s: `Zonas muertas · centro ${S.dzLC} % · borde ${S.dzLB} %`, type: "go", page: "sticks" },
@@ -369,6 +370,10 @@ const PAGES = {
       ...([1, 2, 3, 4].includes(S.lightFx) ? [{ ic: "timer", t: "Velocidad", type: "lvl", k: "lightSpeed", min: 0, max: 100, step: 5, u: " %" }] : []),
       ...([2, 3].includes(S.lightFx) ? [] : [{ ic: "palette", t: "Color", type: "swatch", k: "lightColor", opts: COLORS }]),
     ] : [H("Las luces están apagadas: enciéndelas arriba.")]),
+  ] },
+  touchpad: { t: "Touchpad", from: "Mando", rows: () => [
+    "touchpad",
+    ...(S.touchpad ? ["tvib"] : [H("El touchpad está desactivado: actívalo arriba.")]),
   ] },
   sticks: { t: "Sticks", from: "Mando", rows: () => [
     { html: `<div class="pv full">${stickSvg("Izquierdo", S.dzLC, S.dzLB)}${stickSvg("Derecho", S.dzRC, S.dzRB)}</div>` },
