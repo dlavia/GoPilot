@@ -14,9 +14,9 @@
              y los controles son MÁS OSCUROS que el fondo y llevan un borde fino claro para destacar. -->
         <SolidColorBrush x:Key="PageBrush" Color="#00000000" />
         <SolidColorBrush x:Key="PanelBrush" Color="#1F000000" />
-        <SolidColorBrush x:Key="Panel2Brush" Color="#C71C1D24" />
+        <SolidColorBrush x:Key="Panel2Brush" Color="#C7282828" />
         <!-- Fila con el foco (menú de Legion L): más clara, con aro blanco -->
-        <SolidColorBrush x:Key="RowFocusBrush" Color="#E63C3D48" />
+        <SolidColorBrush x:Key="RowFocusBrush" Color="#E6444444" />
         <!-- Nombre de las filas sin foco: algo apagado; con foco, blanco -->
         <SolidColorBrush x:Key="RowTextBrush" Color="#FFC4C4C8" />
         <SolidColorBrush x:Key="Panel3Brush" Color="#1FFFFFFF" />
