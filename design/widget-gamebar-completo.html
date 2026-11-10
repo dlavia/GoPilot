@@ -108,7 +108,8 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .mgrid .pill.mbox { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 11px 4px 9px; border-radius: 11px; background: rgba(255,255,255,.06); color: var(--text-2); }
 .mgrid .pill.mbox.on { background: var(--accent); color: #fff; }
 .item:not(.focus) .mgrid .pill.mbox.on { background: color-mix(in srgb, var(--accent) 70%, #000); color: rgba(255,255,255,.9); }
-.item .right .mbox .ic { font-size: 22px; } .mbox b { font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 100%; } .mbox i { display: none; font-style: normal; font-size: 12px; font-weight: 600; }
+.mbox .mtop { display: flex; align-items: center; gap: 5px; } .item .right .mbox .ic { font-size: 20px; } .mbox em { font-style: normal; font-size: 12.5px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mbox.on em { color: #fff; } .mbox b { font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 100%; } .mbox i { display: none; font-style: normal; font-size: 12px; font-weight: 600; }
 .frame.narrow .mbox b { display: none; } .frame.narrow .mbox i { display: block; }
 .btns .pill { border: 1.5px solid rgba(255,255,255,.18); }
 .btns .pill.on { border-color: transparent; }
@@ -218,6 +219,8 @@ const HOME_DEFAULT = S.home.slice();
 const MODES = [
   { n: "Silencio", ic: "leaf", w: "10 W" }, { n: "Equilibrado", ic: "scales", w: "15 W" }, { n: "Rendimiento", ic: "rocket-launch", w: "hasta 25 W" },
   { n: "Manual", ic: "sliders-horizontal" }, { n: "Auto", ic: "target" }];
+// Lo que mide cada modo, junto a su icono (con batería; enchufada sube)
+const modeVal = i => i < 3 ? ["10", "15", "25"][i] + " W" : i == 3 ? S.spl + " W" : S.autoTarget + " FPS";
 const ACTIONS = ["GoPilot", "Game Bar", "Inicio de Xbox", "Vista de tareas", "Escritorio", "Teclado", "Recortes", "Captura", "Grabar", "Modo térmico",
   "Ctrl+Alt+Supr", "Administrador de tareas", "Lossless", "Overlay", "Cerrar juego"];
 const ACTIONS0 = ["Nada", ...ACTIONS];
@@ -501,7 +504,7 @@ function rightHtml(d) {
   switch (d.type) {
     case "sw": return `<span class="sw ${v ? "on" : ""}"></span>`;
     case "pills": return `<span class="pills">${d.opts.map((t, i) => `<span class="pill ${i === v ? "on" : ""}">${t}</span>`).join("")}</span>`;
-    case "modes": return `<span class="mgrid">${MODES.map((m, i) => `<span class="pill mbox ${i === v ? "on" : ""}">${I(m.ic, i === v)}<b>${m.n}</b><i>${d.opts[i]}</i></span>`).join("")}</span>`;
+    case "modes": return `<span class="mgrid">${MODES.map((m, i) => `<span class="pill mbox ${i === v ? "on" : ""}"><span class="mtop">${I(m.ic, i === v)}<em>${modeVal(i)}</em></span><b>${m.n}</b><i>${d.opts[i]}</i></span>`).join("")}</span>`;
     case "btns": return `<span class="pills btns">${d.opts.map((t, i) => `<span class="pill ${i === (v || 0) ? "on" : ""}">${t}</span>`).join("")}</span>`;
     case "lvl": return `<span class="level"><b style="width:${(v - d.min) / (d.max - d.min) * 100}%"></b></span><span class="lv">${v}${d.u}</span>`;
     case "cyc": return `<span class="cyc">${I("caret-left", false)}<span>${d.opts[d.map ? v - 1 : v]}</span>${I("caret-right", false)}</span>`;
