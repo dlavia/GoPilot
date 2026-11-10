@@ -101,6 +101,15 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .pills { display: flex; gap: 2px; } .pill { padding: 5px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; color: rgba(245,245,247,.45); white-space: nowrap; }
 .pill.on { background: var(--accent); color: #fff; }
 .item:not(.focus) .pill.on { background: color-mix(in srgb, var(--accent) 70%, #000); color: rgba(255,255,255,.85); }
+/* Modo de CPU: cada modo en su caja, con icono y nombre */
+.item.modes-card { flex-wrap: wrap; row-gap: 0; padding-bottom: 12px; }
+.item.modes-card .right { width: 100%; margin-left: 0; }
+.mgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.mgrid .pill.mbox { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 11px 4px 9px; border-radius: 11px; background: rgba(255,255,255,.06); color: var(--text-2); }
+.mgrid .pill.mbox.on { background: var(--accent); color: #fff; }
+.item:not(.focus) .mgrid .pill.mbox.on { background: color-mix(in srgb, var(--accent) 70%, #000); color: rgba(255,255,255,.9); }
+.item .right .mbox .ic { font-size: 22px; } .mbox b { font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; max-width: 100%; } .mbox i { display: none; font-style: normal; font-size: 12px; font-weight: 600; }
+.frame.narrow .mbox b { display: none; } .frame.narrow .mbox i { display: block; }
 .btns .pill { border: 1.5px solid rgba(255,255,255,.18); }
 .btns .pill.on { border-color: transparent; }
 .item:not(.focus) .btns .pill.on { background: transparent; color: rgba(245,245,247,.6); border-color: rgba(255,255,255,.18); }
@@ -228,7 +237,7 @@ const onOff = v => v ? "Activado" : "Desactivado";
 // ===================== Filas reutilizables =====================
 // type: sw · pills · lvl · cyc · go · act · swatch · btns · ord (editar Inicio)
 const D = {
-  mode: { ic: "gauge", t: "Modo", type: "pills", k: "mode", opts: ["Silencio", "Equil.", "Rendim.", "Manual", "Auto"], cls: "full",
+  mode: { ic: "gauge", t: "Modo", type: "modes", k: "mode", opts: ["Silencio", "Equil.", "Rendim.", "Manual", "Auto"], cls: "full modes-card",
     s: () => S.mode < 3 ? `${MODES[S.mode].w} con batería` : S.mode == 3 ? `Manual · límite ${S.spl} W` : `Auto · ${S.autoTarget} FPS objetivo`, on: bigMode },
   spl: { ic: "lightning", t: "Límite de potencia", s: "Como la Steam Deck: ves al momento lo que consume", type: "lvl", k: "spl", min: 5, max: 30, u: " W" },
   tdpAdv: { ic: "sliders-horizontal", t: "Avanzado", s: () => S.tdpAuto ? "Ráfagas y picos automáticos" : `sPPT ${S.sppt} W · fPPT ${S.fppt} W`, type: "go", page: "tdp" },
@@ -493,6 +502,7 @@ function rightHtml(d) {
   switch (d.type) {
     case "sw": return `<span class="sw ${v ? "on" : ""}"></span>`;
     case "pills": return `<span class="pills">${d.opts.map((t, i) => `<span class="pill ${i === v ? "on" : ""}">${t}</span>`).join("")}</span>`;
+    case "modes": return `<span class="mgrid">${MODES.map((m, i) => `<span class="pill mbox ${i === v ? "on" : ""}">${I(m.ic, i === v)}<b>${m.n}</b><i>${d.opts[i]}</i></span>`).join("")}</span>`;
     case "btns": return `<span class="pills btns">${d.opts.map((t, i) => `<span class="pill ${i === (v || 0) ? "on" : ""}">${t}</span>`).join("")}</span>`;
     case "lvl": return `<span class="level"><b style="width:${(v - d.min) / (d.max - d.min) * 100}%"></b></span><span class="lv">${v}${d.u}</span>`;
     case "cyc": return `<span class="cyc">${I("caret-left", false)}<span>${d.opts[d.map ? v - 1 : v]}</span>${I("caret-right", false)}</span>`;
@@ -547,7 +557,7 @@ function paint() {
   hints();
 }
 function hints() {
-  const d = rows[f], adj = d && ["pills", "lvl", "cyc", "swatch", "btns", "ord"].includes(d.type);
+  const d = rows[f], adj = d && ["pills", "modes", "lvl", "cyc", "swatch", "btns", "ord"].includes(d.type);
   // Selectores (pills, cyc, niveles, colores): solo con ◀▶; A no hace nada en ellos
   const a = !d ? "Elegir" : { sw: "Cambiar", go: "Abrir", btns: "Usar", act: "Elegir" }[d.type];
   $("#hints").classList.toggle("adj", !!adj);
@@ -598,7 +608,7 @@ function adjust(dir) {
   const d = rows[f]; if (!d || (d.dis && d.dis())) return false;
   const v = S[d.k];
   switch (d.type) {
-    case "pills": case "swatch": case "btns": S[d.k] = Math.max(0, Math.min(d.opts.length - 1, (v || 0) + dir)); break;
+    case "pills": case "modes": case "swatch": case "btns": S[d.k] = Math.max(0, Math.min(d.opts.length - 1, (v || 0) + dir)); break;
     case "cyc": { const n = d.opts.length; S[d.k] = d.map ? ((v - 1 + dir + n) % n) + 1 : (v + dir + n) % n; break; }
     case "lvl": S[d.k] = Math.max(d.min, Math.min(d.max, v + dir * (d.step || 1))); break;
     case "ord": { const i = S.home.indexOf(d.id), j = i + dir; if (j < 0 || j >= S.home.length) return true; S.home.splice(i, 1); S.home.splice(j, 0, d.id); f += dir; break; }
