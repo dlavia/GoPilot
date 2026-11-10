@@ -12,7 +12,7 @@
         <SolidColorBrush x:Key="AccentLightBrush" Color="#FFFF7A8A" />
         <!-- Sobre el fondo de Game Bar (el widget no pinta fondo propio). Como en los widgets de Xbox, las tarjetas
              y los controles son MÁS OSCUROS que el fondo y llevan un borde fino claro para destacar. -->
-        <SolidColorBrush x:Key="PageBrush" Color="#FF000000" />
+        <SolidColorBrush x:Key="PageBrush" Color="#00000000" />
         <SolidColorBrush x:Key="PanelBrush" Color="#1F000000" />
         <SolidColorBrush x:Key="Panel2Brush" Color="#C71C1D24" />
         <!-- Fila con el foco (menú de Legion L): más clara, con aro blanco -->

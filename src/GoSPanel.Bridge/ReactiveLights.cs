@@ -18,6 +18,10 @@ namespace GoSPanel.Bridge;
 internal static class ReactiveLights
 {
     private const int FrameMs = 16;
+    // Al volver de la suspensión (o al reaparecer las luces) no se les manda nada durante un rato: el mando se está
+    // despertando y escribirle entonces podía dejarlo sin responder.
+    private static readonly TimeSpan WakePause = TimeSpan.FromSeconds(8);
+    private static DateTime _lastTick, _pausedUntil;
 
     private static readonly object Lock = new();
     private static bool _running;
@@ -92,7 +96,11 @@ internal static class ReactiveLights
         {
             var lamps = await LampArray.FromIdAsync(info.Id);
             if (lamps == null || lamps.LampArrayKind != LampArrayKind.GameController) return;
-            lamps.AvailabilityChanged += (s, e) => Log("disponible: " + s.IsAvailable);
+            lamps.AvailabilityChanged += (s, e) =>
+            {
+                Log("disponible: " + s.IsAvailable);
+                lock (Lock) { _pausedUntil = DateTime.UtcNow.AddSeconds(3); _last = default; }
+            };
             lock (Lock) { if (_running) _lamps = lamps; }
             Log($"luces: {info.Name}, {lamps.LampCount} LED, disponible: {lamps.IsAvailable}");
             if (!lamps.IsAvailable) await PrioritizeAsync();
@@ -118,7 +126,20 @@ internal static class ReactiveLights
     private static void Render()
     {
         LampArray? lamps;
-        lock (Lock) lamps = _lamps;
+        var now = DateTime.UtcNow;
+        lock (Lock)
+        {
+            lamps = _lamps;
+            // Un hueco largo entre dos fotogramas = el equipo ha estado suspendido
+            if (_lastTick != default && now - _lastTick > TimeSpan.FromSeconds(2))
+            {
+                _pausedUntil = now + WakePause;
+                _last = default;
+                Log("vuelta de la suspensión: luces en pausa " + WakePause.TotalSeconds + " s");
+            }
+            _lastTick = now;
+            if (now < _pausedUntil) return;
+        }
         if (lamps == null) return;
 
         // Del brillo de reposo al de pico con los golpes (por defecto 20 → 80 %: con menos rango apenas se notaba).

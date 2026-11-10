@@ -29,7 +29,7 @@ internal static class DesktopMode
     // Apps que ya se manejan con el mando: el modo escritorio duplicaría cada pulsación.
     private static readonly HashSet<string> ControllerApps = new(StringComparer.OrdinalIgnoreCase)
     {
-        "XboxPcApp", "GameBar", "steam", "steamwebhelper", "Playnite.FullscreenApp", "GoSPanel.Widget",
+        "XboxPcApp", "GameBar", "steam", "steamwebhelper", "Playnite.FullscreenApp", "GoSPanel.Widget", "GoPilotHome",
     };
 
     private const int BtnA = 0x000100, BtnB = 0x000200, BtnX = 0x000400, BtnY = 0x000800, BtnLb = 0x001000, BtnRb = 0x004000;
@@ -231,6 +231,9 @@ internal static class DesktopMode
         else if (manual == false) { active = false; reason = "Desactivado con el botón"; }
         else if (manual == true) { active = true; reason = "Activado con el botón"; }
         else if (mode == "off") { active = false; reason = ""; }
+        // Sin ventana delante (pid 0): la experiencia a pantalla completa de Xbox, la pantalla de bloqueo… Antes contaba
+        // como «sin juego» y el modo escritorio mandaba flechas, Intro y Esc a la vez que el mando (iba lento y torpe).
+        else if (pid == 0) { active = false; reason = "Sin ventana delante"; }
         else if (IsControllerApp(pid)) { active = false; reason = "App que ya usa el mando"; }
         else if (mode == "always") { active = true; reason = ""; }
         else if (pid != 0 && pid == ForegroundTracker.CurrentPid) { active = false; reason = "Juego delante"; }
@@ -254,9 +257,32 @@ internal static class DesktopMode
 
     private static int ForegroundPid()
     {
-        GetWindowThreadProcessId(GetForegroundWindow(), out var pid);
+        var window = GetForegroundWindow();
+        GetWindowThreadProcessId(window, out var pid);
+        // Apps de la Tienda (la de Xbox entre ellas): la ventana es del marco ApplicationFrameHost y la app de verdad es
+        // la de su ventana hija. Sin esto la app de Xbox no contaba como «app que ya usa el mando».
+        try
+        {
+            using var process = Process.GetProcessById((int)pid);
+            if (process.ProcessName.Equals("ApplicationFrameHost", StringComparison.OrdinalIgnoreCase))
+            {
+                var inner = pid;
+                EnumChildWindows(window, (child, _) =>
+                {
+                    GetWindowThreadProcessId(child, out var childPid);
+                    if (childPid == pid) return true;
+                    inner = childPid;
+                    return false;
+                }, IntPtr.Zero);
+                pid = inner;
+            }
+        }
+        catch (Exception) { }
         return (int)pid;
     }
+
+    private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr param);
+    [DllImport("user32.dll")] private static extern bool EnumChildWindows(IntPtr parent, EnumWindowsProc callback, IntPtr param);
 
     // ---------------------------------------------------------------------
     // SendInput

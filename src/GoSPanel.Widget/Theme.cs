@@ -28,8 +28,8 @@ namespace GoSPanel.Widget
         public static void Apply(string name)
         {
             Current = name == Contrast ? Contrast : Simple;
-            // Fondo negro (como el menú de Legion L) en los dos temas; Contraste lleva filas más claras.
-            Set("PageBrush", 0xFF, 0x00, 0x00, 0x00);
+            // Fondo transparente: deja ver el fondo por defecto de Game Bar (translúcido) en los dos temas.
+            Set("PageBrush", 0x00, 0x00, 0x00, 0x00);
             if (IsContrast)
             {
                 Set("PanelBrush", 0x00, 0x00, 0x00, 0x00);

@@ -22,7 +22,7 @@ internal static class ForegroundTracker
         "steam", "steamwebhelper", "steamservice", "EpicGamesLauncher", "EpicWebHelper", "Battle.net", "Agent",
         "EADesktop", "EABackgroundService", "Origin", "GalaxyClient", "GalaxyClientService", "upc", "UbisoftConnect",
         "RiotClientServices", "RiotClientUx", "LeagueClient", "LeagueClientUx", "Playnite.DesktopApp",
-        "Playnite.FullscreenApp", "GOG Galaxy", "AmazonGames", "HeroicGamesLauncher",
+        "Playnite.FullscreenApp", "GOG Galaxy", "AmazonGames", "HeroicGamesLauncher", "GoPilotHome",
         // Utilidades que viven en carpetas de juegos (Steam) pero no lo son.
         "LosslessScaling", "Lossless Scaling",
         // Apps de uso normal: en la consola suelen ir maximizadas a toda la pantalla y no son juegos.
@@ -74,6 +74,12 @@ internal static class ForegroundTracker
     }
 
     public static int CurrentPid => Current?.Pid ?? 0;
+
+    /// <summary>Ruta del ejecutable del juego actual (para buscar su arte), o null.</summary>
+    public static string? CurrentPath
+    {
+        get { lock (Lock) return _current is { } c && IsAlive(c) ? c.Path : null; }
+    }
 
     public static JsonObject Get()
     {
