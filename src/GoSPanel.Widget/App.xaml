@@ -45,7 +45,7 @@
         <SolidColorBrush x:Key="ComboBoxBackground" Color="#4D000000" />
         <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#2EFFFFFF" />
 
-        <FontFamily x:Key="Phosphor">ms-appx:///Assets/Fonts/Phosphor-Fill.ttf#Phosphor-Fill</FontFamily>
+        <FontFamily x:Key="Phosphor">ms-appx:///Assets/Fonts/GoPilotIcons.ttf#GoPilotIcons</FontFamily>
 
         <Style x:Key="SectionStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource PanelBrush}" />

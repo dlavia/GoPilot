@@ -106,6 +106,7 @@
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="GameBar\Icon.png" />
     <Content Include="Assets\Fonts\Phosphor-Fill.ttf" />
+    <Content Include="Assets\Fonts\GoPilotIcons.ttf" />
     <Content Include="Properties\Default.rd.xml" />
   </ItemGroup>
   <ItemGroup>
