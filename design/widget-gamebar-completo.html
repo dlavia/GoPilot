@@ -41,7 +41,6 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .top { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; }
 .top .sys { display: flex; gap: 8px; align-items: center; font-weight: 600; } .top .ic { font-size: 18px; }
 .tabs { display: flex; align-items: center; gap: 4px; margin: 0 0 4px; position: relative; }
-.bump { height: 22px; min-width: 30px; padding: 0 6px; border-radius: 7px; border: 1px solid rgba(255,255,255,.2); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: rgba(255,255,255,.4); }
 .tb { height: 42px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 0; font-size: 21px; color: var(--text-3); transition: color .25s; position: relative; z-index: 1; cursor: pointer; }
 .tb b { font-size: 14.5px; font-weight: 700; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; margin-left: 0;
   transition: max-width .38s var(--ease), opacity .25s, margin-left .38s var(--ease); }
@@ -462,9 +461,9 @@ const val = (d, x) => typeof x == "function" ? x(d) : x;
 let tabAnim = 0;
 function tabs() {
   if (!$("#tabs .tb")) {
-    $("#tabs").innerHTML = `<span class="bump">LT</span><span class="grow"></span><span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
+    $("#tabs").innerHTML = `<span class="grow"></span><span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
       `<div class="tb" data-i="${i}">${I(s.icon, false)}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("")
-      + `<span class="grow"></span><span class="bump">RT</span>`;
+      + `<span class="grow"></span>`;
     $$(".tb").forEach(t => t.onclick = () => go2(+t.dataset.i));
   }
   $$(".tb").forEach((t, i) => {
