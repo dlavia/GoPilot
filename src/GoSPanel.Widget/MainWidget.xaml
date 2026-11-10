@@ -92,8 +92,8 @@
             <!-- ================= INICIO ================= -->
             <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Hidden">
                 <StackPanel Spacing="8" Padding="4,6,4,12">
-                    <!-- Juego en primer plano y perfil aplicado -->
-                    <Grid ColumnSpacing="12" Margin="2,0,2,6">
+                    <!-- Juego en primer plano y perfil aplicado (oculto por ahora; se recupera en el futuro) -->
+                    <Grid x:Name="HomeProfileHeader" Visibility="Collapsed" ColumnSpacing="12" Margin="2,0,2,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -170,8 +170,8 @@
                     <!-- Modo: una caja por modo con sus vatios (o FPS en Auto); ◀ ▶ (A no cambia nada) -->
                     <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
                             Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
-                    <!-- Cerrar juego: pulsar dos veces -->
-                    <c:Tile Row="value" x:Name="HomeKillTile" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
+                    <!-- Cerrar juego: pulsar dos veces (oculto por ahora; se recupera en el futuro) -->
+                    <c:Tile Row="value" x:Name="HomeKillTile" Visibility="Collapsed" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
                 </StackPanel>
             </ScrollViewer>
