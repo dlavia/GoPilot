@@ -402,7 +402,7 @@ namespace GoSPanel.Widget
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
                 // Menú de Legion L: solo iconos; la elegida, en blanco y con su nombre (el contorno lo pone TabPill).
-                ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "TextBrush" : "MutedBrush");
+                ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "AccentBrush" : "MutedBrush");
                 ((TextBlock)content.Children[1]).Foreground = Brush("TextBrush");
                 content.Children[1].Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
             }
