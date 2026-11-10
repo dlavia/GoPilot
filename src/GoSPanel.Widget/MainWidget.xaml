@@ -97,7 +97,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="44" Height="58" CornerRadius="8" Background="{StaticResource Panel2Brush}">
+                        <Border x:Name="HomeCover" Width="44" Height="58" CornerRadius="8" Background="{StaticResource Panel2Brush}">
                             <TextBlock x:Name="HomeGameIcon" Style="{StaticResource IconText}" FontSize="22" Text="&#xE26E;" HorizontalAlignment="Center" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">

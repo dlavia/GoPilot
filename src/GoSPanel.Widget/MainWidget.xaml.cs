@@ -1488,6 +1488,49 @@ namespace GoSPanel.Widget
         private bool _autoProfiles = true;
         private string _profilesSignature;
 
+        // Arte del juego en la baldosa Perfil (capsule/hero de Steam o icono); sin juego = el icono del mando.
+        private string _artShown;
+
+        private async System.Threading.Tasks.Task ApplyHomeArtAsync(string currentExe, Windows.Data.Json.JsonObject currentProfile)
+        {
+            if (string.IsNullOrEmpty(currentExe))
+            {
+                if (_artShown != null) { _artShown = null; HomeCover.Background = Brush("Panel2Brush"); HomeGameIcon.Visibility = Visibility.Visible; }
+                return;
+            }
+            if (currentExe == _artShown) return;
+            _artShown = currentExe;
+            var profile = currentProfile ?? new Windows.Data.Json.JsonObject { ["exe"] = Windows.Data.Json.JsonValue.CreateStringValue(currentExe) };
+            var art = await GetArtAsync(profile);
+            var image = ArtImage(art, "capsule") ?? ArtImage(art, "hero") ?? ArtImage(art, "icon");
+            if (image != null)
+            {
+                HomeCover.Background = new Windows.UI.Xaml.Media.ImageBrush { ImageSource = image, Stretch = Windows.UI.Xaml.Media.Stretch.UniformToFill };
+                HomeGameIcon.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                HomeCover.Background = Brush("Panel2Brush");
+                HomeGameIcon.Visibility = Visibility.Visible;
+            }
+        }
+
+        private async System.Threading.Tasks.Task<Windows.Data.Json.JsonObject> GetArtAsync(Windows.Data.Json.JsonObject profile)
+        {
+            var exe = profile.GetNamedString("exe", "");
+            if (exe.Length == 0) return null;
+            var args = new Windows.Data.Json.JsonObject { ["exe"] = Windows.Data.Json.JsonValue.CreateStringValue(exe) };
+            var path = StringOrNull(profile, "path");
+            if (path != null) args["path"] = Windows.Data.Json.JsonValue.CreateStringValue(path);
+            return await CallAsync("art.get", args, false);
+        }
+
+        private static Windows.UI.Xaml.Media.ImageSource ArtImage(Windows.Data.Json.JsonObject art, string key)
+        {
+            var relative = art != null ? StringOrNull(art, key) : null;
+            return relative == null ? null : new Windows.UI.Xaml.Media.Imaging.BitmapImage(new System.Uri("ms-appdata:///local/" + relative));
+        }
+
         private async Task RefreshProfilesAsync(bool gameActive)
         {
             var data = await CallAsync("profiles.list", null, false);
@@ -1506,6 +1549,7 @@ namespace GoSPanel.Widget
             var appliedExe = StringOrNull(data, "appliedExe");
             var profiles = data.GetNamedArray("profiles").Select(v => v.GetObject()).ToList();
             var current = profiles.FirstOrDefault(p => p.GetNamedString("exe", "") == currentExe);
+            var _ = ApplyHomeArtAsync(currentExe, current);
 
             // Banner: perfil activo (Global o el del juego). Tocándolo se alterna entre ambos.
             _activeTarget = StringOrNull(data, "active") ?? "global";
