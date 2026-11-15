@@ -1469,6 +1469,13 @@ namespace GoSPanel.Widget
 
 
             HomeKillTile.Available = active;
+            // Solo con un juego delante: qué se está jugando y la opción de cerrarlo
+            var gameVisibility = active ? Visibility.Visible : Visibility.Collapsed;
+            if (HomeProfileHeader.Visibility != gameVisibility)
+            {
+                if (!active) DisarmKill();
+                HomeProfileHeader.Visibility = HomeKillTile.Visibility = gameVisibility;
+            }
             if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
             HomeGameTitle.Text = active && !string.IsNullOrEmpty(_gameName) ? _gameName : "Sin juego";
 
@@ -1853,9 +1860,9 @@ namespace GoSPanel.Widget
                     var _ = RefreshAllButStatusAsync();
                 }
 
-                // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería: se ve en Manual
-                var watts = Num(Obj(data, "apu"), "watts");
-                TdpNowText.Text = watts.HasValue ? "Ahora: " + watts.Value.ToString("0", Es) + " W de consumo real" : "";
+                // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería: en todos los modos
+                _apuWatts = Num(Obj(data, "apu"), "watts");
+                UpdateNowText();
 
                 UpdateBattery(Obj(data, "battery"));
                 await RefreshForegroundAsync();
@@ -2066,6 +2073,21 @@ namespace GoSPanel.Widget
             var summary = shown == "auto" ? "Auto · " + _autoTarget + " FPS"
                 : ModeNames[shown] + " · " + (shown == "custom" ? _customSpl : _presetSpl[shown]) + " W";
             HomeModeTile.Sub = PowerModeTile.Sub = summary;
+            UpdateNowText();
+        }
+
+        private double? _apuWatts;
+
+        /// <summary>«Ahora: 18 W de 25 W»: lo que gasta de verdad la APU frente al límite del modo elegido.</summary>
+        private void UpdateNowText()
+        {
+            if (!_apuWatts.HasValue) { TdpNowText.Text = ""; return; }
+            var now = "Ahora: " + _apuWatts.Value.ToString("0", Es) + " W";
+            var shown = _autoTdp ? "auto" : _mode;
+            int? limit = shown == "auto" ? (_autoWatts.HasValue ? (int?)Math.Round(_autoWatts.Value) : null)
+                : shown == "custom" ? (_customSpl > 0 ? (int?)_customSpl : null)
+                : _presetSpl.ContainsKey(shown ?? "") ? _presetSpl[shown] : (int?)null;
+            TdpNowText.Text = limit.HasValue ? now + " de " + limit.Value + " W de límite" : now + " de consumo real";
         }
 
         // ---------------------------------------------------------------------

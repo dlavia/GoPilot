@@ -92,7 +92,8 @@
             <!-- ================= INICIO ================= -->
             <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Hidden">
                 <StackPanel Spacing="8" Padding="4,6,4,12">
-                    <!-- Juego en primer plano y perfil aplicado (oculto por ahora; se recupera en el futuro) -->
+                    <!-- Juego en primer plano y perfil aplicado, y «Cerrar juego» (pulsar dos veces): solo en Inicio y solo
+                         con un juego delante (sin juego no se ven; nada de «Sin juego») -->
                     <Grid x:Name="HomeProfileHeader" Visibility="Collapsed" ColumnSpacing="12" Margin="2,0,2,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -106,6 +107,7 @@
                             <TextBlock x:Name="HomeGameSub" Text="Perfil Global" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Grid>
+                    <c:Tile Row="value" x:Name="HomeKillTile" Visibility="Collapsed" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
                     <!-- Aviso de versión nueva: A lleva a Sistema › Actualizaciones; X o ✕ lo ocultan para esa versión -->
                     <Grid x:Name="UpdateNotice" Visibility="Collapsed" ColumnSpacing="4">
@@ -170,8 +172,6 @@
                     <!-- Modo: una caja por modo con sus vatios (o FPS en Auto); ◀ ▶ (A no cambia nada) -->
                     <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
                             Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
-                    <!-- Cerrar juego: pulsar dos veces (oculto por ahora; se recupera en el futuro) -->
-                    <c:Tile Row="value" x:Name="HomeKillTile" Visibility="Collapsed" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
                 </StackPanel>
             </ScrollViewer>
@@ -181,6 +181,8 @@
                 <StackPanel Spacing="8" Padding="4,6,4,12">
                     <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
                             Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
+                    <!-- Consumo real de la APU ahora mismo y el límite del modo, en todos los modos -->
+                    <TextBlock x:Name="TdpNowText" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,-2,6,0" />
 
                     <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
                     <StackPanel x:Name="AutoPanel" Spacing="8" Visibility="Collapsed">
@@ -251,7 +253,6 @@
                             <TextBlock x:Name="SplMaxText" Text="30 W" FontSize="10.5" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right" />
                         </Grid>
                         <TextBlock x:Name="TdpAutoText" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
-                        <TextBlock x:Name="TdpNowText" FontSize="11.5" Foreground="{StaticResource MutedBrush}" Margin="6,0" />
                         <c:Tile Row="sub" x:Name="TdpAdvancedTile" Glyph="&#xE434;" Title="Avanzado" State="sPPT y fPPT" Click="OnTdpAdvancedClick" />
                         <!-- Subpágina «Avanzado» (se mueve a SubHost al abrirla) -->
                         <StackPanel x:Name="TdpAdvancedBody" Spacing="8" Visibility="Collapsed">

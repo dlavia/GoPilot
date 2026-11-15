@@ -343,7 +343,9 @@ namespace GoSPanel.Widget.Controls
                     var texts = ((StackPanel)box.Child).Children.OfType<TextBlock>().ToArray();
                     var on = i == _selectedIndex;
                     box.Background = on ? Brush("AccentSoftBrush") : new SolidColorBrush(Windows.UI.Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF));
-                    box.BorderBrush = on ? Brush("AccentBrush") : new SolidColorBrush(Windows.UI.Colors.Transparent);
+                    // Con el foco no se ilumina la fila entera: solo el modo elegido lleva el aro blanco
+                    box.BorderBrush = on ? (focused ? new SolidColorBrush(Windows.UI.Colors.White) : Brush("AccentBrush"))
+                                         : new SolidColorBrush(Windows.UI.Colors.Transparent);
                     texts[0].Foreground = on ? Brush("AccentLightBrush") : Brush("IconBrush");
                     texts[1].Text = i < _boxValues.Length ? _boxValues[i] : "";
                     texts[1].Visibility = string.IsNullOrEmpty(texts[1].Text) ? Visibility.Collapsed : Visibility.Visible;
@@ -392,6 +394,8 @@ namespace GoSPanel.Widget.Controls
         {
             if (!HasChoices) return;
             var k = e.Key;
+            // Cajas: A no hace nada (ni el efecto de pulsar); el modo cambia solo con ◀ ▶
+            if (_boxes && (k == VirtualKey.GamepadA || k == VirtualKey.Enter || k == VirtualKey.Space)) { e.Handled = true; return; }
             int direction;
             if (k == VirtualKey.GamepadDPadLeft || k == VirtualKey.GamepadLeftThumbstickLeft || k == VirtualKey.Left) direction = -1;
             else if (k == VirtualKey.GamepadDPadRight || k == VirtualKey.GamepadLeftThumbstickRight || k == VirtualKey.Right) direction = 1;
@@ -499,7 +503,9 @@ namespace GoSPanel.Widget.Controls
             {
                 // Fila (menú de Legion L): tarjeta gris; con el foco, más clara y con aro blanco (lo pone RowButton).
                 var focused = Root.FocusState != FocusState.Unfocused;
-                Root.Background = Brush(focused ? "RowFocusBrush" : "Panel2Brush");
+                // Cajas (Modo): la tarjeta no cambia ni lleva aro; el foco se ve en la caja elegida (PaintChoices)
+                Root.UseSystemFocusVisuals = !_boxes;
+                Root.Background = Brush(focused && !_boxes ? "RowFocusBrush" : "Panel2Brush");
                 Root.BorderBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
                 Root.BorderThickness = new Thickness(0);
                 IconText.Foreground = _warning ? accent : Brush(focused ? "TextBrush" : "IconBrush");
