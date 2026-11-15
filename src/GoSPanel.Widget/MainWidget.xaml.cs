@@ -93,8 +93,8 @@ namespace GoSPanel.Widget
             {
                 ApplyThemeShapes();
                 InitUpdates();
-                TabsBar.SizeChanged += (_, __) => MovePill(false);
-                MovePill(false);
+                TabsBar.SizeChanged += (_, __) => LayoutTabs(false);
+                LayoutTabs(false);
                 Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
                 FocusManager.GotFocus += OnAnyGotFocus;
                 _timer.Start();
@@ -180,6 +180,7 @@ namespace GoSPanel.Widget
             RootScale.ScaleY = ContentScale;
             LayoutRoot.Width = e.NewSize.Width / ContentScale;
             LayoutRoot.Height = e.NewSize.Height / ContentScale;
+            if (_tabs != null) LayoutTabs(false);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -347,8 +348,7 @@ namespace GoSPanel.Widget
             var direction = index > _tab ? 1 : -1;
             _tab = index;
             UpdateTabVisuals();
-            TabsBar.UpdateLayout();
-            MovePill(_animate);
+            LayoutTabs(_animate);
 
             // Si había una transición en curso, se termina al instante.
             if (_slide != null) { _slide.SkipToFill(); _slide = null; }
@@ -401,41 +401,104 @@ namespace GoSPanel.Widget
             {
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
-                // Menú de Legion L: solo iconos; la elegida, en blanco y con su nombre (el contorno lo pone TabPill).
+                // Menú de Legion L: solo iconos; la elegida, en acento y con su nombre (el contorno lo pone TabPill).
+                // Mostrar u ocultar el nombre lo hace LayoutTabs, que lo anima.
                 ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "AccentBrush" : "MutedBrush");
                 ((TextBlock)content.Children[1]).Foreground = Brush("TextBrush");
-                content.Children[1].Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
+        // Ancho de una pestaña sin nombre (solo icono); la elegida se queda con todo lo que sobra.
+        private const double TabIconWidth = 52;
         private Storyboard _pillSlide;
+        private int _laidOutTab = -1;
+
+        private static TextBlock TabLabel(Button tab)
+        {
+            return (TextBlock)((StackPanel)tab.Content).Children[1];
+        }
+
+        private double AvailableTabsWidth()
+        {
+            var root = double.IsNaN(LayoutRoot.Width) ? LayoutRoot.ActualWidth : LayoutRoot.Width;
+            return root - LayoutRoot.Padding.Left - LayoutRoot.Padding.Right;
+        }
+
+        private double SelectedTabWidth()
+        {
+            // Ancho del widget, no el de la barra: la barra se ensancha si sus pestañas no caben y se quedaría con
+            // el ancho viejo al encoger el widget.
+            var gaps = TabsBar.ColumnSpacing * (_tabs.Length - 1);
+            var free = AvailableTabsWidth() - TabsBar.Padding.Left - TabsBar.Padding.Right - gaps - TabIconWidth * (_tabs.Length - 1);
+            return Math.Max(free, TabIconWidth);
+        }
 
         /// <summary>
-        /// El contorno blanco va a la pestaña elegida: se desliza y cambia de ancho a la vez (la elegida lleva su
-        /// nombre, así que es más ancha). Los valores finales se ponen como valores propios y la animación solo los
-        /// recorre; al terminar se para, para que un cambio de tamaño posterior no quede tapado por ella.
+        /// Las pestañas ocupan todo el ancho de la barra: las no elegidas miden lo justo para el icono y la elegida
+        /// se estira con el resto. Al cambiar, la anterior encoge mientras la nueva crece, el contorno blanco se
+        /// desliza a la nueva y su nombre se despliega y aparece con un fundido y un pequeño desplazamiento, un poco
+        /// después de empezar. Los valores finales se ponen como valores propios y la animación solo los recorre;
+        /// al terminar se para, para que un cambio de tamaño posterior no quede tapado por ella.
         /// </summary>
-        private void MovePill(bool animate)
+        private void LayoutTabs(bool animate)
         {
-            var tab = _tabs[_tab];
-            if (tab.ActualWidth <= 0) return;
-            var x = tab.TransformToVisual(TabHome).TransformPoint(new Windows.Foundation.Point(0, 0)).X;
-            var width = tab.ActualWidth;
+            if (AvailableTabsWidth() <= 0) return;
             if (_pillSlide != null) { _pillSlide.Stop(); _pillSlide = null; }
+            var previous = _laidOutTab;
+            _laidOutTab = _tab;
+            var big = SelectedTabWidth();
+            var step = TabIconWidth + TabsBar.ColumnSpacing;
+            var pillX = _tab * step;
             var fromX = TabPillTransform.X;
-            var fromWidth = TabPill.ActualWidth > 0 ? TabPill.ActualWidth : width;
-            TabPill.Height = tab.ActualHeight;
-            TabPillTransform.X = x;
-            TabPill.Width = width;
-            if (!animate) return;
+            var height = TabHome.ActualHeight > 0 ? TabHome.ActualHeight : 40;
+
+            // Estado final (valores propios)
+            for (var i = 0; i < _tabs.Length; i++)
+            {
+                var selected = i == _tab;
+                var label = TabLabel(_tabs[i]);
+                _tabs[i].Width = selected ? big : TabIconWidth;
+                label.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
+                label.MaxWidth = double.PositiveInfinity;
+                label.Opacity = 1;
+                if (!(label.RenderTransform is TranslateTransform)) label.RenderTransform = new TranslateTransform();
+                ((TranslateTransform)label.RenderTransform).X = 0;
+            }
+            TabPill.Height = height;
+            TabPill.Width = big;
+            TabPillTransform.X = pillX;
+            if (!animate || previous < 0 || previous == _tab) return;
+
+            var oldTab = _tabs[previous];
+            var newTab = _tabs[_tab];
+            var oldLabel = TabLabel(oldTab);
+            var newLabel = TabLabel(newTab);
+            oldLabel.Visibility = Visibility.Visible;   // se oculta al terminar, ya plegado
+            var unbounded = new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity);
+            newLabel.Measure(unbounded);
+            oldLabel.Measure(unbounded);
+            var newLabelWidth = newLabel.DesiredSize.Width;
+            var oldLabelWidth = oldLabel.DesiredSize.Width;
+
             var sb = new Storyboard();
-            AddSpline(sb, TabPillTransform, "X", fromX, x);
-            AddSpline(sb, TabPill, "Width", fromWidth, width, true);
+            AddSpline(sb, TabPillTransform, "X", fromX, pillX);
+            AddSpline(sb, oldTab, "Width", big, TabIconWidth, true);
+            AddSpline(sb, newTab, "Width", TabIconWidth, big, true);
+            // El nombre anterior se pliega y se apaga deprisa
+            AddSpline(sb, oldLabel, "MaxWidth", oldLabelWidth, 0, true);
+            AddSpline(sb, oldLabel, "Opacity", 1, 0, false, TimeSpan.Zero, TimeSpan.FromMilliseconds(120));
+            // El nuevo se despliega y aparece algo después, deslizándose desde la izquierda
+            AddSpline(sb, newLabel, "MaxWidth", 0, newLabelWidth, true);
+            var labelDelay = TimeSpan.FromMilliseconds(110);
+            var labelDuration = TimeSpan.FromMilliseconds(300);
+            AddSpline(sb, newLabel, "Opacity", 0, 1, false, labelDelay, labelDuration);
+            AddSpline(sb, newLabel.RenderTransform, "X", -10, 0, false, labelDelay, labelDuration);
             sb.Completed += (s, e) =>
             {
                 if (_pillSlide != sb) return;
                 sb.Stop();
                 _pillSlide = null;
+                if (_tab != previous) oldLabel.Visibility = Visibility.Collapsed;
             };
             _pillSlide = sb;
             sb.Begin();
@@ -449,10 +512,18 @@ namespace GoSPanel.Widget
 
         private static void AddSpline(Storyboard sb, DependencyObject target, string property, double from, double to, bool dependent = false)
         {
-            // dependent: propiedades de diseño (Width), que XAML solo anima si se le pide expresamente
+            AddSpline(sb, target, property, from, to, dependent, TimeSpan.Zero, SlideDuration);
+        }
+
+        private static void AddSpline(Storyboard sb, DependencyObject target, string property, double from, double to, bool dependent,
+            TimeSpan begin, TimeSpan duration)
+        {
+            // dependent: propiedades de diseño (Width), que XAML solo anima si se le pide expresamente.
+            // begin: se queda en «from» hasta ese momento y luego recorre la curva durante «duration».
             var animation = new DoubleAnimationUsingKeyFrames { EnableDependentAnimation = dependent };
             animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
-            var spline = new SplineDoubleKeyFrame { KeyTime = SlideDuration, Value = to };
+            if (begin > TimeSpan.Zero) animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = begin, Value = from });
+            var spline = new SplineDoubleKeyFrame { KeyTime = begin + duration, Value = to };
             spline.KeySpline = (KeySpline)Windows.UI.Xaml.Markup.XamlBindingHelper.ConvertValue(typeof(KeySpline), SlideSpline);
             animation.KeyFrames.Add(spline);
             Storyboard.SetTarget(animation, target);
