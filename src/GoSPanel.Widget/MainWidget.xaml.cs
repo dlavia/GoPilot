@@ -401,7 +401,7 @@ namespace GoSPanel.Widget
             {
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
-                // Como la app de Xbox: solo iconos; la elegida, en acento, con el contorno blanco (TabPill) y el icono
+                // Como la app de Xbox: solo iconos; la elegida, en blanco, con el contorno blanco (TabPill) y el icono
                 // en grueso. El nombre no se ve (sigue en AutomationProperties.Name para el lector de pantalla).
                 PaintTabIcon((Grid)content.Children[0], selected);
                 content.Children[1].Visibility = Visibility.Collapsed;
@@ -416,7 +416,7 @@ namespace GoSPanel.Widget
         };
 
         /// <summary>
-        /// Icono de una pestaña: la elegida, en acento y en grueso. Si Segoe Fluent Icons tiene la versión rellena se usa
+        /// Icono de una pestaña: la elegida, en blanco y en grueso. Si Segoe Fluent Icons tiene la versión rellena se usa
         /// esa; si no (Rendimiento, Pantalla, Mando), se engrosa el trazo con dos copias desplazadas medio píxel.
         /// </summary>
         private void PaintTabIcon(Grid icon, bool selected)
@@ -427,7 +427,7 @@ namespace GoSPanel.Widget
             var regular = (string)main.Tag;
             var hasSolid = SolidTabGlyphs.TryGetValue(regular, out var solid);
             main.Text = selected && hasSolid ? solid : regular;
-            var brush = Brush(selected ? "AccentBrush" : "MutedBrush");
+            var brush = Brush(selected ? "TextBrush" : "MutedBrush");
             foreach (var layer in layers)
             {
                 layer.Foreground = brush;
