@@ -401,10 +401,37 @@ namespace GoSPanel.Widget
             {
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
-                // Como la app de Xbox: solo iconos; la elegida, en acento y con el contorno blanco (TabPill).
-                // El nombre no se ve (sigue en AutomationProperties.Name para el lector de pantalla).
-                ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "AccentBrush" : "MutedBrush");
+                // Como la app de Xbox: solo iconos; la elegida, en acento, con el contorno blanco (TabPill) y el icono
+                // en grueso. El nombre no se ve (sigue en AutomationProperties.Name para el lector de pantalla).
+                PaintTabIcon((Grid)content.Children[0], selected);
                 content.Children[1].Visibility = Visibility.Collapsed;
+            }
+        }
+
+        // Iconos de pestaña con versión rellena oficial en Segoe Fluent Icons (Home → HomeSolid, Settings → SettingsSolid)
+        private static readonly Dictionary<string, string> SolidTabGlyphs = new Dictionary<string, string>
+        {
+            ["\uE80F"] = "\uEA8A",
+            ["\uE713"] = "\uF8B0",
+        };
+
+        /// <summary>
+        /// Icono de una pestaña: la elegida, en acento y en grueso. Si Segoe Fluent Icons tiene la versión rellena se usa
+        /// esa; si no (Rendimiento, Pantalla, Mando), se engrosa el trazo con dos copias desplazadas medio píxel.
+        /// </summary>
+        private void PaintTabIcon(Grid icon, bool selected)
+        {
+            var layers = icon.Children.OfType<TextBlock>().ToArray();
+            var main = layers[0];
+            if (main.Tag == null) main.Tag = main.Text;   // el glifo normal, para volver a él
+            var regular = (string)main.Tag;
+            var hasSolid = SolidTabGlyphs.TryGetValue(regular, out var solid);
+            main.Text = selected && hasSolid ? solid : regular;
+            var brush = Brush(selected ? "AccentBrush" : "MutedBrush");
+            foreach (var layer in layers)
+            {
+                layer.Foreground = brush;
+                if (layer != main) layer.Visibility = selected && !hasSolid ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 
@@ -1063,7 +1090,7 @@ namespace GoSPanel.Widget
                 var tile = new Tile
                 {
                     Row = "value",
-                    Glyph = key[0] == 'L' ? "\uE36A" : "\uE382",
+                    Glyph = key[0] == 'L' ? "\uEECA" : "\uEDE3",
                     Title = ButtonLabel(key),
                     Compact = true,
                     Tag = key,

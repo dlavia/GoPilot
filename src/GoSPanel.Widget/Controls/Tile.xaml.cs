@@ -201,7 +201,7 @@ namespace GoSPanel.Widget.Controls
             set { _boxes = value; ApplyLayout(); BuildChoices(); ApplyState(); }
         }
 
-        /// <summary>Iconos de las cajas (Phosphor), separados por «|», en el orden de Choices.</summary>
+        /// <summary>Iconos de las cajas (Segoe Fluent Icons), separados por «|», en el orden de Choices.</summary>
         public string BoxGlyphs
         {
             get => string.Join("|", _boxGlyphs);
@@ -268,7 +268,7 @@ namespace GoSPanel.Widget.Controls
                     var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
                     panel.Children.Add(new TextBlock
                     {
-                        FontFamily = (FontFamily)Application.Current.Resources["Phosphor"],
+                        FontFamily = (FontFamily)Application.Current.Resources["IconFont"],
                         Text = i < _boxGlyphs.Length ? _boxGlyphs[i] : "", FontSize = 22, HorizontalAlignment = HorizontalAlignment.Center,
                     });
                     panel.Children.Add(new TextBlock
@@ -324,7 +324,7 @@ namespace GoSPanel.Widget.Controls
         {
             var caret = new TextBlock
             {
-                FontFamily = (FontFamily)Application.Current.Resources["Phosphor"],
+                FontFamily = (FontFamily)Application.Current.Resources["IconFont"],
                 Text = glyph, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(2, 4, 2, 4),
             };
             caret.AddHandler(TappedEvent, new TappedEventHandler((s, e) => { Step(direction); e.Handled = true; }), true);

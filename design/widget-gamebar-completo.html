@@ -9,6 +9,8 @@
      Pestañas: Inicio · Rendimiento · Pantalla · Mando · Sistema. Lo que antes eran tarjetas desplegables
      (Avanzado, curva, sticks, gatillos, giroscopio, luces, overlay, atajos, perfiles, actualizaciones) son subpáginas: A entra, B vuelve.
      Tipografía e iconos como Windows/Xbox: Segoe UI Variable (del sistema) y Fluent UI System Icons (MIT, regular = b-*, filled = f-*).
+     El widget usa Segoe Fluent Icons (la fuente de iconos de Windows 11, la de Game Bar y la app de Xbox), que solo existe en Windows y
+     no se puede incrustar en una página: aquí se dibujan sus equivalentes de Fluent UI System Icons.
      Teclado: flechas · Intro/Espacio = A · Retroceso/Esc = B · Q/E = LT/RT · X = ocultar aviso · J = juego delante sí/no. Ratón: clic = foco, otro clic = A.
      Puesta al día con el widget (2026-11-16): fondo transparente (el de los widgets de Game Bar), tarjetas más claras (#3C3C3C / foco #585858),
      icono de la pestaña elegida en acento, pestañas solo con icono a partes iguales (como la app de Xbox), Modo sin iluminar la
@@ -56,6 +58,8 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
   transition: color .25s; position: relative; z-index: 1; cursor: pointer; }
 .tb b { display: none; }
 .tb.on { color: var(--accent); }
+/* La elegida, con el icono relleno (en el widget: HomeSolid / SettingsSolid de Segoe Fluent Icons, o el trazo engrosado) */
+.tb .ic.sol, .tb.on .ic.reg { display: none; } .tb.on .ic.sol { display: block; }
 .tb .dot[hidden] { display: none; }
 .tb .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
 .tabind { position: absolute; top: 0; height: 42px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.9);
@@ -503,7 +507,7 @@ let tabAnim = 0;
 function tabs() {
   if (!$("#tabs .tb")) {
     $("#tabs").innerHTML = `<span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
-      `<div class="tb" data-i="${i}" title="${s.name}">${I(s.icon, false)}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("");
+      `<div class="tb" data-i="${i}" title="${s.name}">${I(s.icon, false).replace('class="ic"', 'class="ic reg"')}${I(s.icon, true).replace('class="ic"', 'class="ic sol"')}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("");
     $$(".tb").forEach(t => t.onclick = () => go2(+t.dataset.i));
   }
   $$(".tb").forEach((t, i) => {

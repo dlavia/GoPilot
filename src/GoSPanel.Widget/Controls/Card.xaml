@@ -46,12 +46,12 @@
                             </Grid.ColumnDefinitions>
                             <!-- Icono: suelto o, en Perfil y Modo, dentro de un cuadrado de color -->
                             <Border x:Name="IconBox" CornerRadius="8" VerticalAlignment="Top">
-                                <TextBlock x:Name="IconText" FontFamily="{StaticResource Phosphor}" FontSize="16"
+                                <TextBlock x:Name="IconText" FontFamily="{StaticResource IconFont}" FontSize="16"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock x:Name="TitleText" Grid.Column="1" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <Ellipse x:Name="Dot" Grid.Column="2" Width="7" Height="7" VerticalAlignment="Center" Visibility="Collapsed" />
-                            <TextBlock x:Name="ChevronText" Grid.Column="3" FontFamily="{StaticResource Phosphor}" FontSize="11" Text="&#xE136;"
+                            <TextBlock x:Name="ChevronText" Grid.Column="3" FontFamily="{StaticResource IconFont}" FontSize="11" Text="&#xE70D;"
                                        VerticalAlignment="Center" Visibility="Collapsed">
                                 <TextBlock.RenderTransform>
                                     <RotateTransform x:Name="ChevronRotation" CenterX="5.5" CenterY="7" />

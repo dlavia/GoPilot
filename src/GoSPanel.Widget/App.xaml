@@ -98,7 +98,9 @@
         <SolidColorBrush x:Key="ComboBoxBackground" Color="#4D000000" />
         <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#2EFFFFFF" />
 
-        <FontFamily x:Key="Phosphor">ms-appx:///Assets/Fonts/GoPilotIcons.ttf#GoPilotIcons</FontFamily>
+        <!-- Iconos oficiales de Windows 11 / Xbox: Segoe Fluent Icons (viene con Windows, no se empaqueta); en
+             Windows 10 sin ella, Segoe MDL2 Assets, que comparte casi todos los códigos. -->
+        <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
         <Style x:Key="SectionStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource PanelBrush}" />
@@ -118,7 +120,7 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style x:Key="IconText" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="{StaticResource Phosphor}" />
+            <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
             <Setter Property="FontSize" Value="16" />
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />

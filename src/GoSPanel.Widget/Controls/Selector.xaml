@@ -11,7 +11,7 @@
             <Grid>
                 <TextBlock x:Name="ValueText" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" Margin="0,0,20,0" />
-                <TextBlock Style="{StaticResource IconText}" FontSize="12" Text="&#xE136;" HorizontalAlignment="Right" />
+                <TextBlock Style="{StaticResource IconText}" FontSize="12" Text="&#xE70D;" HorizontalAlignment="Right" />
             </Grid>
             <FlyoutBase.AttachedFlyout>
                 <Flyout x:Name="OptionsFlyout" Placement="Bottom" FlyoutPresenterStyle="{StaticResource SelectorFlyoutStyle}">

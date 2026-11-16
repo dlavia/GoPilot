@@ -18,7 +18,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <TextBlock x:Name="IconText" FontFamily="{StaticResource Phosphor}" FontSize="20"
+            <TextBlock x:Name="IconText" FontFamily="{StaticResource IconFont}" FontSize="20"
                        Foreground="{StaticResource IconBrush}" />
             <TextBlock x:Name="TitleText" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
             <TextBlock x:Name="StateText" FontSize="11" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
@@ -36,7 +36,7 @@
             <Border x:Name="SwitchTrack" Grid.Column="3" Width="38" Height="22" CornerRadius="11" VerticalAlignment="Center" Visibility="Collapsed">
                 <Ellipse x:Name="SwitchKnob" Width="16" Height="16" Margin="3,0" VerticalAlignment="Center" HorizontalAlignment="Left" />
             </Border>
-            <TextBlock x:Name="ChevronText" Grid.Column="3" FontFamily="{StaticResource Phosphor}" FontSize="12" Text="&#xE13A;"
+            <TextBlock x:Name="ChevronText" Grid.Column="3" FontFamily="{StaticResource IconFont}" FontSize="12" Text="&#xE76C;"
                        Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Visibility="Collapsed" />
         </Grid>
     </Button>
