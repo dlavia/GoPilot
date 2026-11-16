@@ -444,8 +444,8 @@ namespace GoSPanel.Widget
         }
 
         /// <summary>
-        /// Las pestañas (solo icono) se reparten todo el ancho a partes iguales y el contorno blanco se desliza a la
-        /// elegida. El ancho sale del widget, no de la barra: la barra se ensancha si sus pestañas no caben y se
+        /// Las pestañas (solo icono) se reparten todo el ancho a partes iguales y el contorno blanco, un círculo centrado
+        /// en el icono, se desliza a la elegida. El ancho sale del widget, no de la barra: la barra se ensancha si sus pestañas no caben y se
         /// quedaría con el ancho viejo al encoger el widget. Los valores finales se ponen como valores propios y la
         /// animación solo los recorre; al terminar se para, para que un cambio de tamaño posterior no quede tapado.
         /// </summary>
@@ -456,11 +456,14 @@ namespace GoSPanel.Widget
             if (available <= 0) return;
             if (_pillSlide != null) { _pillSlide.Stop(); _pillSlide = null; }
             var width = Math.Floor(available / _tabs.Length);
-            var pillX = _tab * (width + TabsBar.ColumnSpacing);
+            // Contorno circular centrado en el icono de la elegida (ancho = alto)
+            var size = TabHome.ActualHeight > 0 ? TabHome.ActualHeight : 40;
+            var pillX = _tab * (width + TabsBar.ColumnSpacing) + Math.Max(0, (width - size) / 2);
             var fromX = TabPillTransform.X;
             foreach (var tab in _tabs) tab.Width = width;
-            TabPill.Height = TabHome.ActualHeight > 0 ? TabHome.ActualHeight : 40;
-            TabPill.Width = width;
+            TabPill.Height = size;
+            TabPill.Width = size;
+            TabPill.CornerRadius = new CornerRadius(size / 2);
             TabPillTransform.X = pillX;
             if (!animate || fromX == pillX) return;
 

@@ -514,9 +514,9 @@ function tabs() {
     t.classList.toggle("on", i === sec);
     t.querySelector(".dot").hidden = !(SECTIONS[i].dot && SECTIONS[i].dot() && i !== sec);
   });
-  // Posición final del contorno: todas las pestañas miden lo mismo
+  // Posición final del contorno: un círculo (ancho = alto) centrado en el icono de la elegida; las pestañas miden lo mismo
   const ind = $("#tabind"), n = SECTIONS.length, gap = 2, total = $("#tabs").clientWidth, w = Math.floor((total - gap * (n - 1)) / n);
-  const to = { l: sec * (w + gap), w };
+  const d = ind.offsetHeight || 42, to = { l: sec * (w + gap) + Math.max(0, (w - d) / 2), w: d };
   const from = { l: ind.offsetLeft, w: ind.offsetWidth }, t0 = performance.now(), dur = 380, id = ++tabAnim;
   const first = !ind.style.width;
   (function step(now) {
