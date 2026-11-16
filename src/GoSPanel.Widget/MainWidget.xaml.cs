@@ -401,22 +401,14 @@ namespace GoSPanel.Widget
             {
                 var content = (StackPanel)_tabs[i].Content;
                 var selected = i == _tab;
-                // Menú de Legion L: solo iconos; la elegida, en acento y con su nombre (el contorno lo pone TabPill).
-                // Mostrar u ocultar el nombre lo hace LayoutTabs, que lo anima.
+                // Como la app de Xbox: solo iconos; la elegida, en acento y con el contorno blanco (TabPill).
+                // El nombre no se ve (sigue en AutomationProperties.Name para el lector de pantalla).
                 ((TextBlock)content.Children[0]).Foreground = Brush(selected ? "AccentBrush" : "MutedBrush");
-                ((TextBlock)content.Children[1]).Foreground = Brush("TextBrush");
+                content.Children[1].Visibility = Visibility.Collapsed;
             }
         }
 
-        // Ancho de una pestaña sin nombre (solo icono); la elegida se queda con todo lo que sobra.
-        private const double TabIconWidth = 52;
         private Storyboard _pillSlide;
-        private int _laidOutTab = -1;
-
-        private static TextBlock TabLabel(Button tab)
-        {
-            return (TextBlock)((StackPanel)tab.Content).Children[1];
-        }
 
         private double AvailableTabsWidth()
         {
@@ -424,81 +416,34 @@ namespace GoSPanel.Widget
             return root - LayoutRoot.Padding.Left - LayoutRoot.Padding.Right;
         }
 
-        private double SelectedTabWidth()
-        {
-            // Ancho del widget, no el de la barra: la barra se ensancha si sus pestañas no caben y se quedaría con
-            // el ancho viejo al encoger el widget.
-            var gaps = TabsBar.ColumnSpacing * (_tabs.Length - 1);
-            var free = AvailableTabsWidth() - TabsBar.Padding.Left - TabsBar.Padding.Right - gaps - TabIconWidth * (_tabs.Length - 1);
-            return Math.Max(free, TabIconWidth);
-        }
-
         /// <summary>
-        /// Las pestañas ocupan todo el ancho de la barra: las no elegidas miden lo justo para el icono y la elegida
-        /// se estira con el resto. Al cambiar, la anterior encoge mientras la nueva crece, el contorno blanco se
-        /// desliza a la nueva y su nombre se despliega y aparece con un fundido y un pequeño desplazamiento, un poco
-        /// después de empezar. Los valores finales se ponen como valores propios y la animación solo los recorre;
-        /// al terminar se para, para que un cambio de tamaño posterior no quede tapado por ella.
+        /// Las pestañas (solo icono) se reparten todo el ancho a partes iguales y el contorno blanco se desliza a la
+        /// elegida. El ancho sale del widget, no de la barra: la barra se ensancha si sus pestañas no caben y se
+        /// quedaría con el ancho viejo al encoger el widget. Los valores finales se ponen como valores propios y la
+        /// animación solo los recorre; al terminar se para, para que un cambio de tamaño posterior no quede tapado.
         /// </summary>
         private void LayoutTabs(bool animate)
         {
-            if (AvailableTabsWidth() <= 0) return;
+            var available = AvailableTabsWidth() - TabsBar.Padding.Left - TabsBar.Padding.Right
+                            - TabsBar.ColumnSpacing * (_tabs.Length - 1);
+            if (available <= 0) return;
             if (_pillSlide != null) { _pillSlide.Stop(); _pillSlide = null; }
-            var previous = _laidOutTab;
-            _laidOutTab = _tab;
-            var big = SelectedTabWidth();
-            var step = TabIconWidth + TabsBar.ColumnSpacing;
-            var pillX = _tab * step;
+            var width = Math.Floor(available / _tabs.Length);
+            var pillX = _tab * (width + TabsBar.ColumnSpacing);
             var fromX = TabPillTransform.X;
-            var height = TabHome.ActualHeight > 0 ? TabHome.ActualHeight : 40;
-
-            // Estado final (valores propios)
-            for (var i = 0; i < _tabs.Length; i++)
-            {
-                var selected = i == _tab;
-                var label = TabLabel(_tabs[i]);
-                _tabs[i].Width = selected ? big : TabIconWidth;
-                label.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
-                label.MaxWidth = double.PositiveInfinity;
-                label.Opacity = 1;
-                if (!(label.RenderTransform is TranslateTransform)) label.RenderTransform = new TranslateTransform();
-                ((TranslateTransform)label.RenderTransform).X = 0;
-            }
-            TabPill.Height = height;
-            TabPill.Width = big;
+            foreach (var tab in _tabs) tab.Width = width;
+            TabPill.Height = TabHome.ActualHeight > 0 ? TabHome.ActualHeight : 40;
+            TabPill.Width = width;
             TabPillTransform.X = pillX;
-            if (!animate || previous < 0 || previous == _tab) return;
-
-            var oldTab = _tabs[previous];
-            var newTab = _tabs[_tab];
-            var oldLabel = TabLabel(oldTab);
-            var newLabel = TabLabel(newTab);
-            oldLabel.Visibility = Visibility.Visible;   // se oculta al terminar, ya plegado
-            var unbounded = new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity);
-            newLabel.Measure(unbounded);
-            oldLabel.Measure(unbounded);
-            var newLabelWidth = newLabel.DesiredSize.Width;
-            var oldLabelWidth = oldLabel.DesiredSize.Width;
+            if (!animate || fromX == pillX) return;
 
             var sb = new Storyboard();
             AddSpline(sb, TabPillTransform, "X", fromX, pillX);
-            AddSpline(sb, oldTab, "Width", big, TabIconWidth, true);
-            AddSpline(sb, newTab, "Width", TabIconWidth, big, true);
-            // El nombre anterior se pliega y se apaga deprisa
-            AddSpline(sb, oldLabel, "MaxWidth", oldLabelWidth, 0, true);
-            AddSpline(sb, oldLabel, "Opacity", 1, 0, false, TimeSpan.Zero, TimeSpan.FromMilliseconds(120));
-            // El nuevo se despliega y aparece algo después, deslizándose desde la izquierda
-            AddSpline(sb, newLabel, "MaxWidth", 0, newLabelWidth, true);
-            var labelDelay = TimeSpan.FromMilliseconds(110);
-            var labelDuration = TimeSpan.FromMilliseconds(300);
-            AddSpline(sb, newLabel, "Opacity", 0, 1, false, labelDelay, labelDuration);
-            AddSpline(sb, newLabel.RenderTransform, "X", -10, 0, false, labelDelay, labelDuration);
             sb.Completed += (s, e) =>
             {
                 if (_pillSlide != sb) return;
                 sb.Stop();
                 _pillSlide = null;
-                if (_tab != previous) oldLabel.Visibility = Visibility.Collapsed;
             };
             _pillSlide = sb;
             sb.Begin();
@@ -1933,9 +1878,8 @@ namespace GoSPanel.Widget
 
                 // Consumo real de toda la APU (contador RAPL del servicio), enchufada o con batería: en todos los modos
                 _apuWatts = Num(Obj(data, "apu"), "watts");
-                UpdateNowText();
-
                 UpdateBattery(Obj(data, "battery"));
+                UpdateNowText();
                 await RefreshForegroundAsync();
                 if (_initialized) await RefreshQuickSlidersAsync();
             }
@@ -1955,6 +1899,8 @@ namespace GoSPanel.Widget
             var charging = battery != null && battery.GetNamedBoolean("charging", false);
             var acOnline = battery != null && battery.ContainsKey("acOnline")
                            && battery["acOnline"].ValueType == JsonValueType.Boolean && battery.GetNamedBoolean("acOnline");
+            // Desenchufada, la descarga de la batería es lo que gasta toda la consola
+            _batteryWatts = !charging && !acOnline && rate.HasValue && rate.Value > 0 ? rate : null;
 
 
             if (health.HasValue && full.HasValue)
@@ -2148,17 +2094,31 @@ namespace GoSPanel.Widget
         }
 
         private double? _apuWatts;
+        private double? _batteryWatts;   // descarga de la batería (solo desenchufada): si no hay lectura de la APU
 
-        /// <summary>«Ahora: 18 W de 25 W»: lo que gasta de verdad la APU frente al límite del modo elegido.</summary>
+        /// <summary>
+        /// «Consumo ahora: 18 W de 25 W de límite», bajo el Modo en Inicio y en Rendimiento. Primero el consumo real de
+        /// la APU (contador RAPL del servicio); si el equipo no lo da, la descarga de la batería (toda la consola, solo
+        /// desenchufada). Sin ninguna lectura se ve «—», para que la línea no desaparezca.
+        /// </summary>
         private void UpdateNowText()
         {
-            if (!_apuWatts.HasValue) { TdpNowText.Text = ""; return; }
-            var now = "Ahora: " + _apuWatts.Value.ToString("0", Es) + " W";
             var shown = _autoTdp ? "auto" : _mode;
             int? limit = shown == "auto" ? (_autoWatts.HasValue ? (int?)Math.Round(_autoWatts.Value) : null)
                 : shown == "custom" ? (_customSpl > 0 ? (int?)_customSpl : null)
                 : _presetSpl.ContainsKey(shown ?? "") ? _presetSpl[shown] : (int?)null;
-            TdpNowText.Text = limit.HasValue ? now + " de " + limit.Value + " W de límite" : now + " de consumo real";
+            string label, value;
+            if (_apuWatts.HasValue) { label = "Consumo ahora: "; value = _apuWatts.Value.ToString("0", Es) + " W"; }
+            else if (_batteryWatts.HasValue) { label = "Batería ahora: "; value = _batteryWatts.Value.ToString("0", Es) + " W"; }
+            else { label = "Consumo ahora: "; value = "—"; }
+            var rest = limit.HasValue ? " de " + limit.Value + " W de límite" : "";
+            foreach (var text in new[] { HomeNowText, TdpNowText })
+            {
+                text.Inlines.Clear();
+                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = label });
+                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = value, Foreground = Brush("TextBrush"), FontWeight = Windows.UI.Text.FontWeights.Bold });
+                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = rest });
+            }
         }
 
         // ---------------------------------------------------------------------

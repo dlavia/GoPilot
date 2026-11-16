@@ -34,8 +34,8 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <!-- Las pestañas llenan todo el ancho: las demás miden lo justo para el icono y la elegida se estira
-                 con el resto (anchos fijados en LayoutTabs). -->
+            <!-- Como la app de Xbox: solo iconos, repartidos a partes iguales en todo el ancho (anchos en LayoutTabs);
+                 la elegida en acento y con el contorno blanco. Los nombres quedan ocultos (y en AutomationProperties.Name). -->
             <Border x:Name="TabPill" Grid.Column="0" Grid.ColumnSpan="5" CornerRadius="18" Background="#1FFFFFFF"
                     BorderBrush="White" BorderThickness="1.5" HorizontalAlignment="Left" IsHitTestVisible="False">
                 <Border.RenderTransform>
@@ -45,7 +45,7 @@
             <Button x:Name="TabHome" AutomationProperties.Name="Inicio" Grid.Column="0" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="0" Click="OnTabClick">
                 <StackPanel Orientation="Horizontal" Padding="12,0,12,0" Height="36" HorizontalAlignment="Center">
                     <TextBlock Style="{StaticResource IconText}" FontSize="18" Text="&#xE2C2;" />
-                    <TextBlock Text="Inicio" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Padding="7,0,0,0" TextWrapping="NoWrap" />
+                    <TextBlock Text="Inicio" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Padding="7,0,0,0" TextWrapping="NoWrap" Visibility="Collapsed" />
                 </StackPanel>
             </Button>
             <Button x:Name="TabPower" AutomationProperties.Name="Rendimiento" Grid.Column="1" Style="{StaticResource FlatButton}" IsTabStop="False" Tag="1" Click="OnTabClick">
@@ -163,6 +163,8 @@
                     <!-- Modo: una caja por modo con sus vatios (o FPS en Auto); ◀ ▶ (A no cambia nada) -->
                     <c:Tile Row="value" x:Name="HomeModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
                             Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
+                    <!-- Consumo real ahora mismo frente al límite del modo (lo rellena UpdateNowText) -->
+                    <TextBlock x:Name="HomeNowText" FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,-2,6,0" />
 
                 </StackPanel>
             </ScrollViewer>
@@ -173,7 +175,7 @@
                     <c:Tile Row="value" x:Name="PowerModeTile" Glyph="&#xE628;" Title="Modo" Choices="Silencio|Equil.|Rendim.|Manual|Auto"
                             Boxes="True" BoxGlyphs="&#xE2DA;|&#xE750;|&#xE3FE;|&#xE434;|&#xE47C;" />
                     <!-- Consumo real de la APU ahora mismo y el límite del modo, en todos los modos -->
-                    <TextBlock x:Name="TdpNowText" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,-2,6,0" />
+                    <TextBlock x:Name="TdpNowText" FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="6,-2,6,0" />
 
                     <!-- AutoTDP: FPS objetivo y margen de vatios; GoPilot ajusta el límite solo (AutoTdp.cs en el agente) -->
                     <StackPanel x:Name="AutoPanel" Spacing="8" Visibility="Collapsed">

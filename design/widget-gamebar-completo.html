@@ -11,9 +11,9 @@
      Tipografía e iconos como Windows/Xbox: Segoe UI Variable (del sistema) y Fluent UI System Icons (MIT, regular = b-*, filled = f-*).
      Teclado: flechas · Intro/Espacio = A · Retroceso/Esc = B · Q/E = LT/RT · X = ocultar aviso · J = juego delante sí/no. Ratón: clic = foco, otro clic = A.
      Puesta al día con el widget (2026-11-16): fondo transparente (el de los widgets de Game Bar), tarjetas más claras (#3C3C3C / foco #585858),
-     icono de la pestaña elegida en acento, pestañas a todo el ancho (la elegida se estira y su nombre entra con fundido), Modo sin iluminar la
-     tarjeta (solo la caja elegida lleva el aro blanco), «Ahora: X W de Y W de límite» bajo el Modo, y en Inicio el juego y «Cerrar juego» solo
-     con un juego delante. -->
+     icono de la pestaña elegida en acento, pestañas solo con icono a partes iguales (como la app de Xbox), Modo sin iluminar la
+     tarjeta (solo la caja elegida lleva el aro blanco), «Consumo ahora: X W de Y W de límite» bajo el Modo en Inicio y Rendimiento, y en
+     Inicio el juego y «Cerrar juego» solo con un juego delante. -->
 <style>
 :root { --text: #F5F5F7; --text-2: rgba(245,245,247,.62); --text-3: rgba(245,245,247,.4); --ease: cubic-bezier(.2,.8,.2,1);
   --glow: 0 0 22px rgba(255,255,255,.32), 0 0 6px rgba(255,255,255,.25); --warn: #FFB547; --ok: #5BE08A;
@@ -51,15 +51,11 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .top { display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; }
 .top .sys { display: flex; gap: 8px; align-items: center; font-weight: 600; } .top .ic { font-size: 18px; }
 .tabs { display: flex; align-items: center; gap: 2px; margin: 0 0 4px; position: relative; }
-/* Las pestañas llenan todo el ancho: las demás miden lo justo para el icono (52) y la elegida se estira con el resto.
-   Al cambiar, la anterior encoge mientras la nueva crece y el nombre nuevo entra algo después, con fundido y desde la izquierda. */
-.tb { flex: 0 0 52px; min-width: 0; height: 42px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 0; font-size: 21px; color: var(--text-3);
-  transition: color .25s, flex-grow .38s var(--ease); position: relative; z-index: 1; cursor: pointer; overflow: hidden; }
-.tb.on { flex-grow: 1; }
-.tb b { font-size: 14.5px; font-weight: 700; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; margin-left: 0; transform: translateX(-10px);
-  transition: max-width .38s var(--ease), opacity .12s, margin-left .38s var(--ease), transform .3s var(--ease); }
-.tb.on { color: var(--accent); } .tb.on b { color: #fff; max-width: 160px; opacity: 1; margin-left: 8px; transform: none;
-  transition: max-width .38s var(--ease), opacity .3s var(--ease) .11s, margin-left .38s var(--ease), transform .3s var(--ease) .11s; }
+/* Como la app de Xbox: solo iconos, repartidos a partes iguales en todo el ancho; la elegida en acento y con el contorno. */
+.tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 0; font-size: 21px; color: var(--text-3);
+  transition: color .25s; position: relative; z-index: 1; cursor: pointer; }
+.tb b { display: none; }
+.tb.on { color: var(--accent); }
 .tb .dot[hidden] { display: none; }
 .tb .dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
 .tabind { position: absolute; top: 0; height: 42px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1.5px solid rgba(255,255,255,.9);
@@ -93,7 +89,7 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .label i { font-style: normal; font-weight: 600; letter-spacing: .02em; text-transform: none; }
 .hint { font-size: 12.5px; line-height: 1.45; color: var(--text-3); margin: 2px 6px 10px; }
 .hint.warn { color: var(--warn); }
-.hint.now { margin: -2px 6px 8px; font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.hint.now { margin: -2px 6px 8px; font-size: 13.5px; color: var(--text-2); font-variant-numeric: tabular-nums; } .hint.now b { color: #fff; }
 .item { min-height: 52px; border-radius: 15px; display: flex; align-items: center; gap: 13px; padding: 0 15px; font-size: 15.5px; font-weight: 600; color: var(--text-2); position: relative;
   background: rgba(60,60,60,.78); margin-bottom: 8px; cursor: pointer; transition: color .2s, background .2s; }
 .item > .ic:first-child { font-size: 20px; width: 21px; }
@@ -326,10 +322,11 @@ const SECTIONS = [
     S.game ? "kill" : null,
     S.banner ? { ic: "arrow-circle-up", t: "GoPilot 0.1.0.160 disponible", s: "A para ver las novedades · X para ocultar", type: "go", page: "update", cls: "banner full keep" } : null,
     "bright", "vol", "mode",
+    { html: `<div class="hint now full">${nowText()}</div>` },
   ] },
   { name: "Rendimiento", icon: "lightning", rows: () => [
     "mode",
-    { html: `<div class="hint now full" id="now">${nowText()}</div>` },
+    { html: `<div class="hint now full">${nowText()}</div>` },
     ...(S.mode == 3 ? ["spl", "tdpAdv"] : []),
     ...(S.mode == 4 ? ["autoTarget", "autoMin", "autoMax", "autoChill"] : []),
     L("Procesador y ventilador"), "boost", "fanMax", "fanCurve",
@@ -493,22 +490,22 @@ function resolve(r) {
 }
 const val = (d, x) => typeof x == "function" ? x(d) : x;
 
-// Pestañas: se construyen una vez y luego solo cambian de clase. Llenan todo el ancho: las demás miden 52 (solo icono) y la
-// elegida se queda con el resto; el contorno se desliza a la nueva y cambia de ancho a la vez (como LayoutTabs del widget).
+// Pestañas: se construyen una vez y luego solo cambian de clase. Solo iconos, a partes iguales en todo el ancho; el contorno
+// se desliza a la elegida (como LayoutTabs del widget).
 let tabAnim = 0;
 function tabs() {
   if (!$("#tabs .tb")) {
     $("#tabs").innerHTML = `<span class="tabind" id="tabind"></span>` + SECTIONS.map((s, i) =>
-      `<div class="tb" data-i="${i}">${I(s.icon, false)}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("");
+      `<div class="tb" data-i="${i}" title="${s.name}">${I(s.icon, false)}<b>${s.name}</b><span class="dot" hidden></span></div>`).join("");
     $$(".tb").forEach(t => t.onclick = () => go2(+t.dataset.i));
   }
   $$(".tb").forEach((t, i) => {
     t.classList.toggle("on", i === sec);
     t.querySelector(".dot").hidden = !(SECTIONS[i].dot && SECTIONS[i].dot() && i !== sec);
   });
-  // Posición final del contorno: x = pestaña × (52 + hueco); ancho = todo lo que sobra tras las demás
-  const ind = $("#tabind"), n = SECTIONS.length, gap = 2, icon = 52, total = $("#tabs").clientWidth;
-  const to = { l: sec * (icon + gap), w: Math.max(icon, total - (n - 1) * (icon + gap)) };
+  // Posición final del contorno: todas las pestañas miden lo mismo
+  const ind = $("#tabind"), n = SECTIONS.length, gap = 2, total = $("#tabs").clientWidth, w = Math.floor((total - gap * (n - 1)) / n);
+  const to = { l: sec * (w + gap), w };
   const from = { l: ind.offsetLeft, w: ind.offsetWidth }, t0 = performance.now(), dur = 380, id = ++tabAnim;
   const first = !ind.style.width;
   (function step(now) {
@@ -679,10 +676,11 @@ function bigMode() {
   el.classList.add("on"); clearTimeout(bigMode.t); bigMode.t = setTimeout(() => el.classList.remove("on"), 1300);
 }
 
-// «Ahora: 18 W de 25 W de límite»: lo que gasta de verdad la APU frente al límite del modo elegido (en todos los modos)
+// «Consumo ahora: 18 W de 25 W de límite», bajo el Modo en Inicio y en Rendimiento: lo que gasta de verdad la APU
+// frente al límite del modo elegido (sin lectura de la APU, el widget usa la descarga de la batería: «Batería ahora»)
 function nowText() {
   const limit = S.mode < 3 ? [10, 15, 25][S.mode] : S.mode == 3 ? S.spl : S.autoWatts;
-  return `Ahora: ${Math.round(live.w)} W de ${limit} W de límite`;
+  return `Consumo ahora: <b>${Math.round(live.w)} W</b> de ${limit} W de límite`;
 }
 function setGame(on) {
   S.game = on; S.profile = on ? 1 : 0;
@@ -701,7 +699,7 @@ setInterval(() => {
   live.fan = S.fanMax ? 5400 : Math.round(1800 + baseW() * 60 + (Math.random() - .5) * 100);
   S.autoWatts = Math.round(Math.min(S.autoMax, Math.max(S.autoMin, live.w + 1.5)));
   const st = $("#stats"); if (st) st.outerHTML = statsHtml();
-  const nw = $("#now"); if (nw) nw.textContent = nowText();
+  $$(".hint.now").forEach(e => e.innerHTML = nowText());
   const g = $("#gdot"); if (g && S.gyro) { g.style.left = 27 + (Math.random() - .5) * 30 * S.gyroSens / 50 + "px"; g.style.top = 27 + (Math.random() - .5) * 30 * S.gyroSens / 50 + "px"; }
 }, 1000);
 
