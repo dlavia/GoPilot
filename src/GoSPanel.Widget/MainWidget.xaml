@@ -83,13 +83,12 @@
             <!-- ================= INICIO ================= -->
             <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Hidden">
                 <StackPanel Spacing="8" Padding="4,6,4,12">
-                    <!-- Juego en primer plano y perfil aplicado, y a la derecha el botón «Cerrar» (pulsar dos veces): solo en
-                         Inicio y solo con un juego delante (sin juego no se ve; nada de «Sin juego») -->
+                    <!-- Juego en primer plano y perfil aplicado: solo en Inicio y solo con un juego delante (sin juego no se
+                         ve; nada de «Sin juego»). «Cerrar juego» va al final de Inicio. -->
                     <Grid x:Name="HomeProfileHeader" Visibility="Collapsed" ColumnSpacing="12" Margin="2,0,2,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Border x:Name="HomeCover" Width="44" Height="58" CornerRadius="8" Background="{StaticResource Panel2Brush}">
                             <TextBlock x:Name="HomeGameIcon" Style="{StaticResource IconText}" FontSize="22" Text="&#xE26E;" HorizontalAlignment="Center" />
@@ -98,14 +97,6 @@
                             <TextBlock x:Name="HomeGameTitle" Text="Sin juego" FontSize="20" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
                             <TextBlock x:Name="HomeGameSub" Text="Perfil Global" FontSize="12" Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
-                        <Button x:Name="HomeKillButton" Grid.Column="2" Style="{StaticResource RowButton}" Height="38" Padding="12,0,14,0"
-                                VerticalAlignment="Center" HorizontalAlignment="Right" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
-                                Click="OnKillClick" AutomationProperties.Name="Cerrar juego">
-                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                <TextBlock x:Name="HomeKillIcon" Style="{StaticResource IconText}" FontSize="16" Text="&#xE4F8;" VerticalAlignment="Center" />
-                                <TextBlock x:Name="HomeKillText" Text="Cerrar" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
                     </Grid>
 
                     <!-- Aviso de versión nueva: A lleva a Sistema › Actualizaciones; X o ✕ lo ocultan para esa versión -->
@@ -196,6 +187,9 @@
                             </Grid>
                         </StackPanel>
                     </Border>
+
+                    <!-- Cerrar juego: pulsar dos veces; solo con un juego delante -->
+                    <c:Tile Row="value" x:Name="HomeKillTile" Visibility="Collapsed" Glyph="&#xE4F8;" Title="Cerrar juego" State="Sin juego" Available="False" Click="OnKillClick" />
 
                 </StackPanel>
             </ScrollViewer>

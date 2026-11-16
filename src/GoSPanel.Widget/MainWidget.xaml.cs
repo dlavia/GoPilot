@@ -1489,8 +1489,10 @@ namespace GoSPanel.Widget
             if (HomeProfileHeader.Visibility != gameVisibility)
             {
                 if (!active) DisarmKill();
-                HomeProfileHeader.Visibility = gameVisibility;
+                HomeProfileHeader.Visibility = HomeKillTile.Visibility = gameVisibility;
             }
+            HomeKillTile.Available = active;
+            if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
             HomeGameTitle.Text = active && !string.IsNullOrEmpty(_gameName) ? _gameName : "Sin juego";
 
             await RefreshProfilesAsync(active);
@@ -1841,12 +1843,11 @@ namespace GoSPanel.Widget
             PaintKill();
         }
 
-        /// <summary>Botón «Cerrar» de la cabecera del juego: con la primera pulsación pide la segunda, en naranja.</summary>
+        /// <summary>Fila «Cerrar juego»: con la primera pulsación pide la segunda, en naranja.</summary>
         private void PaintKill()
         {
-            HomeKillText.Text = _killArmed ? "Pulsa otra vez" : "Cerrar";
-            HomeKillIcon.Foreground = Brush(_killArmed ? "WarnBrush" : "IconBrush");
-            HomeKillText.Foreground = Brush(_killArmed ? "WarnBrush" : "TextBrush");
+            HomeKillTile.Warning = _killArmed;
+            HomeKillTile.State = _killArmed ? "Pulsa otra vez" : _gameName ?? "Sin juego";
         }
 
         private async Task RefreshStatusAsync()

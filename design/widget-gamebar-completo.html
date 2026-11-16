@@ -13,7 +13,7 @@
      Puesta al día con el widget (2026-11-16): fondo transparente (el de los widgets de Game Bar), tarjetas más claras (#3C3C3C / foco #585858),
      icono de la pestaña elegida en acento, pestañas solo con icono a partes iguales (como la app de Xbox), Modo sin iluminar la
      tarjeta (solo la caja elegida lleva el aro blanco), tarjeta «Consumo ahora» (vatios en grande y barra hacia el límite) bajo el Modo en
-     Inicio y Rendimiento, y en Inicio el juego con «Cerrar» a su derecha, solo con un juego delante. -->
+     Inicio y Rendimiento, y en Inicio el juego arriba y «Cerrar juego» al final, solo con un juego delante. -->
 <style>
 :root { --text: #F5F5F7; --text-2: rgba(245,245,247,.62); --text-3: rgba(245,245,247,.4); --ease: cubic-bezier(.2,.8,.2,1);
   --glow: 0 0 22px rgba(255,255,255,.32), 0 0 6px rgba(255,255,255,.25); --warn: #FFB547; --ok: #5BE08A;
@@ -96,10 +96,7 @@ svg.ic { width: 1em; height: 1em; flex: none; fill: currentColor; display: block
 .nowc big { font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; } .nowc big small { font-size: 18px; margin-left: 3px; }
 .nowc .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.16); margin-top: 11px; overflow: hidden; }
 .nowc .bar b { display: block; height: 100%; background: #fff; border-radius: 99px; transition: width .4s var(--ease); }
-/* «Cerrar» a la derecha del juego: botón compacto (pulsar dos veces) */
-.head .item.killbtn { flex: none; margin: 0 0 0 auto; min-height: 42px; padding: 0 15px 0 13px; gap: 8px; border-radius: 13px; font-size: 14px; }
-.head .item.killbtn > .ic:first-child { font-size: 17px; width: 17px; } .head .item.killbtn::before { border-radius: 16px; }
-.head .item.killbtn.armed { color: var(--warn); } .head .item.killbtn .two { padding: 0; }
+
 .item { min-height: 52px; border-radius: 15px; display: flex; align-items: center; gap: 13px; padding: 0 15px; font-size: 15.5px; font-weight: 600; color: var(--text-2); position: relative;
   background: rgba(60,60,60,.78); margin-bottom: 8px; cursor: pointer; transition: color .2s, background .2s; }
 .item > .ic:first-child { font-size: 20px; width: 21px; }
@@ -279,7 +276,7 @@ const D = {
   chillMax: { ic: "arrow-line-up", t: "FPS máximos", s: "En acción", type: "lvl", k: "chillMax", min: 30, max: 120, step: 5, u: "" },
   lossless: { ic: "copy", t: "Lossless Scaling", s: "Actívalo con el juego delante", type: "sw", k: "lossless" },
   overlay: { ic: "squares-four", t: "Overlay en juegos", s: () => !S.overlay ? "Desactivado" : `${["En juegos", "Siempre"][S.overlayAlways]} · ${POS[S.overlayPos].toLowerCase()}`, type: "go", page: "overlay", right: () => S.overlay ? "Sí" : "No" },
-  kill: { ic: "x-circle", t: "Cerrar", type: "act", cls: "killbtn", confirm: "Pulsa otra vez", confirmInTitle: true, act: () => { toast("ELDEN RING cerrado"); setGame(false); } },
+  kill: { ic: "x-circle", t: "Cerrar juego", s: "ELDEN RING", keep: true, type: "act", confirm: "Pulsa otra vez", act: () => { toast("ELDEN RING cerrado"); setGame(false); } },
   bright: { ic: "sun", t: "Brillo", type: "lvl", k: "bright", min: 0, max: 100, step: 2, u: "" },
   vol: { ic: "speaker-high", t: "Volumen", type: "lvl", k: "vol", min: 0, max: 100, step: 2, u: "" },
   res: { ic: "arrows-out", t: "Resolución", type: "cyc", k: "res", opts: RES },
@@ -327,11 +324,12 @@ const bLabel = k => k[0] == "L" ? "Legion L" : "Legion R";
 // ===================== Secciones =====================
 const SECTIONS = [
   { name: "Inicio", icon: "house", rows: () => [
-    // Juego delante (carátula, nombre y perfil) y a su derecha «Cerrar» (pulsar dos veces): solo con un juego delante
-    S.game ? { head: `<div class="cover">ER</div><div><h1>ELDEN RING</h1><div class="sub">Jugando · perfil ${PROFILES[S.profile].n}</div></div>`, row: "kill" } : null,
+    // Juego delante (carátula, nombre y perfil) y, al final, «Cerrar juego» (pulsar dos veces): solo con un juego delante
+    S.game ? { html: `<div class="head full"><div class="cover">ER</div><div><h1>ELDEN RING</h1><div class="sub">Jugando · perfil ${PROFILES[S.profile].n}</div></div></div>` } : null,
     S.banner ? { ic: "arrow-circle-up", t: "GoPilot 0.1.0.160 disponible", s: "A para ver las novedades · X para ocultar", type: "go", page: "update", cls: "banner full keep" } : null,
     "bright", "vol", "mode",
     { html: nowCard() },
+    S.game ? "kill" : null,
   ] },
   { name: "Rendimiento", icon: "lightning", rows: () => [
     "mode",
@@ -544,11 +542,11 @@ function rowHtml(d, i) {
   const dis = d.dis && d.dis(), key = curKey() + ":" + i;
   let s = val(d, d.s);
   let warn = d.warn && d.warn();
-  let title = d.t, cls = "";
-  if (armed === key && d.confirm) { if (d.confirmInTitle) { title = d.confirm; cls = "armed"; } else { s = d.confirm; warn = true; } }
+  const title = d.t;
+  if (armed === key && d.confirm) { s = d.confirm; warn = true; }
   const icon = d.fill === false ? I(d.ic, false) : I(d.ic);
   const body = s ? `<span class="two"><span>${title}</span><small class="${warn ? "warn" : ""}">${s}</small></span>` : `<span class="two"><span>${title}</span></span>`;
-  return `<div class="item ${d.cls || ""} ${cls} ${dis ? "dis" : ""} ${d.keep ? "keep" : ""}" data-i="${i}">${icon}${body}<span class="right">${rightHtml(d)}</span></div>`;
+  return `<div class="item ${d.cls || ""} ${dis ? "dis" : ""} ${d.keep ? "keep" : ""}" data-i="${i}">${icon}${body}<span class="right">${rightHtml(d)}</span></div>`;
 }
 function draw(keepScroll = true) {
   const list = (page ? PAGES[page].rows() : SECTIONS[sec].rows()).map(resolve).filter(Boolean);
@@ -557,7 +555,6 @@ function draw(keepScroll = true) {
   if (page) html += `<div class="crumb full" id="crumb">${I("caret-left", false)}<span>${PAGES[page].t}</span><small>· ${PAGES[page].from}</small></div>`;
   for (const r of list) {
     if (r.html !== undefined) { html += r.html; continue; }
-    if (r.head !== undefined) { const d = resolve(r.row); html += `<div class="head full">${r.head}${rowHtml(d, rows.length)}</div>`; rows.push(d); continue; }
     if (r.label) { html += `<div class="label full">${r.label}${r.aside ? `<i>${r.aside}</i>` : ""}</div>`; continue; }
     html += rowHtml(r, rows.length); rows.push(r);
   }
