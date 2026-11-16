@@ -465,8 +465,8 @@
                                         <TextBlock Text="Gatillo izquierdo" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
                                         <TextBlock x:Name="LeftTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
                                     </Grid>
-                                    <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
-                                        <Border x:Name="LeftTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="White" />
+                                    <Grid Height="8" CornerRadius="4" Background="{StaticResource SliderTrackFill}">
+                                        <Border x:Name="LeftTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="4" Background="White" />
                                     </Grid>
                                 </StackPanel>
                                 <StackPanel Spacing="3">
@@ -474,8 +474,8 @@
                                         <TextBlock Text="Gatillo derecho" FontSize="11.5" Foreground="{StaticResource MutedBrush}" />
                                         <TextBlock x:Name="RightTriggerText" Style="{StaticResource ValueText}" FontSize="12" />
                                     </Grid>
-                                    <Grid Height="10" CornerRadius="5" Background="{StaticResource TrackBrush}">
-                                        <Border x:Name="RightTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="5" Background="White" />
+                                    <Grid Height="8" CornerRadius="4" Background="{StaticResource SliderTrackFill}">
+                                        <Border x:Name="RightTriggerFill" HorizontalAlignment="Left" Width="0" CornerRadius="4" Background="White" />
                                     </Grid>
                                 </StackPanel>
                             </StackPanel>
@@ -748,7 +748,9 @@
                             <Border x:Name="UpdateNotesBox" Background="{StaticResource Panel2Brush}" CornerRadius="14" Padding="13,10" Opacity="0.85">
                                 <TextBlock x:Name="UpdateNotes" FontSize="12" TextWrapping="Wrap" />
                             </Border>
-                            <ProgressBar x:Name="UpdateProgress" Maximum="100" Height="4" Foreground="White" Visibility="Collapsed" />
+                            <!-- Misma barra que los deslizadores: 8 px, pista gris y relleno blanco redondeados -->
+                            <ProgressBar x:Name="UpdateProgress" Maximum="100" Height="8" MinHeight="8" CornerRadius="4" Foreground="White"
+                                         Background="{StaticResource SliderTrackFill}" Margin="6,0" Visibility="Collapsed" />
                             <TextBlock x:Name="UpdateMessage" FontSize="11.5" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Visibility="Collapsed" Margin="6,0" />
                             <Grid x:Name="UpdateButtons" ColumnSpacing="6">
                                 <Grid.ColumnDefinitions>
