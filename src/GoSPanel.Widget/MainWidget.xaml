@@ -35,7 +35,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <!-- Como la app de Xbox: solo iconos, repartidos a partes iguales en todo el ancho (anchos en LayoutTabs);
-                 la elegida en acento y con el contorno blanco. Los nombres quedan ocultos (y en AutomationProperties.Name). -->
+                 la elegida en blanco, rellena y con el contorno circular blanco. Los nombres quedan ocultos (y en AutomationProperties.Name). -->
             <Border x:Name="TabPill" Grid.Column="0" Grid.ColumnSpan="5" CornerRadius="18" Background="#1FFFFFFF"
                     BorderBrush="White" BorderThickness="1.5" HorizontalAlignment="Left" IsHitTestVisible="False">
                 <Border.RenderTransform>
