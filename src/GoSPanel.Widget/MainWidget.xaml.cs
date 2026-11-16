@@ -1484,15 +1484,13 @@ namespace GoSPanel.Widget
             _gameName = active ? data.GetNamedString("name", "") : null;
 
 
-            HomeKillTile.Available = active;
             // Solo con un juego delante: qué se está jugando y la opción de cerrarlo
             var gameVisibility = active ? Visibility.Visible : Visibility.Collapsed;
             if (HomeProfileHeader.Visibility != gameVisibility)
             {
                 if (!active) DisarmKill();
-                HomeProfileHeader.Visibility = HomeKillTile.Visibility = gameVisibility;
+                HomeProfileHeader.Visibility = gameVisibility;
             }
-            if (!_killArmed) HomeKillTile.State = active ? _gameName : "Sin juego";
             HomeGameTitle.Text = active && !string.IsNullOrEmpty(_gameName) ? _gameName : "Sin juego";
 
             await RefreshProfilesAsync(active);
@@ -1822,8 +1820,7 @@ namespace GoSPanel.Widget
             {
                 // Primera pulsación: pedir confirmación durante 3 s (evita cerrar el juego sin querer con el mando).
                 _killArmed = true;
-                HomeKillTile.Warning = true;
-                HomeKillTile.State = "Pulsa otra vez";
+                PaintKill();
                 if (_killTimer == null)
                 {
                     _killTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
@@ -1841,8 +1838,15 @@ namespace GoSPanel.Widget
         private void DisarmKill()
         {
             _killArmed = false;
-            HomeKillTile.Warning = false;
-            HomeKillTile.State = _gameName ?? "Sin juego";
+            PaintKill();
+        }
+
+        /// <summary>Botón «Cerrar» de la cabecera del juego: con la primera pulsación pide la segunda, en naranja.</summary>
+        private void PaintKill()
+        {
+            HomeKillText.Text = _killArmed ? "Pulsa otra vez" : "Cerrar";
+            HomeKillIcon.Foreground = Brush(_killArmed ? "WarnBrush" : "IconBrush");
+            HomeKillText.Foreground = Brush(_killArmed ? "WarnBrush" : "TextBrush");
         }
 
         private async Task RefreshStatusAsync()
@@ -2097,7 +2101,7 @@ namespace GoSPanel.Widget
         private double? _batteryWatts;   // descarga de la batería (solo desenchufada): si no hay lectura de la APU
 
         /// <summary>
-        /// «Consumo ahora: 18 W de 25 W de límite», bajo el Modo en Inicio y en Rendimiento. Primero el consumo real de
+        /// Tarjeta «Consumo ahora · 18 W · de 25 W de límite» con su barra, bajo el Modo en Inicio y en Rendimiento. Primero el consumo real de
         /// la APU (contador RAPL del servicio); si el equipo no lo da, la descarga de la batería (toda la consola, solo
         /// desenchufada). Sin ninguna lectura se ve «—», para que la línea no desaparezca.
         /// </summary>
@@ -2107,18 +2111,27 @@ namespace GoSPanel.Widget
             int? limit = shown == "auto" ? (_autoWatts.HasValue ? (int?)Math.Round(_autoWatts.Value) : null)
                 : shown == "custom" ? (_customSpl > 0 ? (int?)_customSpl : null)
                 : _presetSpl.ContainsKey(shown ?? "") ? _presetSpl[shown] : (int?)null;
-            string label, value;
-            if (_apuWatts.HasValue) { label = "Consumo ahora: "; value = _apuWatts.Value.ToString("0", Es) + " W"; }
-            else if (_batteryWatts.HasValue) { label = "Batería ahora: "; value = _batteryWatts.Value.ToString("0", Es) + " W"; }
-            else { label = "Consumo ahora: "; value = "—"; }
-            var rest = limit.HasValue ? " de " + limit.Value + " W de límite" : "";
-            foreach (var text in new[] { HomeNowText, TdpNowText })
+            string label;
+            double? watts;
+            if (_apuWatts.HasValue) { label = "Consumo ahora"; watts = _apuWatts; }
+            else if (_batteryWatts.HasValue) { label = "Batería ahora"; watts = _batteryWatts; }
+            else { label = "Consumo ahora"; watts = null; }
+            var value = watts.HasValue ? watts.Value.ToString("0", Es) + " W" : "—";
+            var sub = limit.HasValue ? "de " + limit.Value + " W de límite" : "";
+            if (!_apuWatts.HasValue && _batteryWatts.HasValue) sub += (sub.Length > 0 ? " · " : "") + "toda la consola";
+            var ratio = watts.HasValue && limit.HasValue && limit.Value > 0 ? Math.Max(0, Math.Min(1, watts.Value / limit.Value)) : 0;
+            void Fill(TextBlock nameText, TextBlock wattsText, TextBlock limitText, Grid bar)
             {
-                text.Inlines.Clear();
-                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = label });
-                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = value, Foreground = Brush("TextBrush"), FontWeight = Windows.UI.Text.FontWeights.Bold });
-                text.Inlines.Add(new Windows.UI.Xaml.Documents.Run { Text = rest });
+                nameText.Text = label;
+                wattsText.Text = value;
+                limitText.Text = sub;
+                limitText.Visibility = sub.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+                bar.ColumnDefinitions[0].Width = new GridLength(ratio, GridUnitType.Star);
+                bar.ColumnDefinitions[1].Width = new GridLength(1 - ratio, GridUnitType.Star);
             }
+            Fill(HomeNowLabel, HomeNowWatts, HomeNowLimit, HomeNowBar);
+            Fill(TdpNowLabel, TdpNowWatts, TdpNowLimit, TdpNowBar);
+        }
         }
 
         // ---------------------------------------------------------------------
