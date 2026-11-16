@@ -250,7 +250,7 @@ namespace GoSPanel.Widget
 
         private static void PaintSliderRow(Border row, bool focused)
         {
-            row.Background = Brush(focused ? "RowFocusBrush" : "Panel2Brush");
+            row.Background = Brush("Panel2Brush");   // con foco solo cambia el borde, no el fondo
             row.BorderBrush = new SolidColorBrush(focused ? Windows.UI.Colors.White : Windows.UI.Colors.Transparent);
             row.BorderThickness = new Thickness(focused ? 2 : 0);
             // Que el borde no mueva el contenido
@@ -1612,7 +1612,7 @@ namespace GoSPanel.Widget
             var activeProfile = profiles.FirstOrDefault(p => p.GetNamedString("exe", "") == _activeTarget);
             // Siempre el perfil aplicado (no el juego abierto): mando en color = perfil de juego, globo = Global.
             GameTitle.Text = !onGlobal && activeProfile != null ? activeProfile.GetNamedString("name", _activeTarget) : "Global";
-            GameIcon.Text = onGlobal ? "" : "";
+            GameIcon.Text = onGlobal ? "" : "";
             GameIcon.Foreground = Brush(onGlobal ? "MutedBrush" : "AccentBrush");
             ConnectionText.Text = "PERFIL";
             HomeGameSub.Text = (_gameName != null ? "Jugando · perfil " : "Perfil ") + GameTitle.Text;
@@ -1662,7 +1662,7 @@ namespace GoSPanel.Widget
             var icon = new TextBlock
             {
                 Style = (Style)Application.Current.Resources["IconText"],
-                Text = "", FontSize = 18,
+                Text = "", FontSize = 18,
                 Foreground = Brush(active ? "AccentBrush" : "MutedBrush"),
             };
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
@@ -1676,7 +1676,7 @@ namespace GoSPanel.Widget
                 Width = 34, Height = 34,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                Content = new TextBlock { Style = (Style)Application.Current.Resources["IconText"], Text = "", FontSize = 16 },
+                Content = new TextBlock { Style = (Style)Application.Current.Resources["IconText"], Text = "", FontSize = 16 },
             };
             ToolTipService.SetToolTip(delete, "Borrar perfil");
             delete.Click += async (s, e) =>
@@ -2162,7 +2162,6 @@ namespace GoSPanel.Widget
             }
             Fill(HomeNowLabel, HomeNowWatts, HomeNowLimit, HomeNowBar);
             Fill(TdpNowLabel, TdpNowWatts, TdpNowLimit, TdpNowBar);
-        }
         }
 
         // ---------------------------------------------------------------------

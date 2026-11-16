@@ -297,9 +297,9 @@ namespace GoSPanel.Widget.Controls
             else if (_compact)
             {
                 ChoicesPanel.Spacing = 6;
-                ChoicesPanel.Children.Add(Caret("", -1));
+                ChoicesPanel.Children.Add(Caret("", -1));
                 ChoicesPanel.Children.Add(new TextBlock { FontSize = 13, FontWeight = Windows.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center });
-                ChoicesPanel.Children.Add(Caret("", 1));
+                ChoicesPanel.Children.Add(Caret("", 1));
             }
             else
             {
@@ -501,11 +501,11 @@ namespace GoSPanel.Widget.Controls
             var highlighted = _isOn || _warning;
             if (_row != null)
             {
-                // Fila (menú de Legion L): tarjeta gris; con el foco, más clara y con aro blanco (lo pone RowButton).
+                // Fila (menú de Legion L): tarjeta oscura; con el foco solo el aro blanco (lo pone RowButton).
                 var focused = Root.FocusState != FocusState.Unfocused;
                 // Cajas (Modo): la tarjeta no cambia ni lleva aro; el foco se ve en la caja elegida (PaintChoices)
                 Root.UseSystemFocusVisuals = !_boxes;
-                Root.Background = Brush(focused && !_boxes ? "RowFocusBrush" : "Panel2Brush");
+                Root.Background = Brush("Panel2Brush");   // con foco solo cambia el borde, no el fondo
                 Root.BorderBrush = new SolidColorBrush(Windows.UI.Colors.Transparent);
                 Root.BorderThickness = new Thickness(0);
                 IconText.Foreground = _warning ? accent : Brush(focused ? "TextBrush" : "IconBrush");

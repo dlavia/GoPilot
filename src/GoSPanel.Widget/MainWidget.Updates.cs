@@ -15,7 +15,7 @@ namespace GoSPanel.Widget
     /// </summary>
     public sealed partial class MainWidget
     {
-        private const string GlyphUpToDate = "", GlyphDownload = "", GlyphWarning = "";
+        private const string GlyphUpToDate = "", GlyphDownload = "", GlyphWarning = "";
 
         private string _latestVersion;      // versión publicada más nueva que la instalada (null = al día)
         private string _latestNotes = "";

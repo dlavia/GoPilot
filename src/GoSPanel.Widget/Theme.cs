@@ -33,7 +33,7 @@ namespace GoSPanel.Widget
             if (IsContrast)
             {
                 Set("PanelBrush", 0x00, 0x00, 0x00, 0x00);
-                Set("Panel2Brush", 0xFF, 0x3C, 0x3C, 0x3C);
+                Set("Panel2Brush", 0x99, 0x00, 0x00, 0x00);   // tarjetas más oscuras que el fondo de Game Bar
                 Set("RowFocusBrush", 0xFF, 0x58, 0x58, 0x58);
                 Set("Panel3Brush", 0x2E, 0xFF, 0xFF, 0xFF);
                 Set("DockBrush", 0x8C, 0x00, 0x00, 0x00);
@@ -46,7 +46,7 @@ namespace GoSPanel.Widget
             else
             {
                 Set("PanelBrush", 0x00, 0x00, 0x00, 0x00);
-                Set("Panel2Brush", 0xC7, 0x3C, 0x3C, 0x3C);
+                Set("Panel2Brush", 0x66, 0x00, 0x00, 0x00);   // tarjetas más oscuras que el fondo de Game Bar
                 Set("RowFocusBrush", 0xE6, 0x58, 0x58, 0x58);
                 Set("Panel3Brush", 0x1F, 0xFF, 0xFF, 0xFF);
                 Set("DockBrush", 0x73, 0x00, 0x00, 0x00);

@@ -165,7 +165,7 @@ namespace GoSPanel.Widget
                 if (card.Expanded) Collapse(card);
                 if (!card.Pinned) card.Selection = _todo.Contains(card.Name);
             }
-            EditTodoIcon.Text = "";
+            EditTodoIcon.Text = "";
             EditTodoText.Text = "Listo";
             ApplyFilterVisibility();
             ContentScroll.ChangeView(null, 0, null, !_animate);
@@ -179,7 +179,7 @@ namespace GoSPanel.Widget
             foreach (var card in _cards) card.Selection = null;
             // En el orden de la página, para que «Todo» no dependa del orden en que se marcaron
             SetPref("todoCards", string.Join(",", _cards.Where(c => _todo.Contains(c.Name)).Select(c => c.Name)));
-            EditTodoIcon.Text = "";
+            EditTodoIcon.Text = "";
             EditTodoText.Text = "Elegir las baldosas de Todo";
             ApplyFilterVisibility();
         }

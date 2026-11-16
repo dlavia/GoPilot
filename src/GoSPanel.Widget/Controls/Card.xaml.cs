@@ -375,7 +375,7 @@ namespace GoSPanel.Widget.Controls
                 ValueText.Visibility = StateText.Visibility = Visibility.Collapsed;
                 Dot.Visibility = Visibility.Collapsed;
                 ChevronText.Visibility = Visibility.Visible;
-                ChevronText.Text = "";
+                ChevronText.Text = "";
                 ChevronText.FontSize = 11;
                 IconBox.Width = IconBox.Height = _key ? 24 : double.NaN;
                 IconText.FontSize = _key ? 14 : 15;
@@ -399,13 +399,13 @@ namespace GoSPanel.Widget.Controls
             if (_selection.HasValue)
             {
                 ChevronText.Visibility = Visibility.Visible;
-                ChevronText.Text = _selection.Value ? "" : "";   // ✓ / círculo vacío
+                ChevronText.Text = _selection.Value ? "" : "";   // ✓ / círculo vacío
                 ChevronText.FontSize = 15;
                 ChevronRotation.Angle = 0;
             }
             else
             {
-                ChevronText.Text = "";
+                ChevronText.Text = "";
                 ChevronText.FontSize = 11;
             }
             IconBox.Width = IconBox.Height = _key ? 28 : double.NaN;
